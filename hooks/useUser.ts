@@ -1,0 +1,65 @@
+import { retrieveLaunchParams } from "@telegram-apps/sdk";
+import { useLaunchParams } from "@telegram-apps/sdk-react";
+import useApi from "./useApi";
+import { useEffect } from "react";
+
+export function useUser() {
+  const { initDataRaw, initData } = retrieveLaunchParams();
+  const lp = useLaunchParams();
+  const authApi = useApi({
+    key: ["auth"],
+    method: "POST",
+    url: "auth/telegram",
+    urlType: "internal",
+  }).post;
+
+  const getMe = useApi({
+    key: ["auth"],
+    method: "GET",
+    url: "user/me",
+    urlType: "internal",
+  }).get;
+
+  const login = async () => {
+    try {
+      const existUser = localStorage.getItem("user");
+      if (existUser) {
+        const localUser = JSON.parse(existUser);
+        if (initData?.user?.id !== localUser?.id) {
+          localStorage.clear();
+        }
+      }
+      const existToken = localStorage.getItem("token");
+
+      if (!existToken) {
+        const response: any = await authApi?.mutateAsync({
+          initData: initDataRaw,
+          referralCode: lp.startParam,
+        });
+        if (response.access_token) {
+          localStorage.setItem("token", response.access_token);
+        }
+      }
+      localStorage.setItem("user", JSON.stringify(initData?.user));
+      await getUser();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getUser = async () => {
+    await getMe?.refetch();
+  };
+  useEffect(() => {
+    if (initDataRaw) {
+      login();
+    }
+  }, [initDataRaw]);
+
+  return {
+    user: getMe?.data,
+    refetch: getMe?.refetch,
+    isLoading: false,
+    error: null,
+  };
+}

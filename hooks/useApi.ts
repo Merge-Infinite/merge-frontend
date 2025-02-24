@@ -1,0 +1,190 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+export const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+const URLS = {
+  internal: process.env.NEXT_PUBLIC_APP_URL || "",
+  public: process.env.NEXT_PUBLIC_BACKEND_URL || "",
+} as const;
+
+// Create separate axios instances for different base URLs
+export const axiosInstances = {
+  internal: axios.create({ baseURL: URLS.internal }),
+  public: axios.create({ baseURL: URLS.public }),
+};
+
+export const config = () => {
+  return {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "",
+    },
+  };
+};
+type Method = "GET" | "POST" | "PUT" | "DELETE";
+type URLType = keyof typeof URLS;
+
+interface ApiConfig {
+  headers: {
+    "Content-Type": string;
+    Authorization: string;
+    [key: string]: string;
+  };
+}
+
+interface ApiHookParams {
+  key: string[];
+  method: Method;
+  url: string;
+  urlType?: URLType; // Specify which backend URL to use
+  customConfig?: Record<string, unknown>;
+}
+
+interface ApiResponse<T = unknown> {
+  data: T;
+}
+
+// Get base config with authorization
+const getConfig = (): ApiConfig => {
+  const token = localStorage.getItem("token");
+  const config: ApiConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+  };
+  return config;
+};
+
+// Main API function
+const apiCall = async <T = unknown>(
+  method: Method,
+  url: string,
+  urlType: URLType = "public",
+  data?: unknown,
+  customConfig: Record<string, unknown> = {}
+): Promise<T> => {
+  const axiosConfig = getConfig();
+  // Convert custom headers to string values to match ApiConfig type
+  const customHeaders: Record<string, string> = {};
+  Object.entries(customConfig).forEach(([key, value]) => {
+    customHeaders[key] = String(value);
+  });
+  axiosConfig.headers = { ...axiosConfig.headers, ...customHeaders };
+
+  try {
+    const instance = axiosInstances[urlType];
+    const fullUrl = `${URLS[urlType]}/${url}`;
+    let response: ApiResponse<T>;
+
+    switch (method) {
+      case "GET":
+        response = await instance.get(fullUrl, axiosConfig);
+        break;
+      case "POST":
+        response = await instance.post(fullUrl, data, axiosConfig);
+        break;
+      case "PUT":
+        response = await instance.put(fullUrl, data, axiosConfig);
+        break;
+      case "DELETE":
+        response = await instance.delete(fullUrl, axiosConfig);
+        break;
+    }
+
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status === 401) {
+        localStorage.clear();
+        window.location.href = window.location.origin;
+        window.location.reload();
+      }
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong";
+      throw new Error(errorMessage);
+    }
+    throw error;
+  }
+};
+
+// Main hook
+export default function useApi<T = unknown>({
+  key,
+  method,
+  url,
+  urlType = "public",
+  customConfig,
+}: ApiHookParams) {
+  const queryClient = new QueryClient();
+
+  switch (method) {
+    case "GET": {
+      const query = useQuery({
+        queryKey: key,
+        queryFn: async () => apiCall<T>(method, url, urlType),
+        retry: 0,
+        enabled: false,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        refetchOnWindowFocus: true,
+      });
+      return { get: query };
+    }
+
+    case "POST": {
+      const mutation = useMutation({
+        mutationFn: (data: unknown) =>
+          apiCall<T>(method, url, urlType, data, customConfig),
+        retry: 0,
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: key });
+        },
+      });
+
+      const safePost = (data: unknown) => {
+        if (!mutation.isPending) {
+          mutation.mutate(data);
+        }
+      };
+
+      return {
+        post: {
+          ...mutation,
+          mutate: safePost,
+        },
+      };
+    }
+
+    case "PUT": {
+      const mutation = useMutation({
+        mutationFn: (data: { id: number } & Record<string, unknown>) =>
+          apiCall<T>(method, `${url}/${data.id}`, urlType, data),
+        retry: 0,
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: key });
+        },
+      });
+      return { put: mutation };
+    }
+
+    case "DELETE": {
+      const mutation = useMutation({
+        mutationFn: (id: string) => apiCall<T>(method, `${url}/${id}`, urlType),
+        retry: 0,
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: key });
+        },
+      });
+      return { delete: mutation };
+    }
+
+    default:
+      throw new Error(`Invalid method ${method}`);
+  }
+}
