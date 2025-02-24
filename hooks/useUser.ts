@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
 import useApi from "./useApi";
@@ -10,14 +11,12 @@ export function useUser() {
     key: ["auth"],
     method: "POST",
     url: "auth/telegram",
-    urlType: "internal",
   }).post;
 
   const getMe = useApi({
     key: ["auth"],
     method: "GET",
     url: "user/me",
-    urlType: "internal",
   }).get;
 
   const login = async () => {
@@ -36,8 +35,8 @@ export function useUser() {
           initData: initDataRaw,
           referralCode: lp.startParam,
         });
-        if (response.access_token) {
-          localStorage.setItem("token", response.access_token);
+        if (response.accessToken) {
+          localStorage.setItem("token", response.accessToken);
         }
       }
       localStorage.setItem("user", JSON.stringify(initData?.user));
