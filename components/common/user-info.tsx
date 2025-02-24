@@ -1,5 +1,6 @@
 "use client";
 
+import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
 
 interface GamePlayInfoProps {
@@ -11,11 +12,12 @@ interface GamePlayInfoProps {
 }
 
 export default function UserInfo({}: GamePlayInfoProps) {
+  const { user } = useUser();
   return (
-    <div className="h-20 px-4 py-2 bg-neutral-950/60 rounded-2xl border border-[#1f1f1f] flex-col justify-start items-start gap-2 inline-flex">
+    <div className="w-full px-4 py-2 bg-neutral-950/60 rounded-2xl border border-[#1f1f1f] flex-col justify-start items-start gap-2 inline-flex">
       <div className="self-stretch justify-center items-center gap-2 inline-flex">
-        <div className="grow shrink basis-0 text-white text-base font-bold font-['Sora'] leading-normal">
-          Hi Noname!!!
+        <div className="grow shrink basis-0 text-white text-base font-bold font-['Sora'] leading-normal capitalize">
+          Hi {user?.username}!!!
         </div>
       </div>
       <div className="self-stretch justify-start items-center gap-6 inline-flex">

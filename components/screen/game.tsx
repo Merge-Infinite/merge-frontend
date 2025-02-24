@@ -1,5 +1,6 @@
 "use client";
 
+import { useUser } from "@/hooks/useUser";
 import UserInfo from "../common/user-info";
 
 export function GameScreen() {
