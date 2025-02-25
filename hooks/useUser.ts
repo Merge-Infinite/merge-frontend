@@ -19,6 +19,12 @@ export function useUser() {
     url: "user/me",
   }).get;
 
+  const userInventory = useApi({
+    key: ["user", "inventory"],
+    method: "GET",
+    url: "user/inventory",
+  }).get;
+
   const login = async () => {
     try {
       const existUser = localStorage.getItem("user");
@@ -41,6 +47,7 @@ export function useUser() {
       }
       localStorage.setItem("user", JSON.stringify(initData?.user));
       await getUser();
+      await getUserInventory();
     } catch (error) {
       console.log(error);
     }
@@ -49,6 +56,11 @@ export function useUser() {
   const getUser = async () => {
     await getMe?.refetch();
   };
+
+  const getUserInventory = async () => {
+    await userInventory?.refetch();
+  };
+
   useEffect(() => {
     if (initDataRaw) {
       login();
@@ -57,6 +69,8 @@ export function useUser() {
 
   return {
     user: getMe?.data,
+    inventory: userInventory?.data,
+    refetchInventory: userInventory?.refetch,
     refetch: getMe?.refetch,
     isLoading: false,
     error: null,

@@ -107,7 +107,7 @@ const DraggableBox = ({
       }}
     >
       <div className="text-black text-xs font-normal font-['Sora'] capitalize leading-normal">
-        <span className="mr-1">{convertEmojiCode(emoji)}</span> {title}
+        <span className="mr-1">{emoji}</span> {title}
         {amount && amount > 0 ? `(${amount})` : ""}
       </div>
       {!isFromInventory && (

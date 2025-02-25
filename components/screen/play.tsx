@@ -18,29 +18,9 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import MergingArea from "../common/MergingArea";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-const BASIC_ELEMENTS = {
-  water: {
-    id: "water",
-    title: "Water",
-    emoji: "💧",
-    isBasic: true,
-  },
-  fire: {
-    id: "fire",
-    title: "Fire",
-    emoji: "🔥",
-    isBasic: true,
-  },
-  earth: {
-    id: "earth",
-    title: "Earth",
-    emoji: "🌍",
-    isBasic: true,
-  },
-  air: { id: "air", title: "Air", emoji: "💨", isBasic: true },
-};
+
 export default function PlayGame({}: PlayGameProps) {
-  const { user, refetch } = useUser();
+  const { inventory, refetchInventory } = useUser();
   const [mergingBoxes, setMergingBoxes] = useState({});
 
   const mergeApi = useApi({
@@ -75,7 +55,7 @@ export default function PlayGame({}: PlayGameProps) {
             [newElement.id]: newElement,
           };
         });
-        await refetch();
+        await refetchInventory?.();
       } catch (error) {
         console.error("Error combining elements:", error);
       }
@@ -177,7 +157,7 @@ export default function PlayGame({}: PlayGameProps) {
               Infinite elements:
             </div>
             <div className="relative justify-start items-center gap-2 inline-flex flex-wrap">
-              {user?.inventory
+              {(inventory as any[])
                 ?.filter((element: any) => element.isBasic)
                 .map((element: any) => (
                   <DraggableBox
@@ -195,7 +175,7 @@ export default function PlayGame({}: PlayGameProps) {
               Crafted elements:
             </div>
             <div className="relative justify-start items-center gap-2 inline-flex flex-wrap">
-              {user?.inventory
+              {(inventory as any[])
                 ?.filter(
                   (element: any) => !element.isBasic && element.amount > 0
                 )
