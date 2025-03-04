@@ -19,6 +19,8 @@ import { useDidMount } from "@/hooks/useDidMount";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import ToastProvider from "@/lib/wallet/ToastProvider";
+import { ToastContainer } from "react-toastify";
 
 function App(props: PropsWithChildren) {
   const lp = useLaunchParams();
@@ -59,6 +61,7 @@ function RootInner({ children }: PropsWithChildren) {
     <SDKProvider acceptCustomStyles>
       <QueryClientProvider client={client}>
         <App>{children}</App>
+
         <Toaster />
       </QueryClientProvider>
     </SDKProvider>

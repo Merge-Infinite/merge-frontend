@@ -1,0 +1,15 @@
+@import "../../../styles/variables";
+
+.reset-title {
+  font-family: var(--font-sora);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 22px;
+  color: $gray-900;
+}
+
+.reset-desc {
+  font-family: var(--font-sora);
+  color: $gray-400;
+}

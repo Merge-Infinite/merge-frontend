@@ -1,0 +1,52 @@
+@import "../../../styles/variables.scss";
+
+$icon-size: 40px;
+
+.token-item {
+  @apply box-border flex items-center;
+  // padding: 26px 26px;
+
+  // background: $gray-50;
+  // border-radius: 16px;
+  transition: 0.2s;
+  // &:hover {
+  //   /* Gray/50 */
+  //   background: $gray-100;
+  // }
+}
+
+.icon-wrap {
+  &-default {
+    background: $gray-500;
+  }
+}
+
+.token-name {
+  color: $gray-100;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 22px;
+}
+
+.token-amount {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: $gray-100;
+}
+
+.click-button {
+  padding: 4px 12px;
+  background: $primary-100;
+  border-radius: 12px;
+  color: $primary-600;
+  font-weight: 500;
+  transition: 200ms;
+  &:hover {
+    /* Gray/50 */
+    color: $primary-600;
+    background: $primary-200;
+  }
+}

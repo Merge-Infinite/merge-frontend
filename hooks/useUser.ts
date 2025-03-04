@@ -54,11 +54,19 @@ export function useUser() {
   };
 
   const getUser = async () => {
-    await getMe?.refetch();
+    try {
+      await getMe?.refetch();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const getUserInventory = async () => {
-    await userInventory?.refetch();
+    try {
+      await userInventory?.refetch();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {

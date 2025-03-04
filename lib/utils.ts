@@ -13,3 +13,32 @@ export const convertEmojiCode = (code: string) => {
     return "⚠️"; // Return warning emoji as fallback
   }
 };
+
+export const walletPath = [
+  "/home",
+  "/test",
+  "/nft",
+  "/nft/details",
+  "/nft/send",
+  "/coin/detail/:coinType",
+  "/dapps",
+  "/send",
+  "/swap",
+  "/staking",
+  "/transaction/flow",
+  "/transaction/detail/:digest",
+  "/settings",
+  "/settings/wallet",
+  "/settings/network",
+  "/settings/security/*",
+  "/password-confirm",
+  "/onboard/welcome",
+  "/onboard/create-new-wallet",
+  "/onboard/import-wallet",
+  "/wallet/create",
+  "/wallet/import",
+  "/dapp/connect",
+  "/dapp/tx-approval",
+  "/dapp/sign-msg",
+  "*",
+];

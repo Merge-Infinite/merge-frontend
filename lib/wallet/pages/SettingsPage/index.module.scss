@@ -1,0 +1,94 @@
+@import '../../styles/variables';
+
+.container {
+  padding: 24px 0;
+}
+
+.address {
+  @apply flex justify-center items-center;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  color: $gray-400;
+  text-align: center;
+}
+
+.wallet-name {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 36px;
+  text-align: center;
+  color: #000000;
+}
+
+.settings-container {
+  padding: 0 16px;
+  margin-top: 48px;
+
+  .icon-wallet,
+  .icon-network,
+  .icon-security,
+  .icon-right-arrow,
+  .icon-right-external,
+  .icon-reset {
+    width: 24px;
+    height: 24px;
+    background: no-repeat center;
+    background-size: cover;
+    stroke: #b9c0d4;
+    display: inline-block;
+    margin-right: 16px;
+  }
+  .icon-right-external {
+    width: 18px;
+    height: 18px;
+  }
+
+  .icon-right-arrow,
+  .icon-right-external {
+    position: absolute;
+    right: 24px;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+  }
+}
+
+.settings-group {
+  border-radius: 16px;
+  overflow: hidden;
+
+  & + & {
+    margin-top: 12px;
+  }
+}
+
+.settings-item {
+  display: flex;
+  padding: 24px;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  color: #000000;
+  background-color: $gray-50;
+
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    /* Gray/50 */
+    background: $gray-100;
+  }
+
+  &:active {
+    background-color: $gray-200;
+  }
+}
+
+.app-version {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: rgba(0, 0, 0, 0.1);
+  text-align: center;
+}

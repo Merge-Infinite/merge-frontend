@@ -1,0 +1,17 @@
+export { default as Up } from "./Up.svg";
+export { default as Down } from "./Down.svg";
+export { default as Add } from "./Add.svg";
+export { default as Txn } from "./Txn.svg";
+export { default as Mint } from "./Mint.svg";
+export { default as Swap } from "./Swap.svg";
+export { default as Object } from "./Object.svg";
+export { default as Sui } from "./Sui.svg";
+export { default as Coin } from "./Coin.svg";
+export { default as History } from "./History.svg";
+export { default as Close } from "./Close.svg";
+export { default as HashTag } from "./HashTag.svg";
+export { default as Time } from "./Time.svg";
+export { default as Wallet } from "./Wallet.svg";
+export { default as Copy } from "./Copy.svg";
+export { default as Warning } from "./Warning.svg";
+export { default as Trash } from "./Trash.svg";

@@ -1,0 +1,10 @@
+@import "styles/tailwind.css";
+@import "styles/scrollbar.scss";
+
+body {
+  @apply no-scrollbar;
+  background-color: rgba(0, 0, 0, 0.05);
+  position: relative;
+  font-family: var(--font-sora);
+  font-size: 14px;
+}

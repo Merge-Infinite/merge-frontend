@@ -1,0 +1,27 @@
+@import "../../../styles/variables";
+
+.menu {
+  @apply flex justify-between items-center;
+  box-sizing: border-box;
+  height: $menu-height;
+  padding: 8px 32px;
+  border-top: 1px solid #dcdfea;
+}
+
+.menu-item {
+  @apply flex justify-center items-center;
+  cursor: pointer;
+
+  &--active {
+    background: transparent;
+    border-radius: 16px;
+
+    & > .menu-icon {
+      stroke: $primary-50;
+    }
+  }
+}
+
+.menu-icon {
+  stroke: transparent;
+}

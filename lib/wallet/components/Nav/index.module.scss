@@ -1,0 +1,55 @@
+@import "../../styles/variables";
+
+$nav-height: 56px;
+
+.nav {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+
+  &--absolute {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  &--fixed {
+    position: fixed;
+    z-index: $normal-zindex;
+  }
+
+  &--sticky {
+    position: sticky;
+    top: 0;
+    z-index: $normal-zindex;
+  }
+}
+
+.icon-back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  background: $gray-100;
+  border-radius: 16px;
+  cursor: pointer;
+
+  &--disabled {
+    cursor: not-allowed;
+  }
+}
+
+.nav-title {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 28px;
+  color: #fff;
+}

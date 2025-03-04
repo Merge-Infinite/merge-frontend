@@ -1,0 +1,123 @@
+@import "../../../styles/variables";
+
+.page {
+  @apply no-scrollbar;
+  width: $full-width;
+  height: 100%;
+  background-color: $black;
+  overflow-y: auto;
+}
+
+.title-container {
+  padding: 16px 32px 0px;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 36px;
+
+  color: #000000;
+}
+
+.description {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 20px;
+  color: $gray-400;
+  margin-top: 8px;
+}
+
+.nft-bg {
+  // background: #eff1f5;
+  border: $gray-100 2px solid;
+  border-radius: 20px;
+  padding: 10px;
+  margin: 33px 22px 0;
+  transition: background-color 0.3s ease-in-out;
+  &:hover {
+    background-color: $gray-50;
+    border: $gray-200 2px solid;
+  }
+}
+
+.nft-img {
+  border-radius: 16px;
+  width: 86px;
+  height: 86px;
+  flex-shrink: 0;
+
+  img {
+    border-radius: 16px;
+  }
+}
+
+.nft-content {
+  margin-left: 20px;
+  padding-top: 8px;
+}
+
+.nft-name {
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  color: $gray-900;
+}
+
+.nft-desc {
+  margin-top: 3px;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: $gray-400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.address-container {
+  margin: 31px 37px 0 27px;
+}
+
+.address {
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 21px;
+  color: $gray-900;
+}
+
+.gas-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 32px 24px;
+  padding-top: 16px;
+  border-top: solid 1px #eaecf0;
+}
+
+.gas {
+  color: $gray-900;
+  font-weight: 500;
+}
+
+.gas-amount {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: $gray-500;
+}
+
+.btn-container {
+  padding: 16px;
+  border-top: 1px solid $gray-100;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: $black;
+  z-index: 999;
+}
+
+.form {
+  margin-bottom: 120px;
+}

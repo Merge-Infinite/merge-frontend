@@ -1,0 +1,26 @@
+@import "../../styles/variables";
+
+.container {
+  @apply flex flex-col;
+  width: $full-width;
+  height: 100%;
+  background-color: $black;
+  overflow-y: auto;
+  padding: 50px 32px;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 36px;
+  color: black;
+  margin-top: 37px;
+}
+
+.desc {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 20px;
+  color: $gray-400;
+  margin-top: 8px;
+}

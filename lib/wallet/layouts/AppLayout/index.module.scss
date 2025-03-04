@@ -1,0 +1,43 @@
+@import "../../styles/variables";
+
+.main-page {
+  @apply flex flex-col;
+  width: $full-width;
+  //flex: 1;
+  background-color: #000;
+  //overflow-y: auto;
+
+  &--default {
+    & .main {
+      overflow-y: auto;
+    }
+  }
+
+  &--without-header {
+    & .header {
+      display: none;
+    }
+    & .main {
+      overflow-y: auto;
+    }
+  }
+  &--without-menu {
+    & .menu {
+      display: none;
+    }
+    & .main {
+      overflow-y: auto;
+    }
+  }
+  &--empty {
+    & .header {
+      display: none;
+    }
+    & .menu {
+      display: none;
+    }
+    & .main {
+      overflow-y: auto;
+    }
+  }
+}
