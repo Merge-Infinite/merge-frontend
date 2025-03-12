@@ -19,8 +19,16 @@ import { useDidMount } from "@/hooks/useDidMount";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import ToastProvider from "@/lib/wallet/ToastProvider";
-import { ToastContainer } from "react-toastify";
+import { Provider } from "react-redux";
+import { persistorStore, store } from "@/lib/wallet/store";
+import { PersistGate } from "redux-persist/integration/react";
+import { ApiClientContext } from "@/lib/wallet/hooks/useApiClient";
+import { WebApiClient } from "@/lib/wallet/scripts/shared/ui-api-client";
+import {
+  QueryClient as ReactQueryClient,
+  QueryClientProvider as ReactQueryClientProvider,
+} from "react-query";
+import { BrowserRouter } from "react-router-dom";
 
 function App(props: PropsWithChildren) {
   const lp = useLaunchParams();
@@ -60,9 +68,19 @@ function RootInner({ children }: PropsWithChildren) {
   return (
     <SDKProvider acceptCustomStyles>
       <QueryClientProvider client={client}>
-        <App>{children}</App>
+        <BrowserRouter basename="wallet">
+          <Provider store={store}>
+            <PersistGate loading={null} persistor={persistorStore}>
+              <ReactQueryClientProvider client={new ReactQueryClient()}>
+                <ApiClientContext.Provider value={new WebApiClient()}>
+                  <App>{children}</App>
 
-        <Toaster />
+                  <Toaster />
+                </ApiClientContext.Provider>
+              </ReactQueryClientProvider>
+            </PersistGate>
+          </Provider>
+        </BrowserRouter>
       </QueryClientProvider>
     </SDKProvider>
   );

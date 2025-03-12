@@ -1,9 +1,10 @@
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import appContextReducer from './app-context';
-import biometricContextReducer from './biometric-context';
-import featureFlagReducer from './feature-flag';
-import { ChromeStorage } from './storage';
-import { persistReducer, persistStore } from 'redux-persist';
+"use client";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import appContextReducer from "./app-context";
+import biometricContextReducer from "./biometric-context";
+import featureFlagReducer from "./feature-flag";
+import { ChromeStorage } from "./storage";
+import { persistReducer, persistStore } from "redux-persist";
 import {
   FLUSH,
   PAUSE,
@@ -11,12 +12,13 @@ import {
   PURGE,
   REGISTER,
   REHYDRATE,
-} from 'redux-persist/es/constants';
+} from "redux-persist/es/constants";
+const isClient = typeof window !== "undefined";
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage: new ChromeStorage(),
-  whitelist: ['appContext', 'featureFlag'],
+  whitelist: ["appContext", "featureFlag"],
 };
 
 const allReducers = combineReducers({
@@ -26,8 +28,11 @@ const allReducers = combineReducers({
 });
 
 function createStore() {
+  const reducer = isClient
+    ? persistReducer(persistConfig, allReducers)
+    : allReducers;
   const store = configureStore({
-    reducer: persistReducer(persistConfig, allReducers),
+    reducer,
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: {
@@ -39,7 +44,23 @@ function createStore() {
   return { store, persistorStore };
 }
 
-export const { store, persistorStore } = createStore();
+let storeInstance: ReturnType<typeof createStore> | undefined = undefined;
+
+export function getStore() {
+  if (typeof window === "undefined" && !storeInstance) {
+    // Server-side, always create a fresh store
+    return createStore();
+  }
+
+  // Client-side, create the store once and reuse it
+  if (!storeInstance) {
+    storeInstance = createStore();
+  }
+
+  return storeInstance;
+}
+
+export const { store, persistorStore } = getStore();
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

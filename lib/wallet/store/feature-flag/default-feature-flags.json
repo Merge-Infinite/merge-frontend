@@ -60,7 +60,7 @@
   },
   "require_update_browser": false,
   "available_networks": ["mainnet", "testnet", "devnet"],
-  "default_network": "mainnet",
+  "default_network": "testnet",
   "campaign": null,
   "minimal_versions": {
     "android": "1.0.0",

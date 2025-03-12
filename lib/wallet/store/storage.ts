@@ -1,3 +1,5 @@
+"use client";
+
 export interface WebStorage {
   /**
    * @desc Fetches key and returns item in a promise.
@@ -14,21 +16,30 @@ export interface WebStorage {
 }
 
 export class ChromeStorage implements WebStorage {
+  private isClient(): boolean {
+    return typeof window !== "undefined";
+  }
+
   async getItem(key: string) {
-    const results = await localStorage.getItem(key);
+    if (!this.isClient()) return null;
+    const results = localStorage.getItem(key);
     return results ?? null;
   }
 
   async removeItem(key: string): Promise<void> {
-    return localStorage.removeItem(key);
+    if (!this.isClient()) return;
+    localStorage.removeItem(key);
   }
 
   async setItem(key: string, item: string | null): Promise<void> {
-    return localStorage.setItem(key, item ?? '');
+    console.log("this.isClient()", this.isClient());
+    if (!this.isClient()) return;
+    localStorage.setItem(key, item ?? "");
   }
 
-  async clear() {
-    return localStorage.clear();
+  async clear(): Promise<void> {
+    if (!this.isClient()) return;
+    localStorage.clear();
   }
 }
 

@@ -121,7 +121,7 @@ export default function PlayGame({}: PlayGameProps) {
     <DndProvider
       backend={
         process.env.NEXT_PUBLIC_DRAG_DROP_BACKEND === "html5"
-          ? HTML5Backend
+          ? TouchBackend
           : TouchBackend
       }
     >

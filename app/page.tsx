@@ -9,6 +9,7 @@ import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
 import { walletPath } from "@/lib/utils";
+import { NFTMarket } from "@/components/screen/market/market";
 
 export default function Home() {
   const [backButton] = initBackButton();
@@ -63,9 +64,9 @@ export default function Home() {
         <TabsContent value="home">
           <HomeScreen />
         </TabsContent>
-        {/* <TabsContent value="play" className="h-full">
-          <PlayGame />
-        </TabsContent> */}
+        <TabsContent value="market" className="h-full">
+          <NFTMarket />
+        </TabsContent>
       </Tabs>
     </div>
   );

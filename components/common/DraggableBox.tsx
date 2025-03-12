@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { convertEmojiCode } from "@/lib/utils";
 import Image from "next/image";
-import React, { useRef } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { useDrag, useDragDropManager, useDrop } from "react-dnd";
 
 // ItemTypes for drag and drop
@@ -31,80 +37,131 @@ const DraggableBox = ({
   onRemove?: (id: string) => void;
   isFromInventory: boolean;
 }) => {
+  // Memoize the item object to prevent unnecessary re-renders
+  const item = useMemo(
+    () => ({ id, title, emoji, left, top }),
+    [id, title, emoji, left, top]
+  );
+
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.BOX,
-      item: { id, title, emoji, left, top },
+      item,
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
     }),
-    [onDrop, left, top, onRemove, isFromInventory]
+    [item] // Only depend on the memoized item
+  );
+
+  // Memoize the drop callback
+  const handleDrop = useCallback(
+    (dropItem: any) => {
+      if (dropItem.id !== id) {
+        onDrop?.(id, dropItem);
+      }
+    },
+    [id, onDrop]
   );
 
   const [, drop] = useDrop(
     () => ({
       accept: ItemTypes.BOX,
-      drop: (item: any, monitor) => {
-        if (item.id !== id) {
-          onDrop?.(id, item);
-        }
-      },
+      drop: handleDrop,
       collect: (monitor) => ({
         isOver: monitor.isOver(),
       }),
     }),
-    [onDrop, left, top, onRemove, isFromInventory]
+    [handleDrop]
   );
 
-  //   const dragDropManager = useDragDropManager();
-  //   const monitor = dragDropManager.getMonitor();
-  //   React.useEffect(
-  //     () =>
-  //       monitor.subscribeToOffsetChange(() => {
-  //         const offset = monitor.getClientOffset();
-  //         const initialOffset = monitor.getInitialClientOffset();
-  //         const difference = monitor.getDifferenceFromInitialOffset();
-  //         const initialSourceOffset = monitor.getInitialSourceClientOffset();
-  //         console.log("offset", offset);
-  //         console.log("initialOffset", initialOffset);
-  //         console.log("difference", difference);
-  //         console.log("initialSourceOffset", initialSourceOffset);
-  //       }),
-  //     [monitor]
-  //   );
-  //   const [{ handlerId }, drop] = useDrop({
-  //     accept: ItemTypes.BOX,
-  //     collect(monitor) {
-  //       return {
-  //         handlerId: monitor.getHandlerId(),
-  //       };
-  //     },
-  //   });
-  //   const [{ isDragging }, drag] = useDrag({
-  //     type: ItemTypes.BOX,
-  //     item: () => {
-  //       return { id };
-  //     },
-  //     collect: (monitor) => ({
-  //       isDragging: monitor.isDragging(),
-  //     }),
-  //   });
+  const dragDropManager = useDragDropManager();
+  const [position, setPosition] = useState({ x: left || 0, y: top || 0 });
+  const initialPosition = useRef({ x: left || 0, y: top || 0 });
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
-  const ref = (element: any) => {
-    drag(element);
-    drop(element);
-  };
+  // Update position when left/top props change
+  useEffect(() => {
+    if (!isDragging) {
+      setPosition({ x: left || 0, y: top || 0 });
+      initialPosition.current = { x: left || 0, y: top || 0 };
+    }
+  }, [isDragging, left, top]);
+
+  // Handle dragging with debounced updates
+  useEffect(() => {
+    if (!isDragging) return;
+
+    let animationFrame: number;
+    const monitor = dragDropManager.getMonitor();
+
+    const updatePosition = () => {
+      const offset = monitor.getSourceClientOffset();
+      if (offset) {
+        setPosition({
+          x: offset.x + 35,
+          y: offset.y + 18,
+        });
+      }
+    };
+
+    const handleOffsetChange = () => {
+      // Use requestAnimationFrame to debounce updates
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(updatePosition);
+    };
+
+    const unsubscribe = monitor.subscribeToOffsetChange(handleOffsetChange);
+
+    return () => {
+      unsubscribe();
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [isDragging, dragDropManager]);
+
+  // Combine drag and drop refs
+  const ref = useCallback(
+    (element: any) => {
+      elementRef.current = element;
+      drag(element);
+      drop(element);
+    },
+    [drag, drop]
+  );
+
+  // Memoize the style object
+  const style = useMemo(
+    () =>
+      isDragging
+        ? {
+            opacity: 0.9,
+            position: "fixed" as const,
+            left: position.x,
+            top: position.y,
+            pointerEvents: "none" as const,
+            zIndex: 1000,
+            transform: "translate(-50%, -50%)",
+            willChange: "transform", // Hint to browser for optimization
+          }
+        : {
+            opacity: 1,
+            position: isFromInventory
+              ? ("static" as const)
+              : ("absolute" as const),
+            left,
+            top,
+          },
+    [isDragging, position.x, position.y, isFromInventory, left, top]
+  );
+
+  // Memoize the remove handler
+  const handleRemove = useCallback(() => onRemove?.(id), [onRemove, id]);
+
   return (
     <div
       ref={ref}
       className="h-8 px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex"
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-        left,
-        top,
-        position: !isFromInventory ? "absolute" : "static",
-      }}
+      style={style}
     >
       <div className="text-black text-xs font-normal font-['Sora'] capitalize leading-normal">
         <span className="mr-1">{emoji}</span> {title}
@@ -112,7 +169,7 @@ const DraggableBox = ({
       </div>
       {!isFromInventory && (
         <Image
-          onClick={() => onRemove?.(id)}
+          onClick={handleRemove}
           src="/images/remove.svg"
           alt="fire"
           width={24}
@@ -123,4 +180,15 @@ const DraggableBox = ({
   );
 };
 
-export default React.memo(DraggableBox);
+// Use React.memo with a custom comparison function for optimal re-rendering
+export default React.memo(
+  DraggableBox,
+  (prevProps, nextProps) =>
+    prevProps.id === nextProps.id &&
+    prevProps.title === nextProps.title &&
+    prevProps.emoji === nextProps.emoji &&
+    prevProps.left === nextProps.left &&
+    prevProps.top === nextProps.top &&
+    prevProps.amount === nextProps.amount &&
+    prevProps.isFromInventory === nextProps.isFromInventory
+);

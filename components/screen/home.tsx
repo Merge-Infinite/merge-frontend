@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export function HomeScreen() {
   const router = useRouter();
   return (
-    <Tabs defaultValue="home" className="w-full">
+    <Tabs defaultValue="wallet" className="w-full">
       <TabsList className="flex justify-center gap-6 bg-transparent">
         <TabsTrigger
           value="game"

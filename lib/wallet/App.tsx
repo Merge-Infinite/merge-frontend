@@ -45,7 +45,7 @@ function App() {
   useAutoLoadFeatureFlags();
   const client = useCustomApolloClient(
     appContext.networkId,
-    "suiet-desktop-extension",
+    "suiet-desktop",
     version,
     new ChromeStorage()
   );
