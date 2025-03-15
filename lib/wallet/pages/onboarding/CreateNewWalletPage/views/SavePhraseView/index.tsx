@@ -1,5 +1,4 @@
 import styles from "./index.module.scss";
-import Button from "../../../../../components/Button";
 import { Extendable } from "../../../../../types";
 import CopyIcon from "../../../../../components/CopyIcon";
 import message from "../../../../../components/message";
@@ -7,6 +6,7 @@ import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
 import { isNonEmptyArray } from "../../../../../core";
 import Skeleton from "react-loading-skeleton";
 import classNames from "classnames";
+import { Button } from "@/components/ui/button";
 
 type PhraseDisplayProps = Extendable & {
   phrases: string[] | undefined;
@@ -54,15 +54,13 @@ export const PhraseDisplay = (props: PhraseDisplayProps) => {
 };
 
 const SavePhraseView = (props: SavePhraseView) => {
+  console.log("props.phrases", props.phrases);
+  console.log("isNonEmptyArray(props.phrases)", props.onNext);
   return (
-    <SettingOneLayout
-      titles={["Backup", "Your", "Wallet"]}
-      desc={"Copy and save your recovery phrase."}
-    >
+    <SettingOneLayout titles={[]} desc={"Copy and save your recovery phrase."}>
       <section className={"mt-[24px]"}>
         <PhraseDisplay phrases={props.phrases} />
         <Button
-          state={"primary"}
           className={"mt-[32px]"}
           disabled={!isNonEmptyArray(props.phrases)}
           onClick={props.onNext}

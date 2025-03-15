@@ -1,11 +1,11 @@
-import { Extendable } from '../types';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { useEffect } from 'react';
-import { useApiClient } from '../hooks/useApiClient';
-import { updateAuthed } from '../store/app-context';
-import LockPage from '../pages/LockPage';
-import { useBiometricAuth } from '../hooks/useBiometricAuth';
+import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useApiClient } from "../hooks/useApiClient";
+import { useBiometricAuth } from "../hooks/useBiometricAuth";
+import { RootState } from "../store";
+import { updateAuthed } from "../store/app-context";
+import { Extendable } from "../types";
 
 const Session = (props: Extendable) => {
   const authed = useSelector((state: RootState) => state.appContext.authed);
@@ -15,7 +15,9 @@ const Session = (props: Extendable) => {
 
   async function verifyAuthStatus(ac: AbortController) {
     try {
-      await apiClient.callFunc('auth', 'isAuthed', null);
+      console.log("starting login");
+      await apiClient.callFunc<string, string>("auth", "login", "123456");
+
       dispatch(updateAuthed(true));
     } catch (e) {
       dispatch(updateAuthed(false));
@@ -25,7 +27,8 @@ const Session = (props: Extendable) => {
   useEffect(() => {
     if (!authed) {
       const ac = new AbortController();
-      authenticate(ac.signal).catch(() => {});
+      verifyAuthStatus(ac);
+
       return () => {
         ac.abort();
       };
@@ -33,14 +36,17 @@ const Session = (props: Extendable) => {
   }, [isSetuped]);
 
   useEffect(() => {
+    dispatch(updateAuthed(true));
     const controller = new AbortController();
-    verifyAuthStatus(controller);
     return () => {
       controller.abort();
     };
   }, []);
 
-  if (!authed) return <LockPage />;
+  if (!authed) {
+    return <SkeletonCard />;
+  }
+
   return <>{props.children}</>;
 };
 

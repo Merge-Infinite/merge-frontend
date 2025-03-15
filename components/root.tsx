@@ -1,34 +1,35 @@
 "use client";
 
-import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
 import {
+  bindMiniAppCSSVars,
+  bindThemeParamsCSSVars,
+  bindViewportCSSVars,
   SDKProvider,
   useLaunchParams,
   useMiniApp,
   useThemeParams,
   useViewport,
-  bindMiniAppCSSVars,
-  bindThemeParamsCSSVars,
-  bindViewportCSSVars,
 } from "@telegram-apps/sdk-react";
 import { AppRoot } from "@telegram-apps/telegram-ui";
+import { type PropsWithChildren, useEffect, useState } from "react";
 
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ErrorPage } from "@/components/common/ErrorPage";
 import { useDidMount } from "@/hooks/useDidMount";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/app/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
-import { Provider } from "react-redux";
-import { persistorStore, store } from "@/lib/wallet/store";
-import { PersistGate } from "redux-persist/integration/react";
 import { ApiClientContext } from "@/lib/wallet/hooks/useApiClient";
 import { WebApiClient } from "@/lib/wallet/scripts/shared/ui-api-client";
+import { persistorStore, store } from "@/lib/wallet/store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   QueryClient as ReactQueryClient,
   QueryClientProvider as ReactQueryClientProvider,
 } from "react-query";
+import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
+import { PersistGate } from "redux-persist/integration/react";
 
 function App(props: PropsWithChildren) {
   const lp = useLaunchParams();
@@ -68,14 +69,15 @@ function RootInner({ children }: PropsWithChildren) {
   return (
     <SDKProvider acceptCustomStyles>
       <QueryClientProvider client={client}>
-        <BrowserRouter basename="wallet">
+        <BrowserRouter>
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistorStore}>
               <ReactQueryClientProvider client={new ReactQueryClient()}>
                 <ApiClientContext.Provider value={new WebApiClient()}>
-                  <App>{children}</App>
-
-                  <Toaster />
+                  <AuthProvider>
+                    <App>{children}</App>
+                    <Toaster />
+                  </AuthProvider>
                 </ApiClientContext.Provider>
               </ReactQueryClientProvider>
             </PersistGate>

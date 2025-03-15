@@ -3,10 +3,15 @@ import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
 import useApi from "./useApi";
 import { useEffect } from "react";
+import { useAccount } from "@/lib/wallet/hooks/useAccount";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/wallet/store";
 
 export function useUser() {
   const { initDataRaw, initData } = retrieveLaunchParams();
   const lp = useLaunchParams();
+  const appContext = useSelector((state: RootState) => state.appContext);
+  const { address } = useAccount(appContext.accountId);
   const authApi = useApi({
     key: ["auth"],
     method: "POST",
@@ -24,6 +29,12 @@ export function useUser() {
     method: "GET",
     url: "user/inventory",
   }).get;
+
+  const saveAddressApi = useApi({
+    key: ["user", "saveAddress"],
+    method: "POST",
+    url: "user/saveAddress",
+  }).post;
 
   const login = async () => {
     try {
@@ -60,6 +71,20 @@ export function useUser() {
       console.log(error);
     }
   };
+
+  const saveAddress = async () => {
+    try {
+      await saveAddressApi?.mutateAsync({ address });
+      getMe?.refetch();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    if (address && !getMe?.data?.walletAddress) {
+      saveAddress();
+    }
+  }, [address]);
 
   const getUserInventory = async () => {
     try {

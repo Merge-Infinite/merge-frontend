@@ -59,7 +59,7 @@ const TestPage = lazy(async () => await import("../pages/TestPage"));
 
 const routesConfig: RouteObject[] = [
   {
-    path: "/wallet",
+    path: "/",
     element: (
       <RequireInit>
         <Session>
@@ -161,7 +161,7 @@ const routesConfig: RouteObject[] = [
     ],
   },
   {
-    path: "wallet/onboard",
+    path: "/onboard",
     children: [
       {
         index: true,
@@ -182,7 +182,7 @@ const routesConfig: RouteObject[] = [
     ],
   },
   {
-    path: "wallet/*",
+    path: "/*",
     element: (
       <Session>
         <Outlet />
@@ -201,7 +201,7 @@ const routesConfig: RouteObject[] = [
     ],
   },
   {
-    path: "wallet/dapp",
+    path: "/dapp",
     element: (
       <RequireInit>
         <Session>
@@ -226,7 +226,7 @@ const routesConfig: RouteObject[] = [
   },
   {
     path: "*",
-    element: <Navigate to="/wallet/home" />,
+    element: <Navigate to="/home" />,
   },
 ];
 

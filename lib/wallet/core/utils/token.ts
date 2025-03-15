@@ -1,19 +1,19 @@
-import * as crypto from '../crypto';
-import { IStorage } from '../storage';
-import { Buffer } from 'buffer';
-import { Vault } from '../vault/Vault';
-import { prepareVault } from './vault';
+import * as crypto from "../crypto";
+import { IStorage } from "../storage";
+import { Buffer } from "buffer";
+import { Vault } from "../vault/Vault";
+import { prepareVault } from "./vault";
 
 export async function validateToken(storage: IStorage, token: string) {
   if (!token) {
-    throw new Error('Auth token is not provided');
+    throw new Error("Auth token is not provided");
   }
   const meta = await storage.loadMeta();
   if (!meta) {
-    throw new Error('Meta is not initialized');
+    throw new Error("Meta is not initialized");
   }
-  if (!crypto.validateToken(Buffer.from(token, 'hex'), meta.cipher)) {
-    throw new Error('Invalid auth token');
+  if (!crypto.validateToken(Buffer.from(token, "hex"), meta.cipher)) {
+    throw new Error("Invalid auth token");
   }
 }
 
@@ -25,6 +25,7 @@ export type ValidateAccountParams = {
 };
 
 export async function validateAccount(params: ValidateAccountParams) {
+  console.log("validateAccount", params);
   await validateToken(params.storage, params.token);
   await validateAddress(params);
 }

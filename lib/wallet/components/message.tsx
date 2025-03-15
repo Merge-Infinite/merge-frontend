@@ -19,7 +19,7 @@ function createToast(content: string, options?: ToastOptions) {
 
 export const success = (content: string, options?: ToastOptions) => {
   return createToast(content, {
-    icon: <Image src={IconSuccess} alt="success" width={24} height={24} />,
+    icon: <IconSuccess alt="success" width={24} height={24} />,
     type: "success",
     ...options,
   });
@@ -27,7 +27,7 @@ export const success = (content: string, options?: ToastOptions) => {
 
 export const error = (content: string, options?: ToastOptions) => {
   return createToast(content, {
-    icon: <Image src={IconError} alt="error" width={24} height={24} />,
+    icon: <IconError alt="error" width={24} height={24} />,
     type: "error",
     ...options,
   });
@@ -35,7 +35,7 @@ export const error = (content: string, options?: ToastOptions) => {
 
 export const info = (content: string, options?: ToastOptions) => {
   return createToast(content, {
-    icon: <Image src={IconInfo} alt="info" width={24} height={24} />,
+    icon: <IconInfo alt="info" width={24} height={24} />,
     type: "info",
     ...options,
   });

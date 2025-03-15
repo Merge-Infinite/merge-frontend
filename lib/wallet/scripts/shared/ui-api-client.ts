@@ -1,7 +1,7 @@
 // src/lib/api/DirectApiClient.ts
-import mitt, { Emitter } from 'mitt';
-import { isDev } from '../../utils/env';
-import { ErrorCode } from '../background/errors';
+import mitt, { Emitter } from "mitt";
+import { isDev } from "../../utils/env";
+import { ErrorCode } from "../background/errors";
 import {
   AccountApi,
   AuthApi,
@@ -10,9 +10,9 @@ import {
   TransactionApi,
   WalletApi,
   IStorage,
-} from '../../core';
-import { DappBgApi } from '../background/bg-api/dapp';
-import { cloneDeep } from 'lodash-es';
+} from "../../core";
+import { DappBgApi } from "../background/bg-api/dapp";
+import { cloneDeep } from "lodash-es";
 
 // Types
 export interface CallFuncOption {
@@ -22,7 +22,7 @@ export interface CallFuncOption {
 
 function log(message: string, details?: any, devOnly = true) {
   if (devOnly && !isDev) return;
-  console.log('[direct api client]', message, details);
+  console.log("[direct api client]", message, details);
 }
 
 export interface ApiClientEventListeners {
@@ -90,7 +90,7 @@ export class WebApiClient {
           await this.storage.clearMeta();
         } catch (e) {
           console.error(e);
-          throw new Error('Clear meta failed');
+          throw new Error("Clear meta failed");
         }
       },
       resetAppData: async () => {
@@ -113,13 +113,13 @@ export class WebApiClient {
       dapp: this.dapp,
     };
 
-    log('Services initialized', Object.keys(this.serviceInstances));
+    log("Services initialized", Object.keys(this.serviceInstances));
   }
 
   private getStorage(): IStorage {
-    const storage = getStorage('web');
+    const storage = getStorage();
     if (!storage) {
-      throw new Error('Web platform not supported by storage system');
+      throw new Error("Web platform not supported by storage system");
     }
     return storage;
   }
@@ -136,23 +136,23 @@ export class WebApiClient {
     // Check if service exists
     if (!this.serviceInstances[service]) {
       const error = new Error(`Service "${service}" does not exist`);
-      log('Error in callFunc', { error, service, funcName }, false);
+      log("Error in callFunc", { error, service, funcName }, false);
       throw error;
     }
 
     // Check if function exists in service
     const serviceInstance = this.serviceInstances[service];
-    if (typeof serviceInstance[funcName] !== 'function') {
+    if (typeof serviceInstance[funcName] !== "function") {
       const error = new Error(
         `Method "${funcName}" does not exist in service "${service}"`
       );
-      log('Error in callFunc', { error, service, funcName }, false);
+      log("Error in callFunc", { error, service, funcName }, false);
       throw error;
     }
 
     // Prepare parameters
     const params = payload ? cloneDeep(payload) : {};
-
+    console.log("params", params);
     // Inject token if withAuth is true
     if (options?.withAuth === true) {
       try {
@@ -160,16 +160,16 @@ export class WebApiClient {
         Object.assign(params, { token });
         // For context objects, add token there too
         if (
-          'context' in params &&
+          "context" in params &&
           params.context &&
-          typeof params.context === 'object'
+          typeof params.context === "object"
         ) {
           Object.assign(params.context, { token });
         }
       } catch (e) {
-        log('Error injecting token', e);
-        this.events.emit('authExpired');
-        throw new Error('Authentication required');
+        log("Error injecting token", e);
+        this.events.emit("authExpired");
+        throw new Error("Authentication required");
       }
     }
 
@@ -180,11 +180,11 @@ export class WebApiClient {
       log(`Result from ${service}.${funcName}:`, result);
       return result;
     } catch (error) {
-      log('Error in callFunc', { error, service, funcName }, false);
+      log("Error in callFunc", { error, service, funcName }, false);
 
       // Handle auth errors specifically
       if (error?.code === ErrorCode.NO_AUTH) {
-        this.events.emit('authExpired');
+        this.events.emit("authExpired");
       }
 
       throw error;
@@ -202,42 +202,42 @@ export class WebApiClient {
 
   // Wallet service methods
   async getWallets() {
-    return await this.callFunc('wallet', 'getWallets', {});
+    return await this.callFunc("wallet", "getWallets", {});
   }
 
   async createWallet(params: { name: string }) {
-    return await this.callFunc('wallet', 'createWallet', params);
+    return await this.callFunc("wallet", "createWallet", params);
   }
 
   // Account service methods
   async getAccounts(params: { walletId: string }) {
-    return await this.callFunc('account', 'getAccounts', params, {
+    return await this.callFunc("account", "getAccounts", params, {
       withAuth: true,
     });
   }
 
   // Auth service methods
   async login(params: { password: string }) {
-    return await this.callFunc('auth', 'login', params);
+    return await this.callFunc("auth", "login", params);
   }
 
   async logout() {
-    return await this.callFunc('auth', 'logout', {});
+    return await this.callFunc("auth", "logout", {});
   }
 
   async initPassword(params: { password: string }) {
-    return await this.callFunc('auth', 'initPassword', params);
+    return await this.callFunc("auth", "initPassword", params);
   }
 
   // Transaction service methods
   async sendTransaction(params: any) {
-    return await this.callFunc('txn', 'sendTransaction', params, {
+    return await this.callFunc("txn", "sendTransaction", params, {
       withAuth: true,
     });
   }
 
   // Network service methods
   async getNetworks() {
-    return await this.callFunc('network', 'getNetworks', {});
+    return await this.callFunc("network", "getNetworks", {});
   }
 }

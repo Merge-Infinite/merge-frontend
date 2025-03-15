@@ -5,11 +5,10 @@ import { useEffectAdjustInitializedStatus } from "../../../hooks/useEffectAdjust
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
 import { useRef, useState } from "react";
-import SetNewPassword from "./views/SetPasswordView";
 import { useApiClient } from "../../../hooks/useApiClient";
-import SetPasswordView from "./views/SetPasswordView";
 import { PageEntry } from "../../../hooks/usePageEntry";
-import Nav from "../../../components/Nav";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 enum Step {
   WELCOME,
@@ -32,16 +31,15 @@ const WelcomePage = () => {
   const nextRoute = useRef<string>("");
   const apiClient = useApiClient();
 
-  function handleCreateNewWallet() {
+  async function handleCreateNewWallet() {
     nextRoute.current = "/onboard/create-new-wallet";
     setOnboardType(OnboardType.CREATE_NEW_WALLET);
-    setStep(Step.SET_PASSWORD);
+    await handleSetNewPassword();
   }
 
   function handleImportWallet() {
     nextRoute.current = "/onboard/import-wallet";
     setOnboardType(OnboardType.IMPORT_WALLET);
-    setStep(Step.SET_PASSWORD);
   }
 
   function handleNavBack() {
@@ -55,33 +53,39 @@ const WelcomePage = () => {
   function renderWelcomeView() {
     return (
       <BrandLayout grayTitle={"Welcome to"} blackTitle={"Merg3 Wallet"}>
-        <section className={"px-[32px]  w-full flex justify-between"}>
-          <RectButton
-            theme={"primary"}
-            onClick={handleCreateNewWallet}
-            className="h-[180px] w-[143px] text-white!"
-          >
-            Create New
-          </RectButton>
-          <RectButton
-            onClick={handleImportWallet}
-            className="h-[180px] w-[143px]"
-          >
-            Import Wallet
-          </RectButton>
-        </section>
+        <div
+          className={"flex flex-col items-center"}
+          style={{
+            gap: 32,
+          }}
+        >
+          <Image
+            src="/images/m3r8 symbol.svg"
+            alt="logo"
+            width={52}
+            height={48}
+          />
+          <div className="text-center text-white text-2xl font-normal  uppercase leading-7">
+            Welcome to
+            <br />
+            Merge Infinite <br />
+            Wallet
+          </div>
+
+          <div className="flex w-full justify-between gap-4">
+            <Button onClick={handleCreateNewWallet}>Create New</Button>
+            <Button variant={"outline"} onClick={handleImportWallet}>
+              Import Wallet
+            </Button>
+          </div>
+        </div>
       </BrandLayout>
     );
   }
 
-  async function handleSetNewPassword(password: string) {
+  async function handleSetNewPassword() {
     try {
-      await apiClient.callFunc<string, undefined>(
-        "auth",
-        "initPassword",
-        password
-      );
-      console.log("handleSetNewPassword", password);
+      await apiClient.callFunc("auth", "initPassword", null);
       if (!nextRoute.current) {
         throw new Error("nextRoute is not set");
       }
@@ -103,21 +107,6 @@ const WelcomePage = () => {
       return null;
     }
 
-    if (step === Step.SET_PASSWORD) {
-      return (
-        <div className={"flex-1"}>
-          <Nav
-            title={
-              onboardType === OnboardType.IMPORT_WALLET
-                ? "Import Wallet"
-                : "Create New"
-            }
-            onNavBack={handleNavBack}
-          />
-          <SetPasswordView type={"new"} onNext={handleSetNewPassword} />
-        </div>
-      );
-    }
     return renderWelcomeView();
   }
 

@@ -37,12 +37,7 @@ const Nav = (props: NavProps) => {
   }
   return (
     <nav
-      className={classnames(
-        styles["nav"],
-        styles[`nav--${position}`],
-        props.className,
-        "justify-between"
-      )}
+      className={classnames(styles["nav"], props.className, "!justify-between")}
       style={props.style}
     >
       <div

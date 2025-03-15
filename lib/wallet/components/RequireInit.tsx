@@ -1,18 +1,19 @@
-import { useCallback, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
-import { isNonEmptyArray } from '../utils/check';
-import { updateNetworkId } from '../store/app-context';
-import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import { useEffectAdjustInitializedStatus } from '../hooks/useEffectAdjustInitializedStatus';
+import { useCallback, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
+import { useEffectAdjustInitializedStatus } from "../hooks/useEffectAdjustInitializedStatus";
+import { useFeatureFlags } from "../hooks/useFeatureFlags";
+import { AppDispatch, RootState } from "../store";
+import { updateNetworkId } from "../store/app-context";
+import { isNonEmptyArray } from "../utils/check";
 
 function RequireInit({ children }: any) {
   const appContext = useSelector((state: RootState) => state.appContext);
   const dispatch = useDispatch<AppDispatch>();
   const featureFlags = useFeatureFlags();
   const adjustCurrentNetworkId = useCallback(async () => {
-    const defaultNetwork = featureFlags?.default_network ?? 'mainnet';
+    console.log("featureFlags", featureFlags);
+    const defaultNetwork = featureFlags?.default_network ?? "testnet";
 
     if (!appContext.networkId) {
       await dispatch(updateNetworkId(defaultNetwork));
@@ -37,7 +38,7 @@ function RequireInit({ children }: any) {
   return appContext.initialized ? (
     children
   ) : (
-    <Navigate to={'/onboard'} replace />
+    <Navigate to={"/onboard"} replace />
   );
 }
 

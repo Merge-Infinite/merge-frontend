@@ -3,17 +3,10 @@
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-export const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-const URLS = {
-  internal: process.env.NEXT_PUBLIC_APP_URL || "",
-  public: process.env.NEXT_PUBLIC_BACKEND_URL || "",
-} as const;
+export const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 // Create separate axios instances for different base URLs
-export const axiosInstances = {
-  internal: axios.create({ baseURL: URLS.internal }),
-  public: axios.create({ baseURL: URLS.public }),
-};
+export const axiosInstances = axios.create({ baseURL: baseUrl });
 
 export const config = () => {
   return {
@@ -24,7 +17,6 @@ export const config = () => {
   };
 };
 type Method = "GET" | "POST" | "PUT" | "DELETE";
-type URLType = keyof typeof URLS;
 
 interface ApiConfig {
   headers: {
@@ -38,7 +30,6 @@ interface ApiHookParams {
   key: string[];
   method: Method;
   url: string;
-  urlType?: URLType; // Specify which backend URL to use
   customConfig?: Record<string, unknown>;
 }
 
@@ -62,7 +53,6 @@ const getConfig = (): ApiConfig => {
 const apiCall = async <T = unknown>(
   method: Method,
   url: string,
-  urlType: URLType = "public",
   data?: unknown,
   customConfig: Record<string, unknown> = {}
 ): Promise<T> => {
@@ -75,8 +65,8 @@ const apiCall = async <T = unknown>(
   axiosConfig.headers = { ...axiosConfig.headers, ...customHeaders };
 
   try {
-    const instance = axiosInstances[urlType];
-    const fullUrl = `${URLS[urlType]}/${url}`;
+    const instance = axiosInstances;
+    const fullUrl = `${baseUrl}/${url}`;
     let response: ApiResponse<T>;
 
     switch (method) {
@@ -119,7 +109,6 @@ export default function useApi<T = unknown>({
   key,
   method,
   url,
-  urlType = "public",
   customConfig,
 }: ApiHookParams) {
   const queryClient = new QueryClient();
@@ -128,7 +117,7 @@ export default function useApi<T = unknown>({
     case "GET": {
       const query = useQuery({
         queryKey: key,
-        queryFn: async () => apiCall<T>(method, url, urlType),
+        queryFn: async () => apiCall<T>(method, url),
         retry: 0,
         enabled: false,
         staleTime: 1000 * 60 * 5, // 5 minutes
@@ -140,7 +129,7 @@ export default function useApi<T = unknown>({
     case "POST": {
       const mutation = useMutation({
         mutationFn: (data: unknown) =>
-          apiCall<T>(method, url, urlType, data, customConfig),
+          apiCall<T>(method, url, data, customConfig),
         retry: 0,
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: key });
@@ -164,7 +153,7 @@ export default function useApi<T = unknown>({
     case "PUT": {
       const mutation = useMutation({
         mutationFn: (data: { id: number } & Record<string, unknown>) =>
-          apiCall<T>(method, `${url}/${data.id}`, urlType, data),
+          apiCall<T>(method, `${url}/${data.id}`, data),
         retry: 0,
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: key });
@@ -175,7 +164,7 @@ export default function useApi<T = unknown>({
 
     case "DELETE": {
       const mutation = useMutation({
-        mutationFn: (id: string) => apiCall<T>(method, `${url}/${id}`, urlType),
+        mutationFn: (id: string) => apiCall<T>(method, `${url}/${id}`),
         retry: 0,
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: key });

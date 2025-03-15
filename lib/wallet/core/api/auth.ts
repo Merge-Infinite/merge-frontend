@@ -1,12 +1,12 @@
-import * as crypto from '../crypto';
-import { IStorage } from '../storage';
-import { Buffer } from 'buffer';
-import { DATA_VERSION } from '../storage/constants';
-import { generateClientId } from '../utils/clientId';
-import { Vault } from '../vault/Vault';
-import { MetadataMissingError, NoAuthError } from '../errors';
-import { type } from 'superstruct';
-import { IsImportedWallet, isImportedAccount } from '../storage/types';
+import * as crypto from "../crypto";
+import { IStorage } from "../storage";
+import { Buffer } from "buffer";
+import { DATA_VERSION } from "../storage/constants";
+import { generateClientId } from "../utils/clientId";
+import { Vault } from "../vault/Vault";
+import { MetadataMissingError, NoAuthError } from "../errors";
+import { type } from "superstruct";
+import { IsImportedWallet, isImportedAccount } from "../storage/types";
 
 export type UpdatePasswordParams = {
   oldPassword: string;
@@ -33,15 +33,13 @@ export class AuthApi implements IAuthApi {
     this.session = new Session();
   }
 
-  public async initPassword(password: string): Promise<void> {
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
+  public async initPassword(): Promise<void> {
+    const password = "123456";
     const meta = await this.storage.loadMeta();
     const wallets = await this.storage.getWallets();
     // NOTE: prevent calling when already has wallets
     if (meta && wallets?.length > 0) {
-      throw new Error('Meta already initialized');
+      throw new Error("Meta already initialized");
     }
     const { cipher } = crypto.newToken(password);
     const newMeta = {
@@ -59,16 +57,16 @@ export class AuthApi implements IAuthApi {
   public async updatePassword(params: UpdatePasswordParams): Promise<void> {
     const { oldPassword, newPassword } = params;
     if (newPassword.length < 6) {
-      throw new Error('Password must be at least 6 characters');
+      throw new Error("Password must be at least 6 characters");
     }
     const meta = await this.storage.loadMeta();
     if (!meta) {
-      throw new Error('Meta not found');
+      throw new Error("Meta not found");
     }
-    const currentSalt = Buffer.from(meta.cipher.salt, 'hex');
+    const currentSalt = Buffer.from(meta.cipher.salt, "hex");
     const currentToken = crypto.password2Token(oldPassword, currentSalt);
     if (!crypto.validateToken(currentToken, meta.cipher)) {
-      throw new Error('Invalid password');
+      throw new Error("Invalid password");
     }
     const { token: newToken, cipher: newCipher } = crypto.newToken(newPassword);
     const newMeta = {
@@ -101,7 +99,7 @@ export class AuthApi implements IAuthApi {
                 .getSecret();
               account.encryptedPrivateKey = crypto
                 .encryptPrivate(newToken, privateKey)
-                .toString('hex');
+                .toString("hex");
               accounts.push(account);
             }
             continue;
@@ -112,10 +110,10 @@ export class AuthApi implements IAuthApi {
           );
           wallets[i].encryptedMnemonic = crypto
             .encryptMnemonic(newToken, mnemonic)
-            .toString('hex');
+            .toString("hex");
         }
       } finally {
-        console.log('decryptMnemonic', Date.now() - t);
+        console.log("decryptMnemonic", Date.now() - t);
       }
     }
     await this.storage.updateMetaWalletsAndAccounts(newMeta, wallets, accounts);
@@ -125,7 +123,7 @@ export class AuthApi implements IAuthApi {
       try {
         await this.login(newPassword);
       } finally {
-        console.log('login', Date.now() - t);
+        console.log("login", Date.now() - t);
       }
     }
   }
@@ -155,13 +153,12 @@ export class AuthApi implements IAuthApi {
   public async login(password: string) {
     const t = Date.now();
     const token = await this.loadTokenWithPassword(password);
-    console.log('loadTokenWithPassword', Date.now() - t);
+    console.log("loadTokenWithPassword", Date.now() - t);
+    console.log("token", token);
     await maybeFixDataConsistency(this.storage, token);
-    console.log('maybeFixDataConsistency', Date.now() - t);
+    console.log("maybeFixDataConsistency", Date.now() - t);
     this.session.setToken(token);
-    // no need to await as we don't care about the result
-    // and we don't want to block the login process
-    this.biometricAuthTokenChanged(token);
+    return token;
   }
 
   public async logout() {
@@ -174,14 +171,14 @@ export class AuthApi implements IAuthApi {
       throw new MetadataMissingError();
     }
     const t = Date.now();
-    const salt = Buffer.from(meta.cipher.salt, 'hex');
+    const salt = Buffer.from(meta.cipher.salt, "hex");
     const token = crypto.password2Token(password, salt);
-    console.log('password2Token', Date.now() - t);
+    console.log("password2Token", Date.now() - t);
     if (!crypto.validateToken(token, meta.cipher)) {
-      throw new Error('Invalid password');
+      throw new Error("Invalid password");
     }
-    console.log('validateToken', Date.now() - t);
-    return token.toString('hex');
+    console.log("validateToken", Date.now() - t);
+    return token.toString("hex");
   }
 
   public async getClientId() {
@@ -190,7 +187,7 @@ export class AuthApi implements IAuthApi {
       throw new MetadataMissingError();
     }
     if (!meta.clientId) {
-      meta.clientId = generateClientId(20, undefined, 'chrome-');
+      meta.clientId = generateClientId(20, undefined, "chrome-");
       await this.storage.saveMeta(meta);
     }
     return meta.clientId;
@@ -202,7 +199,7 @@ export class AuthApi implements IAuthApi {
       throw new MetadataMissingError();
     }
 
-    if (typeof meta.biometricData === 'object' && meta.biometricData !== null) {
+    if (typeof meta.biometricData === "object" && meta.biometricData !== null) {
       const clientId = await this.getClientId();
       const newAuthKey = generateClientId(24);
       const encryptedToken = crypto.encryptString(
@@ -214,9 +211,9 @@ export class AuthApi implements IAuthApi {
         const resp = await fetch(
           `https://api.suiet.app/extension/auth/set-auth-key`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'content-type': 'application/json',
+              "content-type": "application/json",
             },
             body: JSON.stringify({
               client_id: clientId,
@@ -229,7 +226,7 @@ export class AuthApi implements IAuthApi {
           meta.biometricData.encryptedToken = encryptedToken;
           await this.storage.saveMeta(meta);
         } else {
-          throw new Error('Failed to set auth key');
+          throw new Error("Failed to set auth key");
         }
       } catch (e) {
         delete meta.biometricData;
@@ -249,15 +246,15 @@ export class AuthApi implements IAuthApi {
     }
 
     if (!meta.biometricData) {
-      throw new Error('Biometric authentication not enabled');
+      throw new Error("Biometric authentication not enabled");
     }
 
     const token = crypto.decryptString(
       Buffer.from(authKey),
       meta.biometricData.encryptedToken
     );
-    if (!crypto.validateToken(Buffer.from(token, 'hex'), meta.cipher)) {
-      throw new Error('Invalid password');
+    if (!crypto.validateToken(Buffer.from(token, "hex"), meta.cipher)) {
+      throw new Error("Invalid password");
     }
 
     await maybeFixDataConsistency(this.storage, token);
@@ -282,7 +279,7 @@ export class AuthApi implements IAuthApi {
     }
 
     if (!meta.biometricData) {
-      throw new Error('Biometric authentication not enabled');
+      throw new Error("Biometric authentication not enabled");
     }
 
     const clientId = await this.getClientId();
@@ -294,9 +291,9 @@ export class AuthApi implements IAuthApi {
       const resp = await fetch(
         `https://api.suiet.app/extension/auth/rotate-auth-key`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'content-type': 'application/json',
+            "content-type": "application/json",
           },
           body: JSON.stringify({
             client_id: clientId,
@@ -322,7 +319,7 @@ export class AuthApi implements IAuthApi {
       } else {
         try {
           const { error_code: errorCode } = await resp.json();
-          if (errorCode === 'NOT_FOUND') {
+          if (errorCode === "NOT_FOUND") {
             shouldClear = true;
           }
         } catch (e) {}
@@ -373,9 +370,9 @@ export class AuthApi implements IAuthApi {
       const resp = await fetch(
         `https://api.suiet.app/extension/auth/set-auth-key`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'content-type': 'application/json',
+            "content-type": "application/json",
           },
           body: JSON.stringify({
             client_id: clientId,
@@ -409,9 +406,9 @@ export class AuthApi implements IAuthApi {
       await this.storage.clearMeta();
       await this.storage.saveMeta(meta);
       await fetch(`https://api.suiet.app/extension/auth/delete-auth-key`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'content-type': 'application/json',
+          "content-type": "application/json",
         },
         body: JSON.stringify({
           client_id: await this.getClientId(),
@@ -432,13 +429,13 @@ async function maybeFixDataConsistency(storage: IStorage, token: string) {
       // account is just accountId string, need to change to {id: string, address: string}
       const accountData = await storage.getAccount(account.id);
       if (!accountData) {
-        throw new Error('Check data consistency failed: account data missing');
+        throw new Error("Check data consistency failed: account data missing");
         continue;
       }
       let vault: Vault;
       if (isImportedAccount(accountData)) {
         vault = await Vault.fromEncryptedPrivateKey(
-          Buffer.from(token, 'hex'),
+          Buffer.from(token, "hex"),
           accountData.encryptedPrivateKey!
         );
       } else {
@@ -451,13 +448,13 @@ async function maybeFixDataConsistency(storage: IStorage, token: string) {
           console.debug(`update account hd path from ${hdPath} to ${path}`);
           accountData.hdPath = path;
         }
-        console.log('crypto.derivationHdPath', Date.now() - t);
+        console.log("crypto.derivationHdPath", Date.now() - t);
         vault = await Vault.fromEncryptedMnemonic(
           hdPath,
-          Buffer.from(token, 'hex'),
+          Buffer.from(token, "hex"),
           wallet.encryptedMnemonic!
         );
-        console.log('Vault.create', Date.now() - t);
+        console.log("Vault.create", Date.now() - t);
       }
       if (
         accountData.address !== vault.getAddress() ||
@@ -525,8 +522,8 @@ class Session {
   }
 
   public setExpiration(expiration: number) {
-    if (typeof expiration !== 'number' || expiration < 0) {
-      throw new Error('expiration must be greater than 0');
+    if (typeof expiration !== "number" || expiration < 0) {
+      throw new Error("expiration must be greater than 0");
     }
     this.#expiration = expiration;
   }

@@ -1,10 +1,10 @@
-import { Account, GetAddressParams } from '../../../core';
-import { useApiClient } from './useApiClient';
-import { useEffect, useState } from 'react';
-import { OmitToken } from '../types';
-import { BackgroundApiClient } from '../scripts/shared/ui-api-client';
-import { isNonEmptyArray } from '../utils/check';
-import { useQuery } from 'react-query';
+import { Account, GetAddressParams } from "../../../core";
+import { useApiClient } from "./useApiClient";
+import { useEffect, useState } from "react";
+import { OmitToken } from "../types";
+import { BackgroundApiClient } from "../scripts/shared/ui-api-client";
+import { isNonEmptyArray } from "../utils/check";
+import { useQuery } from "react-query";
 
 // memory cache variable, mapping accountId -> address
 const _addressMemoryCache_ = new Map<string, string>();
@@ -51,8 +51,8 @@ export async function getAddress(
       OmitToken<GetAddressParams>,
       string[]
     >(
-      'account',
-      'getAddress',
+      "account",
+      "getAddress",
       {
         batchAccountIds: needFetchIds,
       },
@@ -82,8 +82,8 @@ export async function getAddress(
     return _addressMemoryCache_.get(accountId) as string;
   }
   const address = await apiClient.callFunc<OmitToken<GetAddressParams>, string>(
-    'account',
-    'getAddress',
+    "account",
+    "getAddress",
     {
       accountId: params.accountId,
     },
@@ -100,10 +100,10 @@ export async function getAddress(
 export function useAccount(accountId: string) {
   const apiClient = useApiClient();
   const { data, error, ...rest } = useQuery(
-    ['account', 'getAccount', accountId],
+    ["account", "getAccount", accountId],
     async () => await fetchAccount(accountId)
   );
-  const [address, setAddress] = useState<string>('');
+  const [address, setAddress] = useState<string>("");
 
   async function fetchAddressByAccountId(accountId: string) {
     try {
@@ -111,7 +111,7 @@ export function useAccount(accountId: string) {
       setAddress(result as string);
     } catch (e) {
       console.error(e);
-      setAddress('');
+      setAddress("");
     }
   }
 
@@ -123,8 +123,8 @@ export function useAccount(accountId: string) {
   async function fetchAccount(accountId: string) {
     if (!accountId) return;
     return await apiClient.callFunc<string, Account>(
-      'account',
-      'getAccount',
+      "account",
+      "getAccount",
       accountId
     );
   }

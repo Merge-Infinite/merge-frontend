@@ -1,0 +1,362 @@
+"use client";
+
+import ElementItem from "@/components/common/ElementItem";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+import useApi from "@/hooks/useApi";
+import {
+  emojiToString,
+  MINT_NFT_FEE,
+  NFT_MODULE_NAME,
+  NFT_PACKAGE_ID,
+} from "@/lib/utils";
+import {
+  SendAndExecuteTxParams,
+  TxEssentials,
+} from "@/lib/wallet/core/api/txn";
+import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
+import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
+import { RootState } from "@/lib/wallet/store";
+import { OmitToken } from "@/lib/wallet/types";
+import { Transaction } from "@mysten/sui/transactions";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+
+export function OffchainBagScreen() {
+  const apiClient = useApiClient();
+
+  const appContext = useSelector((state: RootState) => state.appContext);
+  const { data: network } = useNetwork(appContext.networkId);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [mintQuantity, setMintQuantity] = useState(1);
+  const [isMinting, setIsMinting] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const getUserBagApi = useApi({
+    key: ["getUserBag"],
+    method: "GET",
+    url: "user/mybags",
+  }).get;
+
+  const syncUserBag = useApi({
+    key: ["syncUserBag"],
+    method: "POST",
+    url: "marketplace/mint",
+  }).post;
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      setInitialLoading(true);
+      try {
+        await getUserBagApi?.refetch();
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
+  const handleItemClick = (item) => {
+    setSelectedItem(item);
+    // Default to 1 as the mint quantity for better UX
+    setMintQuantity(1);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedItem(null);
+    setMintQuantity(1);
+  };
+
+  const handleQuantityChange = (e) => {
+    const value = parseInt(e.target.value);
+    // Ensure the quantity is valid and within bounds
+    if (!isNaN(value)) {
+      if (value <= 0) {
+        setMintQuantity(1);
+      } else if (selectedItem && value > selectedItem.amount) {
+        setMintQuantity(selectedItem.amount);
+      } else {
+        setMintQuantity(value);
+      }
+    } else {
+      setMintQuantity(1);
+    }
+  };
+
+  async function mintNFTs() {
+    if (!selectedItem || !mintQuantity || mintQuantity <= 0) {
+      toast({
+        title: "Please select an item and enter a valid quantity",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (mintQuantity > selectedItem.amount) {
+      toast({
+        title: "You don't have enough items to mint",
+        variant: "destructive",
+      });
+      return null;
+    }
+    setIsMinting(true);
+    try {
+      let tx = new Transaction();
+
+      // Split Sui coin for payment
+      const paymentCoin = tx.splitCoins(tx.gas, [MINT_NFT_FEE]);
+
+      tx.moveCall({
+        target: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"mint"}`,
+        arguments: [
+          tx.pure.string(selectedItem?.handle),
+          tx.pure.u64(mintQuantity),
+          tx.pure.string(emojiToString(selectedItem?.emoji)),
+          tx.pure.string(String(selectedItem?.itemId)),
+          paymentCoin,
+        ],
+      });
+
+      const response = await apiClient.callFunc<
+        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+        undefined
+      >(
+        "txn",
+        "signAndExecuteTransactionBlock",
+        {
+          transactionBlock: tx.serialize(),
+          context: {
+            network,
+            walletId: appContext.walletId,
+            accountId: appContext.accountId,
+          },
+        },
+        { withAuth: true }
+      );
+
+      if (response && response.digest) {
+        await syncUserBag?.mutateAsync({
+          transactionDigest: response.digest,
+          itemId: selectedItem.itemId,
+          amount: mintQuantity,
+        });
+        toast({
+          title: "NFTs minted successfully!",
+          description: `You've minted ${mintQuantity} ${selectedItem.handle} NFTs`,
+        });
+
+        getUserBagApi?.refetch();
+        handleCloseModal();
+        return response.digest;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error minting NFTs:", error);
+      toast({
+        title: "Failed to mint NFTs",
+        description: error.message || "Please try again later",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsMinting(false);
+    }
+  }
+
+  // Filter items based on search query
+  const filteredItems = getUserBagApi?.data?.filter((item) =>
+    item.handle?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate total elements count
+  const totalElements =
+    getUserBagApi?.data?.reduce((acc, item) => acc + item.amount, 0) || 0;
+
+  return (
+    <div className="flex flex-col gap-4 w-full">
+      {/* Search Bar */}
+      <div className="self-stretch h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
+        <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-center gap-4 inline-flex">
+          <Image src="/images/search.svg" alt="search" width={24} height={24} />
+          <Input
+            className="grow shrink basis-0 h-full text-white text-sm font-normal leading-normal focus:outline-none border-transparent bg-transparent"
+            placeholder="Search items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            disabled={initialLoading}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="text-gray-400 hover:text-white"
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-col justify-start items-start gap-1 flex">
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <span className="text-white text-sm font-normal font-['Sora'] leading-normal">
+              Elements: (
+            </span>
+            <span className="text-[#68ffd1] text-sm font-normal font-['Sora'] leading-normal">
+              {totalElements}
+            </span>
+            <span className="text-white text-sm font-normal font-['Sora'] leading-normal">
+              )
+            </span>
+          </div>
+
+          {getUserBagApi?.isLoading && !initialLoading && (
+            <div className="flex items-center text-xs text-gray-400">
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              Refreshing...
+            </div>
+          )}
+        </div>
+
+        {initialLoading ? (
+          <div className="flex flex-col items-center justify-center w-full h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-[#68ffd1] mb-2" />
+            <p className="text-gray-400">Loading inventory...</p>
+          </div>
+        ) : filteredItems && filteredItems.length > 0 ? (
+          <div className="flex flex-wrap gap-2 w-full">
+            {filteredItems.map((item, index) => (
+              <div
+                key={index}
+                onClick={() => handleItemClick(item)}
+                className="cursor-pointer transition-transform hover:scale-105"
+              >
+                <ElementItem {...item} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full h-64 text-center">
+            <div>
+              <p className="text-gray-400 mb-2">
+                {searchQuery
+                  ? "No matching items found"
+                  : "No items in your inventory yet"}
+              </p>
+              {searchQuery && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSearchQuery("")}
+                  className="mt-2"
+                >
+                  Clear Search
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Dialog
+        open={!!selectedItem}
+        onOpenChange={(open) => !open && handleCloseModal()}
+      >
+        <DialogContent className="p-4 bg-[#1A1A1A] rounded-lg border border-[#333333] w-[90%] max-w-md">
+          <DialogHeader className="mb-0">
+            <DialogTitle className="text-white text-lg font-medium font-['Sora']">
+              Mint NFT
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="self-stretch flex-col justify-start items-start gap-4 flex">
+            {selectedItem && (
+              <div className="flex-col justify-start items-start gap-3 flex w-full">
+                <div className="flex items-center justify-start w-full py-2">
+                  <div className="px-3 py-1 rounded-3xl border border-white justify-center items-center gap-2 inline-flex">
+                    <span className="text-xl">{selectedItem.emoji}</span>
+                    <div className="text-white text-xs font-normal font-['Sora'] uppercase leading-normal">
+                      {selectedItem.handle} ({selectedItem.amount})
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <div className="text-white text-sm font-normal font-['Sora'] leading-normal mb-1">
+                    Quantity:
+                  </div>
+                  <div className="flex items-center gap-2 w-full">
+                    <div className="w-full h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
+                      <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-center inline-flex w-full">
+                        <Input
+                          className="grow shrink basis-0 h-6 text-white text-sm font-normal font-['Sora'] leading-normal bg-transparent border-none focus:outline-none"
+                          placeholder="Enter qty"
+                          type="number"
+                          min="1"
+                          max={selectedItem.amount}
+                          value={mintQuantity}
+                          onChange={handleQuantityChange}
+                          disabled={isMinting}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
+                        Fee: {MINT_NFT_FEE / Number(MIST_PER_SUI)} SUI
+                      </div>
+                      <Image
+                        src="/images/sui.svg"
+                        alt="sui"
+                        width={20}
+                        height={20}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="w-full mt-4">
+              <Button
+                onClick={mintNFTs}
+                disabled={
+                  isMinting ||
+                  !mintQuantity ||
+                  mintQuantity <= 0 ||
+                  mintQuantity > selectedItem?.amount
+                }
+                className="w-full bg-gradient-to-r from-[#9747FF] to-[#7F45E2] hover:from-[#9747FF] hover:to-[#8a4dd4]"
+              >
+                {isMinting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Minting...
+                  </>
+                ) : (
+                  `Mint ${mintQuantity} NFT${mintQuantity !== 1 ? "s" : ""}`
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

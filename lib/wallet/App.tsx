@@ -20,21 +20,21 @@ import { useCustomApolloClient } from "./hooks/useCustomApolloClient";
 
 function useRegisterHandleRejectionEvent() {
   useEffect(() => {
-    const handleError = (event: PromiseRejectionEvent) => {
-      console.error("catch unhandledrejection:", event);
-      event.promise.catch((e) => {
-        if (e.message.includes(ErrorCode.NO_AUTH)) {
-          message.info("Session expired, please login again");
-          return;
-        }
-        message.error(e.message);
-      });
-      event.preventDefault();
-    };
-    window.addEventListener("unhandledrejection", handleError);
-    return () => {
-      window.removeEventListener("unhandledrejection", handleError);
-    };
+    // const handleError = (event: PromiseRejectionEvent) => {
+    //   console.error("catch unhandledrejection:", event);
+    //   event.promise.catch((e) => {
+    //     if (e.message.includes(ErrorCode.NO_AUTH)) {
+    //       // message.info("Session expired, please login again");
+    //       return;
+    //     }
+    //     // message.error(e.message);
+    //   });
+    //   event.preventDefault();
+    // };
+    // window.addEventListener("unhandledrejection", handleError);
+    // return () => {
+    //   window.removeEventListener("unhandledrejection", handleError);
+    // };
   }, []);
 }
 

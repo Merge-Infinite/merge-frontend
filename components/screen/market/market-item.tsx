@@ -1,0 +1,230 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import useApi from "@/hooks/useApi";
+import {
+  mists_to_sui,
+  NFT_MODULE_NAME,
+  NFT_PACKAGE_ID,
+  POLICY_ID,
+} from "@/lib/utils";
+import {
+  SendAndExecuteTxParams,
+  TxEssentials,
+} from "@/lib/wallet/core/api/txn";
+import { useAccount } from "@/lib/wallet/hooks/useAccount";
+import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
+import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
+import { RootState } from "@/lib/wallet/store";
+import { OmitToken } from "@/lib/wallet/types";
+import { Transaction } from "@mysten/sui/transactions";
+import { formatAddress } from "@mysten/sui/utils";
+import Image from "next/image";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+
+export const MarketItem = React.memo(
+  ({
+    element,
+    amount,
+    price,
+    loading: initialLoading,
+    itemId,
+    emoji,
+    onBuy,
+    nftId,
+    seller_kiosk,
+    id,
+  }: {
+    element: string;
+    amount: string | number;
+    id: string;
+    price?: string;
+    onBuy?: () => void;
+    loading?: boolean;
+    itemId: string;
+    emoji: string;
+    nftId: string;
+    seller_kiosk: string;
+  }) => {
+    const apiClient = useApiClient();
+    const { toast } = useToast();
+    const appContext = useSelector((state: RootState) => state.appContext);
+    const { address } = useAccount(appContext.accountId);
+    const { data: network } = useNetwork(appContext.networkId);
+    const [loading, setLoading] = useState(initialLoading || false);
+    const [copied, setCopied] = useState(false);
+    const jsonContent = `{
+        "p": "sui-20",
+        "element": "${element}", 
+        "amt": "${amount}",
+        "itemId": "${itemId}",
+        "emoji": "${emoji}"
+    }`;
+
+    const purchasesApi = useApi({
+      key: ["purchases"],
+      method: "POST",
+      url: "marketplace/purchases",
+    }).post;
+
+    const handleCopyId = () => {
+      navigator.clipboard.writeText(nftId);
+      setCopied(true);
+      toast({
+        title: "Copied!",
+        description: "NFT ID copied to clipboard",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    };
+
+    async function purchaseNFT(): Promise<void> {
+      try {
+        setLoading(true);
+
+        // Show processing toast
+        toast({
+          title: "Processing Purchase",
+          description: "Transaction in progress...",
+        });
+
+        const txb = new Transaction();
+        const paymentCoin = txb.splitCoins(txb.gas, [Number(price)]);
+
+        // Use txb.object instead of txb.pure.id for better compatibility
+        const [nft, request] = txb.moveCall({
+          target: "0x2::kiosk::purchase",
+          arguments: [txb.object(seller_kiosk), txb.object(nftId), paymentCoin],
+          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+        });
+
+        txb.moveCall({
+          target: `0x2::transfer_policy::confirm_request`,
+          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+          arguments: [txb.object(POLICY_ID), request],
+        });
+
+        txb.transferObjects([nft], txb.pure.address(address));
+
+        const response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: txb.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
+          },
+          { withAuth: true }
+        );
+
+        if (response && response.digest) {
+          // Show transaction submitted toast
+          toast({
+            title: "Transaction Submitted",
+            description: "Finalizing your purchase...",
+          });
+
+          // Sync with backend
+          try {
+            await purchasesApi?.mutateAsync({
+              listingId: id,
+              transactionDigest: response.digest,
+            });
+
+            // Success message
+            toast({
+              title: "Purchase Successful!",
+              description: `You are now the owner of ${element} ${emoji}`,
+            });
+
+            if (onBuy) {
+              onBuy();
+            }
+          } catch (error) {
+            console.error("Backend sync error:", error);
+            toast({
+              title: "Note",
+              description:
+                "Purchase completed but we couldn't update our records. Your NFT is in your wallet.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Transaction Failed",
+            description: "Failed to purchase NFT. Please try again.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Purchase error:", error);
+        toast({
+          title: "Purchase Failed",
+          description:
+            error.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    return (
+      <Card className="w-full sm:w-60 bg-transparent border-none transition-all duration-300 gap-2 flex flex-col">
+        <CardContent className="p-4  border border-[#1f1f1f] rounded-2xl">
+          <pre className="text-white text-sm font-normal font-['Sora'] whitespace-pre-wrap">
+            {jsonContent}
+          </pre>
+        </CardContent>
+
+        <div className="flex flex-col items-center gap-2">
+          <div
+            className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline"
+            onClick={handleCopyId}
+          >
+            {formatAddress(nftId)} {copied ? "✓" : ""}
+          </div>
+          <div className="w-full flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <div className="text-white text-xs font-normal font-['Sora']">
+                {price && (
+                  <>
+                    <Image
+                      src="/images/sui.svg"
+                      alt="Sui Logo"
+                      className="h-3 w-3 inline mr-1"
+                      width={16}
+                      height={16}
+                    />
+                    {mists_to_sui(Number(price))} SUI
+                  </>
+                )}
+              </div>
+            </div>
+            <Button
+              className=" text-black w-fit uppercase rounded-3xl"
+              onClick={purchaseNFT}
+              disabled={loading}
+              isLoading={loading}
+              size="sm"
+            >
+              {loading ? (
+                <div className="flex items-center gap-1">
+                  <span>Buying</span>
+                </div>
+              ) : (
+                "Buy"
+              )}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+);

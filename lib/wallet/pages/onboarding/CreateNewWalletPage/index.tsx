@@ -1,30 +1,29 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAsyncEffect } from "ahooks";
+import { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import {
-  updateAccountId,
-  updateInitialized,
-  updateNetworkId,
-  updateWalletId,
-} from "../../../store/app-context";
-import { isNonEmptyArray } from "../../../utils/check";
+import { useNavigate } from "react-router-dom";
 import message from "../../../components/message";
+import Nav from "../../../components/Nav";
 import {
   Account,
   CreateWalletParams,
   RevealMnemonicParams,
   Wallet,
 } from "../../../core";
-import { AppDispatch } from "../../../store";
-import { PageEntry, usePageEntry } from "../../../hooks/usePageEntry";
-import Nav from "../../../components/Nav";
 import { useApiClient } from "../../../hooks/useApiClient";
-import { sleep } from "../../../utils/time";
-import { OmitToken } from "../../../types";
 import { useFeatureFlags } from "../../../hooks/useFeatureFlags";
+import { PageEntry, usePageEntry } from "../../../hooks/usePageEntry";
+import { AppDispatch } from "../../../store";
+import {
+  updateAccountId,
+  updateInitialized,
+  updateNetworkId,
+  updateWalletId,
+} from "../../../store/app-context";
+import { OmitToken } from "../../../types";
+import { isNonEmptyArray } from "../../../utils/check";
 import styles from "./index.module.scss";
 import SavePhraseView from "./views/SavePhraseView";
-import { useAsyncEffect } from "ahooks";
 
 // enum Step {
 //   DISPLAY_PHRASE = 1,
@@ -72,11 +71,12 @@ const CreateNewWallet = () => {
 
     await dispatch(updateWalletId(wallet.id));
     await dispatch(updateAccountId(defaultAccount.id));
-    await dispatch(updateNetworkId(featureFlags?.default_network ?? "mainnet"));
+    await dispatch(updateNetworkId(featureFlags?.default_network ?? "testnet"));
     await dispatch(updateInitialized(true));
   }
 
   async function handleSavePhrase() {
+    console.log("handleSavePhrase");
     message.success("Wallet Created!");
     if (pageEntry === PageEntry.SWITCHER) {
       navigate("/home", { state: { openSwitcher: true } });
@@ -94,7 +94,13 @@ const CreateNewWallet = () => {
 
   return (
     <div className={styles["page"]}>
-      <Nav title={"Create"} navDisabled={true} />
+      <Nav
+        title={"Save the recovery phrase"}
+        onNavBack={() => {
+          navigate("/onboard");
+        }}
+        className="w-full justify-between"
+      />
       <SavePhraseView phrases={phrases} onNext={handleSavePhrase} />
     </div>
   );
