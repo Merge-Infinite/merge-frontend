@@ -19,6 +19,7 @@ import { useDidMount } from "@/hooks/useDidMount";
 
 import { AuthProvider } from "@/app/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
+import Session from "@/lib/wallet/components/Session";
 import { ApiClientContext } from "@/lib/wallet/hooks/useApiClient";
 import { WebApiClient } from "@/lib/wallet/scripts/shared/ui-api-client";
 import { persistorStore, store } from "@/lib/wallet/store";
@@ -75,7 +76,9 @@ function RootInner({ children }: PropsWithChildren) {
               <ReactQueryClientProvider client={new ReactQueryClient()}>
                 <ApiClientContext.Provider value={new WebApiClient()}>
                   <AuthProvider>
-                    <App>{children}</App>
+                    <Session>
+                      <App>{children}</App>
+                    </Session>
                     <Toaster />
                   </AuthProvider>
                 </ApiClientContext.Provider>
