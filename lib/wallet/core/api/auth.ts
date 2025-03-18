@@ -1,12 +1,11 @@
-import * as crypto from "../crypto";
-import { IStorage } from "../storage";
 import { Buffer } from "buffer";
+import * as crypto from "../crypto";
+import { MetadataMissingError, NoAuthError } from "../errors";
+import { IStorage } from "../storage";
 import { DATA_VERSION } from "../storage/constants";
+import { IsImportedWallet, isImportedAccount } from "../storage/types";
 import { generateClientId } from "../utils/clientId";
 import { Vault } from "../vault/Vault";
-import { MetadataMissingError, NoAuthError } from "../errors";
-import { type } from "superstruct";
-import { IsImportedWallet, isImportedAccount } from "../storage/types";
 
 export type UpdatePasswordParams = {
   oldPassword: string;
@@ -430,7 +429,6 @@ async function maybeFixDataConsistency(storage: IStorage, token: string) {
       const accountData = await storage.getAccount(account.id);
       if (!accountData) {
         throw new Error("Check data consistency failed: account data missing");
-        continue;
       }
       let vault: Vault;
       if (isImportedAccount(accountData)) {
@@ -494,7 +492,7 @@ async function maybeFixDataConsistency(storage: IStorage, token: string) {
  * Session memory storage for sensitive data
  */
 class Session {
-  #DEFAULT_EXPIRATION = 1000 * 60 * 60 * 4; // 4 hrs
+  #DEFAULT_EXPIRATION = 1000 * 60 * 60 * 24 * 365; // 1 year
   #token: string | undefined;
   #expiration: number; // unit: ms
   #lastUpdate: number;

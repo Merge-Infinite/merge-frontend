@@ -17,7 +17,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ErrorPage } from "@/components/common/ErrorPage";
 import { useDidMount } from "@/hooks/useDidMount";
 
-import { AuthProvider } from "@/app/context/AuthContext";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import Session from "@/lib/wallet/components/Session";
 import { ApiClientContext } from "@/lib/wallet/hooks/useApiClient";
@@ -75,12 +75,11 @@ function RootInner({ children }: PropsWithChildren) {
             <PersistGate loading={null} persistor={persistorStore}>
               <ReactQueryClientProvider client={new ReactQueryClient()}>
                 <ApiClientContext.Provider value={new WebApiClient()}>
-                  <AuthProvider>
-                    <Session>
-                      <App>{children}</App>
-                    </Session>
-                    <Toaster />
-                  </AuthProvider>
+                  <Session>
+                    <App>{children}</App>
+                  </Session>
+                  <Toaster />
+                  <SonnerToaster />
                 </ApiClientContext.Provider>
               </ReactQueryClientProvider>
             </PersistGate>

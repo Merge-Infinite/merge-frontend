@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useAccount } from "@/lib/wallet/hooks/useAccount";
+import { RootState } from "@/lib/wallet/store";
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
-import useApi from "./useApi";
 import { useEffect } from "react";
-import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useSelector } from "react-redux";
-import { RootState } from "@/lib/wallet/store";
+import useApi from "./useApi";
 
 export function useUser() {
   const { initDataRaw, initData } = retrieveLaunchParams();
@@ -99,6 +99,8 @@ export function useUser() {
       login();
     }
   }, [initDataRaw]);
+
+  console.log(getMe?.data);
 
   return {
     user: getMe?.data,

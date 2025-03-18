@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "sonner";
 
 export const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -131,8 +132,15 @@ export default function useApi<T = unknown>({
         mutationFn: (data: unknown) =>
           apiCall<T>(method, url, data, customConfig),
         retry: 0,
-        onSuccess: () => {
+
+        onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: key });
+          data.message && toast(data.message, {});
+        },
+        onError: (error: any) => {
+          console.log(error);
+          error.response?.data?.message &&
+            toast(error.response?.data?.message, {});
         },
       });
 
@@ -155,8 +163,15 @@ export default function useApi<T = unknown>({
         mutationFn: (data: { id: number } & Record<string, unknown>) =>
           apiCall<T>(method, `${url}/${data.id}`, data),
         retry: 0,
-        onSuccess: () => {
+
+        onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: key });
+          data.message && toast(data.message, {});
+        },
+        onError: (error: any) => {
+          console.log(error);
+          error.response?.data?.message &&
+            toast(error.response?.data?.message, {});
         },
       });
       return { put: mutation };
@@ -166,8 +181,13 @@ export default function useApi<T = unknown>({
       const mutation = useMutation({
         mutationFn: (id: string) => apiCall<T>(method, `${url}/${id}`),
         retry: 0,
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: key });
+          data.message && toast(data.message, {});
+        },
+        onError: (error: any) => {
+          error.response?.data?.message &&
+            toast(error.response?.data?.message, {});
         },
       });
       return { delete: mutation };

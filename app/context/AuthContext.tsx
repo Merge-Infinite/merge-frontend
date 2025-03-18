@@ -39,6 +39,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refetchInventory,
   };
 
+  console.log(user);
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

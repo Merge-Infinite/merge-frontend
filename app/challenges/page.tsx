@@ -1,0 +1,64 @@
+"use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { initBackButton } from "@telegram-apps/sdk";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUser } from "@/hooks/useUser";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { ChallengeTab } from "./components/challenges";
+import { SubmittedTab } from "./components/submitted";
+export default function Challenge() {
+  const searchParams = useSearchParams();
+  const day = searchParams.get("day");
+
+  const [backButton] = initBackButton();
+  const { user } = useUser();
+  const router = useRouter();
+  useEffect(() => {
+    backButton.show();
+
+    backButton.on("click", () => {
+      router.back();
+    });
+  }, []);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] ">
+      <Tabs defaultValue="challenges" className="w-full h-full ">
+        <TabsList className="flex justify-center gap-6 bg-transparent">
+          <TabsTrigger
+            value="challenges"
+            className=" data-[state=active]:border-b-2"
+          >
+            CHALLENGE
+          </TabsTrigger>
+          <TabsTrigger
+            value="submitted"
+            className=" data-[state=active]:border-b-2"
+          >
+            SUBMITED
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="rewards"
+            className=" data-[state=active]:border-b-2"
+          >
+            REWARDS
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="challenges" className="h-full">
+          <ChallengeTab day={day} />
+        </TabsContent>
+        <TabsContent value="submitted" className="h-full">
+          <SubmittedTab />
+        </TabsContent>
+        <TabsContent value="rewards" className="h-full"></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
