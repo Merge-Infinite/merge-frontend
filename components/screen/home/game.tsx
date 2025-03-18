@@ -11,7 +11,6 @@ export function GameScreen() {
       <div className="h-96 flex-col justify-start items-start gap-1 inline-flex">
         <ChallengeHeader />
         <ChallengeGrid category="Daily" />
-        <ChallengeGrid category="Web3" />
       </div>
     </div>
   );
