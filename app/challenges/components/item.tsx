@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import React, { useMemo } from "react";
 interface ChallengeItemProps {
   name?: string;
@@ -8,6 +7,8 @@ interface ChallengeItemProps {
   className?: string;
   itemChallengeId?: string;
   onClick?: () => void;
+  itemId?: number;
+  inventory?: any;
 }
 
 export const ChallengeItem = ({
@@ -15,8 +16,9 @@ export const ChallengeItem = ({
   icon,
   className = "",
   onClick,
+  itemId,
+  inventory,
 }: ChallengeItemProps) => {
-  const router = useRouter();
   const defaultIcon = useMemo(
     () => (
       <svg
@@ -43,7 +45,7 @@ export const ChallengeItem = ({
       onClick={onClick}
     >
       <div className="relative">{icon || defaultIcon}</div>
-      <div className="text-xs font-normal font-['Sora'] leading-normal">
+      <div className={`text-xs font-normal font-['Sora'] leading-normal`}>
         {name}
       </div>
     </div>

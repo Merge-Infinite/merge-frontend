@@ -34,14 +34,14 @@ export default function UserInfo({}: GamePlayInfoProps) {
         >
           <Image src="/images/energy.svg" alt="energy" width={24} height={24} />
           <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-            {user?.userBalance?.energyBalance}
+            {user?.userBalance?.energyBalance.toLocaleString()}
           </div>
           <Image src="/images/plus.svg" alt="energy" width={24} height={24} />
         </div>
         <div className="justify-start items-start gap-1 flex">
           <Image src="/images/m3r8.svg" alt="mask" width={24} height={24} />
           <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-            33,000
+            {user?.m3rBalance?.balance.toLocaleString()}
           </div>
         </div>
         <div

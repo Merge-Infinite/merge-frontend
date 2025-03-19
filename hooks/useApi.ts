@@ -138,9 +138,9 @@ export default function useApi<T = unknown>({
           data.message && toast(data.message, {});
         },
         onError: (error: any) => {
-          console.log(error);
-          error.response?.data?.message &&
-            toast(error.response?.data?.message, {});
+          console.log(error.message);
+          (error.message || error.response?.data?.message) &&
+            toast(error.message || error.response?.data?.message, {});
         },
       });
 

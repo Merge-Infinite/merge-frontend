@@ -9,6 +9,10 @@ import { Extendable } from "../types";
 
 const Session = (props: Extendable) => {
   const authed = useSelector((state: RootState) => state.appContext.authed);
+  const initialized = useSelector(
+    (state: RootState) => state.appContext.initialized
+  );
+
   const dispatch = useDispatch();
   const apiClient = useApiClient();
   const { isSetuped, authenticate } = useBiometricAuth();
@@ -25,7 +29,7 @@ const Session = (props: Extendable) => {
   }
 
   useEffect(() => {
-    if (!authed) {
+    if (!authed && initialized) {
       const ac = new AbortController();
       verifyAuthStatus(ac);
 
@@ -43,7 +47,7 @@ const Session = (props: Extendable) => {
     };
   }, []);
 
-  if (!authed) {
+  if (!authed && initialized) {
     return <SkeletonCard />;
   }
 

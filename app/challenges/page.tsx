@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ChallengeTab } from "./components/challenges";
+import { RewardTab } from "./components/reward";
 import { SubmittedTab } from "./components/submitted";
 export default function Challenge() {
   const searchParams = useSearchParams();
@@ -57,7 +58,9 @@ export default function Challenge() {
         <TabsContent value="submitted" className="h-full">
           <SubmittedTab />
         </TabsContent>
-        <TabsContent value="rewards" className="h-full"></TabsContent>
+        <TabsContent value="rewards" className="h-full">
+          <RewardTab />
+        </TabsContent>
       </Tabs>
     </div>
   );

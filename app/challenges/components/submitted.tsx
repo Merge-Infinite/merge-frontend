@@ -29,7 +29,7 @@ export const SubmittedTab = () => {
   }, [fetchSubmittedItems]);
 
   return (
-    <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex p-4">
+    <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex.">
       <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
         Total number of submissions:{" "}
         <span className="text-[#68FFD1]">
@@ -42,7 +42,7 @@ export const SubmittedTab = () => {
             key={item.id}
             name={item.dailyChallengeItem.item.handle}
             icon={item.dailyChallengeItem.item.emoji}
-            className="bg-white text-[#333333]"
+            className={"bg-white text-black"}
           />
         ))}
       </div>

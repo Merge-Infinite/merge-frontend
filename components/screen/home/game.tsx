@@ -8,7 +8,7 @@ export function GameScreen() {
   return (
     <div className="w-full h-full  flex-col justify-start items-start gap-2 inline-flex">
       <UserInfo />
-      <div className="h-96 flex-col justify-start items-start gap-1 inline-flex">
+      <div className="flex-col justify-start items-start gap-4 inline-flex">
         <ChallengeHeader />
         <ChallengeGrid category="Daily" />
       </div>
