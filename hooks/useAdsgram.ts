@@ -4,7 +4,7 @@ import { AdController, ShowPromiseResult } from "../adsgram";
 
 export interface useAdsgramParams {
   blockId: string;
-  onReward: () => void;
+  onReward: (result: ShowPromiseResult) => void;
   onError?: (result: ShowPromiseResult) => void;
 }
 
@@ -27,9 +27,9 @@ export function useAdsgram({
     if (AdControllerRef.current) {
       AdControllerRef.current
         .show()
-        .then(() => {
+        .then((result: ShowPromiseResult) => {
           // user watch ad till the end
-          onReward();
+          onReward(result);
         })
         .catch((result: ShowPromiseResult) => {
           // user get error during playing ad or skip ad

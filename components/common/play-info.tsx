@@ -4,6 +4,7 @@ import { useUser } from "@/hooks/useUser";
 import { AppDispatch } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 interface GamePlayInfoProps {
   explore?: number;
@@ -15,6 +16,7 @@ interface GamePlayInfoProps {
 
 export default function GamePlayInfo({}: GamePlayInfoProps) {
   const { user } = useUser();
+  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   return (
     <div className="w-full justify-between items-center inline-flex">
@@ -38,6 +40,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
             height={32}
             onClick={() => {
               dispatch(updateTabMode(TabMode.SHOP));
+              router.back();
             }}
           />
         </div>
