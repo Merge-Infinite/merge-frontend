@@ -39,34 +39,6 @@ export const emojiToString = (emoji: string): string => {
     .join("_");
   return codePoints;
 };
-export const walletPath = [
-  "/home",
-  "/test",
-  "/nft",
-  "/nft/details",
-  "/nft/send",
-  "/coin/detail/:coinType",
-  "/dapps",
-  "/send",
-  "/swap",
-  "/staking",
-  "/transaction/flow",
-  "/transaction/detail/:digest",
-  "/settings",
-  "/settings/wallet",
-  "/settings/network",
-  "/settings/security/*",
-  "/password-confirm",
-  "/onboard/welcome",
-  "/onboard/create-new-wallet",
-  "/onboard/import-wallet",
-  "/wallet/create",
-  "/wallet/import",
-  "/dapp/connect",
-  "/dapp/tx-approval",
-  "/dapp/sign-msg",
-  "*",
-];
 
 export const NFT_PACKAGE_ID =
   "0xd193c1d711383f22b026faec8905bfde145f16ed0030e102f65591dea431d245";
