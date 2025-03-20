@@ -7,6 +7,7 @@ import {
   NFT_MODULE_NAME,
   NFT_PACKAGE_ID,
   POLICY_ID,
+  SELLER_ADDRESS,
 } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
@@ -18,7 +19,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
-import { formatAddress } from "@mysten/sui/utils";
+import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
@@ -89,7 +90,9 @@ export const MarketItem = React.memo(
         });
 
         const txb = new Transaction();
-        const paymentCoin = txb.splitCoins(txb.gas, [Number(price)]);
+        const paymentCoin = txb.splitCoins(txb.gas, [
+          Number(price) * Number(MIST_PER_SUI),
+        ]);
 
         // Use txb.object instead of txb.pure.id for better compatibility
         const [nft, request] = txb.moveCall({
@@ -105,6 +108,16 @@ export const MarketItem = React.memo(
         });
 
         txb.transferObjects([nft], txb.pure.address(address));
+        // Calculate 3% fee for the platform owner
+        const feeAmount = Math.floor(Number(price) * 0.03);
+        const platformOwnerAddress = SELLER_ADDRESS;
+        if (feeAmount <= 0) return;
+
+        const feeCoin = txb.splitCoins(txb.gas, [
+          feeAmount * Number(MIST_PER_SUI),
+        ]);
+
+        txb.transferObjects([feeCoin], txb.pure.address(platformOwnerAddress));
 
         const response = await apiClient.callFunc<
           SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
