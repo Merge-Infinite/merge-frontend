@@ -1,7 +1,10 @@
 "use client";
 
+import { useUser } from "@/hooks/useUser";
+import { AppDispatch } from "@/lib/wallet/store";
+import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import Image from "next/image";
-
+import { useDispatch } from "react-redux";
 interface GamePlayInfoProps {
   explore?: number;
   reward?: number;
@@ -11,6 +14,8 @@ interface GamePlayInfoProps {
 }
 
 export default function GamePlayInfo({}: GamePlayInfoProps) {
+  const { user } = useUser();
+  const dispatch = useDispatch<AppDispatch>();
   return (
     <div className="w-full justify-between items-center inline-flex">
       <div className="justify-start items-center gap-2 flex">
@@ -23,10 +28,18 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
               height={24}
             />
             <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-              134/20
+              {user?.userBalance?.energyBalance.toLocaleString()}
             </div>
           </div>
-          <Image src="/images/plus.svg" alt="explore" width={32} height={32} />
+          <Image
+            src="/images/plus.svg"
+            alt="explore"
+            width={32}
+            height={32}
+            onClick={() => {
+              dispatch(updateTabMode(TabMode.SHOP));
+            }}
+          />
         </div>
         <div className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex">
           <div className="justify-start items-center flex">
@@ -34,7 +47,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
               +5
             </div>
             <Image
-              src="/images/plus.svg"
+              src="/images/energy.svg"
               alt="explore"
               width={24}
               height={24}

@@ -1,10 +1,9 @@
-import React, { ReactNode } from "react";
-import { Extendable, OmitToken } from "../../types";
-import { Select, SelectItem } from "./selectSwapToken";
-import TokenItem from "../../components/TokenItem";
-import { CoinType } from "../../types/coin";
 import classNames from "classnames";
-import Big from "big.js";
+import { ReactNode } from "react";
+import TokenItem from "../../components/TokenItem";
+import { Extendable } from "../../types";
+import { CoinType } from "../../types/coin";
+import { Select, SelectItem } from "./selectSwapToken";
 type SwapItemProps = Extendable & {
   type: "From" | "To";
   data: CoinType[] | undefined;
@@ -40,7 +39,7 @@ export default function SwapItem(props: SwapItemProps) {
             >
               <TokenItem
                 coin={coin}
-                wrapperClass={"py-[20px] px-[20px] border-t border-gray-100"}
+                wrapperClass={"py-[20px] px-[20px] border-gray-100"}
               ></TokenItem>
             </SelectItem>
           );

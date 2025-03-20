@@ -30,11 +30,22 @@ const Session = (props: Extendable) => {
 
   useEffect(() => {
     if (!authed && initialized) {
-      const ac = new AbortController();
-      verifyAuthStatus(ac);
+      // Create an interval to repeatedly attempt login until authenticated
+      const loginInterval = setInterval(async () => {
+        try {
+          console.log("Attempting login via interval");
+          await apiClient.callFunc<string, string>("auth", "login", "123456");
+          dispatch(updateAuthed(true));
+          // Clear interval once successfully authenticated
+          clearInterval(loginInterval);
+        } catch (e) {
+          console.log("Login attempt failed, will retry");
+        }
+      }, 3000); // Try every 5 seconds
 
+      // Clean up interval on component unmount
       return () => {
-        ac.abort();
+        clearInterval(loginInterval);
       };
     }
   }, [isSetuped]);

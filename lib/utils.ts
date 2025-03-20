@@ -77,7 +77,8 @@ export const MINT_NFT_FEE = 50000000;
 export const suiClient = new SuiClient({
   url: getFullnodeUrl(process.env.NEXT_PUBLIC_SUI_NETWORK as any),
 });
-
+export const SELLER_ADDRESS =
+  "0xace56ece58a618dd661794d254430d9c60384c2bccf66d2151391135d6f2e722";
 export const kioskClient = new KioskClient({
   client: suiClient,
   network: process.env.NEXT_PUBLIC_SUI_NETWORK as Network,

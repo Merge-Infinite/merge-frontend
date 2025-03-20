@@ -106,7 +106,12 @@ export default function SubmitItem() {
       <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
         If you don't have this element available:
       </div>
-      <Button className="px-3 py-1  rounded-3xl justify-center items-center gap-2 inline-flex w-fit">
+      <Button
+        className="px-3 py-1  rounded-3xl justify-center items-center gap-2 inline-flex w-fit"
+        onClick={() => {
+          router.push("/play");
+        }}
+      >
         <div className="text-center text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
           Merge
         </div>

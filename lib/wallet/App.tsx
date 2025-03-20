@@ -1,22 +1,16 @@
 "use client";
-import { useRoutes } from "react-router-dom";
-import "./App.scss";
-import routesConfig from "./routes";
-import "./styles/react-toastify.scss";
-import "react-loading-skeleton/dist/skeleton.css";
-import "react-tabs/style/react-tabs.css";
-import ErrorBoundary from "./components/ErrorBoundary";
 import { useEffect } from "react";
-import message from "./components/message";
-import { ToastContainer } from "react-toastify";
-import { useAutoLoadFeatureFlags } from "./hooks/useFeatureFlags";
+import "react-loading-skeleton/dist/skeleton.css";
 import { useSelector } from "react-redux";
+import { useRoutes } from "react-router-dom";
+import "react-tabs/style/react-tabs.css";
+import { ToastContainer } from "react-toastify";
+import "./App.scss";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { useAutoLoadFeatureFlags } from "./hooks/useFeatureFlags";
+import routesConfig from "./routes";
 import { RootState } from "./store";
-import { ApolloProvider } from "@apollo/client";
-import { ChromeStorage } from "./store/storage";
-import { version } from "../../package.json";
-import { ErrorCode } from "./scripts/background/errors";
-import { useCustomApolloClient } from "./hooks/useCustomApolloClient";
+import "./styles/react-toastify.scss";
 
 function useRegisterHandleRejectionEvent() {
   useEffect(() => {
@@ -43,20 +37,11 @@ function App() {
   const appContext = useSelector((state: RootState) => state.appContext);
   useRegisterHandleRejectionEvent();
   useAutoLoadFeatureFlags();
-  const client = useCustomApolloClient(
-    appContext.networkId,
-    "suiet-desktop",
-    version,
-    new ChromeStorage()
-  );
 
-  if (!client) {
-    return <h2>Initializing app...</h2>;
-  }
   return (
     <div className="app">
       <ErrorBoundary>
-        <ApolloProvider client={client}>{routes}</ApolloProvider>
+        {routes}
         <ToastContainer />
       </ErrorBoundary>
     </div>
