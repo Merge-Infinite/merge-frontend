@@ -91,8 +91,8 @@ const apiCall = async <T = unknown>(
       const status = error.response?.status;
       if (status === 401) {
         localStorage.clear();
-        // window.location.href = window.location.origin;
-        // window.location.reload();
+        window.location.href = window.location.origin;
+        window.location.reload();
       }
 
       const errorMessage =
