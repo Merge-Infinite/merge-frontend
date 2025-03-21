@@ -27,7 +27,7 @@ export function SkeletonCard() {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-sm mx-auto bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 shadow-sm overflow-hidden relative h-full">
+    <div className="flex flex-col w-full max-w-sm mx-auto bg-black rounded-2xl p-6 shadow-sm overflow-hidden relative h-full">
       {/* Shimmer overlay */}
       <div className="absolute inset-0 z-10" style={shimmerStyle}></div>
 
