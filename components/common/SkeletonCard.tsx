@@ -11,7 +11,7 @@ export function SkeletonCard() {
       <div className="absolute inset-0 z-20 flex items-center justify-center">
         <div className="relative h-24 w-24 flex items-center justify-center">
           <Skeleton className="absolute inset-0 rounded-full bg-gray-200 dark:bg-gray-700 opacity-60" />
-          <div className="relative z-30 flex items-center justify-center">
+          <div className="relative z-30 flex items-center justify-center p-4">
             <Image
               src="/images/logo.svg"
               alt="logo"

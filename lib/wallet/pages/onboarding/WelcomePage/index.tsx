@@ -58,7 +58,12 @@ const WelcomePage = () => {
             gap: 32,
           }}
         >
-          <Image src="/images/logo.svg" alt="logo" width={52} height={48} />
+          <Image
+            src="/images/m3r8_symbol.svg"
+            alt="logo"
+            width={52}
+            height={48}
+          />
           <div className="text-center text-white text-2xl font-normal  uppercase leading-7">
             Welcome to
             <br />
