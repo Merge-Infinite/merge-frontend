@@ -1,29 +1,29 @@
-import type { StyleExtendable } from "../../../types";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
-import { useAccount } from "../../../hooks/useAccount";
-import { isNonEmptyArray, isSuiToken } from "../../../utils/check";
-import { useMemo } from "react";
-import { Extendable } from "../../../types";
-import styles from "./index.module.scss";
-import Typo from "../../../components/Typo";
-import TokenIcon from "../../../components/TokenIcon";
-import IconWaterDrop from "../../../assets/icons/waterdrop.svg";
-import IconToken from "../../../assets/icons/token.svg";
-import { formatCurrency } from "../../../core";
-import { useNetwork } from "../../../hooks/useNetwork";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client";
-import { GET_DELEGATED_STAKES } from "../../../utils/graphql/query";
-import useCoins from "../../../hooks/coin/useCoins";
 import { SUI_TYPE_ARG } from "@mysten/sui.js";
-import { DEFAULT_SUI_COIN } from "../../../constants/coin";
-import VerifiedIcon from "../../../assets/icons/verified.svg";
-import UnverifiedIcon from "../../../assets/icons/unverified.svg";
-import Tooltip from "../../../components/Tooltip";
 import classNames from "classnames";
-import Img from "../../../components/Img";
 import Image from "next/image";
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import IconToken from "../../../assets/icons/token.svg";
+import UnverifiedIcon from "../../../assets/icons/unverified.svg";
+import VerifiedIcon from "../../../assets/icons/verified.svg";
+import IconWaterDrop from "../../../assets/icons/waterdrop.svg";
+import Img from "../../../components/Img";
+import TokenIcon from "../../../components/TokenIcon";
+import Tooltip from "../../../components/Tooltip";
+import Typo from "../../../components/Typo";
+import { DEFAULT_SUI_COIN } from "../../../constants/coin";
+import { formatCurrency } from "../../../core";
+import useCoins from "../../../hooks/coin/useCoins";
+import { useAccount } from "../../../hooks/useAccount";
+import { useNetwork } from "../../../hooks/useNetwork";
+import { RootState } from "../../../store";
+import type { StyleExtendable } from "../../../types";
+import { Extendable } from "../../../types";
+import { isNonEmptyArray, isSuiToken } from "../../../utils/check";
+import { GET_DELEGATED_STAKES } from "../../../utils/graphql/query";
+import styles from "./index.module.scss";
 // const images = require.context('../../../assets/img', true);
 // loadImage = imageName => (assets(`./${imageName}`).default);
 
@@ -84,16 +84,7 @@ const TokenItem = (props: TokenItemProps) => {
         { "cursor-pointer": isSUI }
       )}
     >
-      <div
-        className={classNames(
-          "py-[20px]",
-          "border-t",
-          // 'border',
-          "border-gray-100",
-          "w-full"
-        )}
-        onClick={handleClick}
-      >
+      <div className={classNames("py-[20px]", "w-full")} onClick={handleClick}>
         <div className="flex  w-full flex-row items-center justify-between">
           <div className="flex w-full justify-between gap-2">
             <div className="relative">
