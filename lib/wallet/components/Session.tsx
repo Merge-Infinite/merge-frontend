@@ -39,6 +39,7 @@ const Session = (props: Extendable) => {
           // Clear interval once successfully authenticated
           clearInterval(loginInterval);
         } catch (e) {
+          alert(e);
           console.log("Login attempt failed, will retry");
         }
       }, 3000); // Try every 5 seconds
