@@ -32,6 +32,7 @@ export default function Home() {
   }, []);
 
   if (!user || !authed) {
+    alert(`user: ${user}, authed: ${authed}`);
     return <SkeletonCard />;
   }
 
