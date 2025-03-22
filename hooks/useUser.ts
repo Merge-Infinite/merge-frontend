@@ -3,7 +3,7 @@ import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import useApi from "./useApi";
 
@@ -12,6 +12,7 @@ export function useUser() {
   const lp = useLaunchParams();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address } = useAccount(appContext.accountId);
+  const [user, setUser] = useState<any>(null);
   const authApi = useApi({
     key: ["auth"],
     method: "POST",
@@ -39,6 +40,7 @@ export function useUser() {
   const login = async () => {
     try {
       const existUser = localStorage.getItem("user");
+      alert(`existUser: ${existUser}`);
       if (existUser) {
         const localUser = JSON.parse(existUser);
         if (initData?.user?.id !== localUser?.id) {
@@ -46,7 +48,7 @@ export function useUser() {
         }
       }
       const existToken = localStorage.getItem("token");
-
+      alert(`existToken: ${existToken}`);
       if (!existToken) {
         const response: any = await authApi?.mutateAsync({
           initData: initDataRaw,
@@ -56,7 +58,6 @@ export function useUser() {
           localStorage.setItem("token", response.accessToken);
         }
       }
-      localStorage.setItem("user", JSON.stringify(initData?.user));
       await getUser();
       await getUserInventory();
     } catch (error) {
@@ -66,7 +67,10 @@ export function useUser() {
 
   const getUser = async () => {
     try {
-      await getMe?.refetch();
+      const response = await getMe?.refetch();
+      setUser(response?.data);
+      alert(`response: ${response}`);
+      localStorage.setItem("user", JSON.stringify(response?.data));
     } catch (error) {
       console.log(error);
     }
@@ -75,7 +79,8 @@ export function useUser() {
   const saveAddress = async () => {
     try {
       await saveAddressApi?.mutateAsync({ address });
-      getMe?.refetch();
+      const response = await getMe?.refetch();
+      localStorage.setItem("user", JSON.stringify(response?.data));
     } catch (error) {
       console.log(error);
     }
@@ -103,7 +108,7 @@ export function useUser() {
   console.log(getMe?.data);
 
   return {
-    user: getMe?.data,
+    user,
     inventory: userInventory?.data,
     refetchInventory: userInventory?.refetch,
     refetch: getMe?.refetch,
