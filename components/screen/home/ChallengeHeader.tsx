@@ -1,9 +1,11 @@
 "use client";
 
 import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
 import { useEffect } from "react";
 export default function ChallengeHeader() {
+  const { user } = useUser();
   const fetchPoints = useApi({
     key: ["total-points"],
     method: "GET",
@@ -11,8 +13,10 @@ export default function ChallengeHeader() {
   }).get;
 
   useEffect(() => {
-    fetchPoints?.refetch();
-  }, [fetchPoints]);
+    if (user) {
+      fetchPoints?.refetch();
+    }
+  }, [fetchPoints, user]);
 
   return (
     <>

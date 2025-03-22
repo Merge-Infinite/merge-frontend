@@ -40,7 +40,6 @@ export function useUser() {
   const login = async () => {
     try {
       const existUser = localStorage.getItem("user");
-      alert(`existUser: ${existUser}`);
       if (existUser) {
         const localUser = JSON.parse(existUser);
         if (initData?.user?.id !== localUser?.id) {
@@ -48,7 +47,6 @@ export function useUser() {
         }
       }
       const existToken = localStorage.getItem("token");
-      alert(`existToken: ${existToken}`);
       if (!existToken) {
         const response: any = await authApi?.mutateAsync({
           initData: initDataRaw,
@@ -69,7 +67,6 @@ export function useUser() {
     try {
       const response = await getMe?.refetch();
       setUser(response?.data);
-      alert(`response: ${response}`);
       localStorage.setItem("user", JSON.stringify(response?.data));
     } catch (error) {
       console.log(error);
@@ -104,8 +101,6 @@ export function useUser() {
       login();
     }
   }, [initDataRaw]);
-
-  console.log(getMe?.data);
 
   return {
     user,

@@ -1,35 +1,35 @@
 import { useUser } from "@/hooks/useUser";
-import { createContext, ReactNode, useContext } from "react";
+import React, { createContext, ReactNode, useContext } from "react";
 
-// Define the shape of the auth context
 interface AuthContextType {
   user: any;
   inventory: any;
   isLoading: boolean;
-  error: any;
+  error: Error | null;
   refetchUser: () => Promise<any>;
   refetchInventory: () => Promise<any>;
+  isAuthenticated: boolean;
 }
 
-// Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create props interface for the provider component
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const {
     user,
     inventory,
-    refetchInventory,
     refetch: refetchUser,
+    refetchInventory,
     isLoading,
     error,
   } = useUser();
 
-  // The value that will be provided to consumers of this context
+  const isAuthenticated = !!user;
+
+  // Context value
   const value = {
     user,
     inventory,
@@ -37,15 +37,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error,
     refetchUser,
     refetchInventory,
+    isAuthenticated,
   };
 
-  console.log(user);
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
-// Create a custom hook to use the auth context
-export function useAuth() {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
@@ -53,4 +51,4 @@ export function useAuth() {
   }
 
   return context;
-}
+};

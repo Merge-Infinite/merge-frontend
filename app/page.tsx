@@ -6,7 +6,6 @@ import { HomeScreen } from "@/components/screen/home/home";
 import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUser } from "@/hooks/useUser";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
@@ -18,10 +17,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "./context/AuthContext";
 
 export default function Home() {
   const [backButton] = initBackButton();
-  const { user } = useUser();
+  const { isAuthenticated } = useAuth();
+
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
   const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
@@ -30,9 +31,8 @@ export default function Home() {
   useEffect(() => {
     backButton.hide();
   }, []);
-
-  if (!user || !authed) {
-    alert(`user: ${user}, authed: ${authed}`);
+  console.log(`isAuthenticated: ${isAuthenticated}, authed: ${authed}`);
+  if (!isAuthenticated || !authed) {
     return <SkeletonCard />;
   }
 

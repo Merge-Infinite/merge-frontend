@@ -32,7 +32,6 @@ const Session = (props: Extendable) => {
     if (!authed && initialized) {
       // Create an interval to repeatedly attempt login until authenticated
       const loginInterval = setInterval(async () => {
-        alert("loginInterval");
         try {
           console.log("Attempting login via interval");
           await apiClient.callFunc<string, string>("auth", "login", "123456");
@@ -50,7 +49,7 @@ const Session = (props: Extendable) => {
         clearInterval(loginInterval);
       };
     }
-  }, [isSetuped]);
+  }, [authed, initialized, isSetuped]);
 
   useEffect(() => {
     dispatch(updateAuthed(true));

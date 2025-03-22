@@ -17,6 +17,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ErrorPage } from "@/components/common/ErrorPage";
 import { useDidMount } from "@/hooks/useDidMount";
 
+import { AuthProvider } from "@/app/context/AuthContext";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import Session from "@/lib/wallet/components/Session";
@@ -70,17 +71,19 @@ function App(props: PropsWithChildren) {
 
   return (
     <ApolloProvider client={client}>
-      <Session>
-        <AppRoot
-          appearance={themeParams.isDark ? "dark" : "light"}
-          platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
-          className="h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)] p-4"
-        >
-          {props.children}
-        </AppRoot>
-        <Toaster />
-        <SonnerToaster />
-      </Session>
+      <AuthProvider>
+        <Session>
+          <AppRoot
+            appearance={themeParams.isDark ? "dark" : "light"}
+            platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
+            className="h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)] p-4"
+          >
+            {props.children}
+          </AppRoot>
+          <Toaster />
+          <SonnerToaster />
+        </Session>
+      </AuthProvider>
     </ApolloProvider>
   );
 }
