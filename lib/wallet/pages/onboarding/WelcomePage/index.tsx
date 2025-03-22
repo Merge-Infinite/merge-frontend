@@ -1,14 +1,13 @@
-import RectButton from "./RectButton";
-import { useNavigate } from "react-router-dom";
-import BrandLayout from "../../../layouts/BrandLayout";
-import { useEffectAdjustInitializedStatus } from "../../../hooks/useEffectAdjustInitializedStatus";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
-import { useRef, useState } from "react";
-import { useApiClient } from "../../../hooks/useApiClient";
-import { PageEntry } from "../../../hooks/usePageEntry";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useApiClient } from "../../../hooks/useApiClient";
+import { useEffectAdjustInitializedStatus } from "../../../hooks/useEffectAdjustInitializedStatus";
+import { PageEntry } from "../../../hooks/usePageEntry";
+import BrandLayout from "../../../layouts/BrandLayout";
+import { RootState } from "../../../store";
 
 enum Step {
   WELCOME,
@@ -59,12 +58,7 @@ const WelcomePage = () => {
             gap: 32,
           }}
         >
-          <Image
-            src="/images/m3r8 symbol.svg"
-            alt="logo"
-            width={52}
-            height={48}
-          />
+          <Image src="/images/logo.svg" alt="logo" width={52} height={48} />
           <div className="text-center text-white text-2xl font-normal  uppercase leading-7">
             Welcome to
             <br />
