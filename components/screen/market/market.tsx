@@ -1,42 +1,40 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
 import { useMarketPlace } from "@/hooks/useMarketPlace";
 import { useUser } from "@/hooks/useUser";
+import { cn } from "@/lib/utils";
+import { formatSUI } from "@/lib/wallet/core";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
+import useSuiBalance from "@/lib/wallet/hooks/coin/useSuiBalance";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
+import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
 import { SearchIcon, ShoppingCart, Wallet } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { MarketItem } from "./market-item";
 
 // Card Item component with hover effects and improved visuals
 
 // Empty state component
-const EmptyState = ({ message, action }) => (
+const EmptyState = ({ message }: { message: string }) => (
   <div className="flex flex-col items-center justify-center p-8 mt-10 border border-dashed border-gray-700 rounded-lg">
     <ShoppingCart className="h-12 w-12 text-gray-500 mb-4" />
     <p className="text-gray-400 mb-4">{message}</p>
-    {action && (
-      <Button variant="outline" onClick={action.onClick}>
-        {action.label}
-      </Button>
-    )}
   </div>
 );
 
@@ -92,20 +90,20 @@ export const NFTMarket = () => {
   const { user } = useUser();
   const apiClient = useApiClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("browse");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("all");
-  const [sortOption, setSortOption] = useState("newest");
   const { toast } = useToast();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address } = useAccount(appContext.accountId);
   const { data: network } = useNetwork(appContext.networkId);
-
+  const { data: balance } = useSuiBalance(address);
+  const [isOwned, setIsOwned] = useState(false);
+  const [isSell, setIsSell] = useState(false);
+  const dispatch = useDispatch();
   const {
     items: marketplaceListings,
     loading,
     refetch,
-  } = useMarketPlace(undefined, {
+  } = useMarketPlace(isOwned ? user.kiosk.objectId : undefined, {
     pollingInterval: undefined,
   });
 
@@ -206,24 +204,12 @@ export const NFTMarket = () => {
           return false;
         }
 
-        // Apply category filter
-        if (selectedFilter === "rare" && Number(listing.amount) < 100)
-          return false;
-        if (selectedFilter === "common" && Number(listing.amount) >= 100)
-          return false;
-
         return true;
       })
       .sort((a, b) => {
-        // Apply sorting
-        if (sortOption === "price-asc")
-          return Number(a.amount) - Number(b.amount);
-        if (sortOption === "price-desc")
-          return Number(b.amount) - Number(a.amount);
-        // Default: newest first (using id as proxy for time since we don't have timestamp)
         return b.id.localeCompare(a.id);
       });
-  }, [marketplaceListings, searchTerm, selectedFilter, sortOption]);
+  }, [marketplaceListings, searchTerm]);
 
   useEffect(() => {
     if (user && !user.kiosk) {
@@ -259,51 +245,47 @@ export const NFTMarket = () => {
                 height={16}
               />
               <span className="text-white text-sm font-normal font-['Sora']">
-                3,300 ~ $11,550
+                {formatSUI(balance.balance)}
               </span>
             </div>
           </div>
         </div>
-
-        <div className="w-full flex items-center gap-2">
-          <div className="relative flex-grow">
-            <Input
-              className="h-10 px-10 py-2 bg-[#141414] border-[#333333] rounded-3xl text-white placeholder:text-[#5c5c5c]"
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
-          </div>
-        </div>
       </div>
-      <div className="flex flex-1 h-full mt-20">
+      <div className="flex flex-1 h-full">
         {!user ? (
           <WalletBanner onConnect={handleCreateKiosk} />
         ) : (
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full h-full bg-black"
-          >
-            <TabsList className="grid grid-cols-2 bg-[#141414] rounded-3xl p-1 fixed top-28 left-4 right-4">
-              <TabsTrigger
-                value="browse"
-                className="rounded-3xl data-[state=active]:bg-[#a668ff] data-[state=active]:text-black py-2"
+          <div className="w-full h-full">
+            <div className="flex justify-between rounded-3xl fixed top-12 left-4 right-4 gap-2">
+              <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
+                <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+                  <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
+                  <SearchIcon className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className={cn(
+                  "rounded-3xl w-fit  px-4 py-1 bg-transparent border border-[#333333]",
+                  isOwned && "bg-[#fff] text-black"
+                )}
+                onClick={() => setIsOwned((prev) => !prev)}
               >
-                Browse
-              </TabsTrigger>
-              <TabsTrigger
-                value="owned"
-                className="rounded-3xl data-[state=active]:bg-[#a668ff] data-[state=active]:text-black py-2"
+                Owned
+              </Button>
+              <Button
+                size="sm"
+                className={cn(
+                  "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
+                )}
+                onClick={() => {
+                  dispatch(updateTabMode(TabMode.BAG));
+                }}
               >
-                My NFTs
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent
-              value="browse"
-              className="h-full overflow-y-auto mt-20"
-            >
+                Sell
+              </Button>
+            </div>
+            <div className="h-full overflow-y-auto mt-20">
               {loading ? (
                 <MarketplaceSkeleton />
               ) : filteredListings.length > 0 ? (
@@ -325,49 +307,10 @@ export const NFTMarket = () => {
                   ))}
                 </div>
               ) : (
-                <EmptyState
-                  message="No listings found matching your criteria"
-                  action={{
-                    label: "Clear Filters",
-                    onClick: () => {
-                      setSearchTerm("");
-                      setSelectedFilter("all");
-                      setSortOption("newest");
-                    },
-                  }}
-                />
+                <EmptyState message="No listings found matching your criteria" />
               )}
-            </TabsContent>
-
-            <TabsContent value="owned">
-              {filteredListings.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-                  {filteredListings.map((listing) => (
-                    <MarketItem
-                      key={listing.id}
-                      element={listing.item.handle}
-                      amount={listing.amount}
-                      id={listing.id}
-                      itemId={listing.item.id}
-                      emoji={listing.item.emoji}
-                      price={listing.price}
-                      nftId={listing.nftId}
-                      loading={purchaseLoading}
-                      seller_kiosk={listing.kiosk.objectId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  message="You don't own any NFTs yet"
-                  action={{
-                    label: "Browse Marketplace",
-                    onClick: () => setActiveTab("browse"),
-                  }}
-                />
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         )}
       </div>
     </div>
