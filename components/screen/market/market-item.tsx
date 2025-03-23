@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
 import {
   mists_to_sui,
   NFT_MODULE_NAME,
@@ -36,6 +37,7 @@ export const MarketItem = React.memo(
     nftId,
     seller_kiosk,
     id,
+    isOwned,
   }: {
     element: string;
     amount: string | number;
@@ -47,9 +49,11 @@ export const MarketItem = React.memo(
     emoji: string;
     nftId: string;
     seller_kiosk: string;
+    isOwned?: boolean;
   }) => {
     const apiClient = useApiClient();
     const { toast } = useToast();
+    const { user } = useUser();
     const appContext = useSelector((state: RootState) => state.appContext);
     const { address } = useAccount(appContext.accountId);
     const { data: network } = useNetwork(appContext.networkId);
@@ -67,6 +71,12 @@ export const MarketItem = React.memo(
       key: ["purchases"],
       method: "POST",
       url: "marketplace/purchases",
+    }).post;
+
+    const marketplaceDeListings = useApi({
+      key: ["syncUserBag"],
+      method: "POST",
+      url: "marketplace/delist",
     }).post;
 
     const handleCopyId = () => {
@@ -188,6 +198,81 @@ export const MarketItem = React.memo(
       }
     }
 
+    async function deListNFT(): Promise<void> {
+      try {
+        setLoading(true);
+        const txb = new Transaction();
+
+        txb.moveCall({
+          target: "0x2::kiosk::delist",
+          arguments: [
+            txb.object(user.kiosk.objectId),
+            txb.object(user.kiosk.ownerCapId),
+            txb.pure.address(id),
+          ],
+          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+        });
+
+        const response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: txb.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
+          },
+          { withAuth: true }
+        );
+
+        if (response && response.digest) {
+          // Sync with backend
+          try {
+            await marketplaceDeListings?.mutateAsync({
+              kioskId: user.kiosk.objectId,
+              nftId: id,
+              transactionDigest: response.digest,
+            });
+
+            toast({
+              title: "Success!",
+              description: "Your NFT has been delisted successfully",
+            });
+          } catch (error) {
+            console.error("Backend sync error:", error);
+            toast({
+              title: "Sync Error",
+              description:
+                "Transaction was successful but we couldn't sync with our servers. Please try again or contact support.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Transaction Failed",
+            description: "Failed to delist NFT. Please try again.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
     return (
       <Card className="w-full sm:w-60 bg-transparent border-none transition-all duration-300 gap-2 flex flex-col">
         <CardContent className="p-4  border border-[#1f1f1f] rounded-2xl">
@@ -220,21 +305,33 @@ export const MarketItem = React.memo(
                 )}
               </div>
             </div>
-            <Button
-              className=" text-black w-fit uppercase rounded-3xl"
-              onClick={purchaseNFT}
-              disabled={loading}
-              isLoading={loading}
-              size="sm"
-            >
-              {loading ? (
-                <div className="flex items-center gap-1">
-                  <span>Buying</span>
-                </div>
-              ) : (
-                "Buy"
-              )}
-            </Button>
+            {!isOwned ? (
+              <Button
+                className=" text-black w-fit uppercase rounded-3xl"
+                onClick={purchaseNFT}
+                disabled={loading}
+                isLoading={loading}
+                size="sm"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-1">
+                    <span>Buying</span>
+                  </div>
+                ) : (
+                  "Buy"
+                )}
+              </Button>
+            ) : (
+              <Button
+                className=" text-black w-fit uppercase rounded-3xl"
+                onClick={deListNFT}
+                disabled={loading}
+                isLoading={loading}
+                size="sm"
+              >
+                Cancel
+              </Button>
+            )}
           </div>
         </div>
       </Card>

@@ -303,6 +303,7 @@ export const NFTMarket = () => {
                       loading={purchaseLoading}
                       seller_kiosk={listing.kiosk.objectId}
                       onBuy={refetch}
+                      isOwned={isOwned}
                     />
                   ))}
                 </div>
