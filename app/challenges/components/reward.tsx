@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useApi from "@/hooks/useApi";
 import { initBackButton } from "@telegram-apps/sdk";
-import { CheckIcon, XIcon } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -54,8 +54,6 @@ export const RewardTab = () => {
   return (
     <div className="flex flex-col space-y-4 w-full">
       <div className="flex flex-col space-y-2">
-        <h2 className="text-white text-sm font-bold font-['Sora']">Daily</h2>
-
         <div>
           <span className="text-white text-sm font-normal font-['Sora']">
             Total number of elements:{" "}
@@ -71,7 +69,13 @@ export const RewardTab = () => {
           <CardTitle className="text-white text-sm font-normal font-['Sora']">
             500 elements:{" "}
           </CardTitle>
-          <CheckIcon className="text-white w-6 h-6" />
+          <Image
+            src="/images/remove.svg"
+            alt="check"
+            width={24}
+            height={24}
+            className="text-white w-6 h-6"
+          />
         </CardHeader>
         <CardContent className="p-2">
           <ScrollArea className="h-64">
@@ -92,7 +96,7 @@ export const RewardTab = () => {
                         ? isClaimed
                           ? "bg-[#333333] hover:bg-[#333333] text-white rounded-3xl px-3 py-1 h-auto w-fit"
                           : "bg-[#a668ff] hover:bg-[#9150e9] text-neutral-950 rounded-3xl px-3 py-1 h-auto w-fit"
-                        : "border-[#333333] text-[#333333] hover:text-white hover:border-white rounded-3xl px-3 py-1 h-auto"
+                        : "border-[#333333] text-[#333333] hover:text-white hover:border-white rounded-3xl px-3 py-1 h-auto w-fit"
                     }
                     onClick={() => {
                       if (
@@ -129,7 +133,13 @@ export const RewardTab = () => {
           <span className="text-white text-sm font-normal font-['Sora']">
             1,000 elements:{" "}
           </span>
-          <XIcon className="text-[#1f1f1f] w-6 h-6" />
+          <Image
+            src="/images/add.svg"
+            alt="check"
+            width={24}
+            height={24}
+            className="text-white w-6 h-6"
+          />
         </CardContent>
       </Card>
 
@@ -138,7 +148,13 @@ export const RewardTab = () => {
           <span className="text-white text-sm font-normal font-['Sora']">
             1,500 elements:{" "}
           </span>
-          <XIcon className="text-[#1f1f1f] w-6 h-6" />
+          <Image
+            src="/images/add.svg"
+            alt="check"
+            width={24}
+            height={24}
+            className=" w-6 h-6"
+          />
         </CardContent>
       </Card>
     </div>

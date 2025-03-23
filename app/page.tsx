@@ -10,6 +10,7 @@ import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
   TabMode,
+  updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
 import { initBackButton } from "@telegram-apps/sdk";
@@ -29,9 +30,11 @@ export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   useEffect(() => {
+    dispatch(updateTabMode(TabMode.HOME));
+    dispatch(updateAppMode(AppMode.GAMES));
     backButton.hide();
   }, []);
-  console.log(`isAuthenticated: ${isAuthenticated}, authed: ${authed}`);
+  console.log(`tabMode: ${tabMode}`);
   if (!isAuthenticated || !authed) {
     return <SkeletonCard />;
   }
@@ -44,39 +47,35 @@ export default function Home() {
         value={tabMode}
         onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
       >
-        {appMode === AppMode.GAMES && (
-          <TabsList
-            className="flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black"
-            style={{
-              bottom: 8,
-            }}
-          >
-            <TabsTrigger value="home">
-              <Image src="/images/home.svg" alt="logo" width={24} height={24} />
-            </TabsTrigger>
-            <TabsTrigger value="play" onClick={() => router.push("/play")}>
-              <Image src="/images/play.svg" alt="logo" width={24} height={24} />
-            </TabsTrigger>
+        <TabsList
+          className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black ${
+            appMode !== AppMode.GAMES ? "hidden" : ""
+          }`}
+          style={{
+            bottom: 8,
+          }}
+        >
+          <TabsTrigger value="home">
+            <Image src="/images/home.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
+          <TabsTrigger value="play" onClick={() => router.push("/play")}>
+            <Image src="/images/play.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
 
-            <TabsTrigger value="task">
-              <Image src="/images/task.svg" alt="logo" width={24} height={24} />
-            </TabsTrigger>
-            <TabsTrigger value="bag">
-              <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
-            </TabsTrigger>
-            <TabsTrigger value="market">
-              <Image
-                src="/images/market.svg"
-                alt="logo"
-                width={24}
-                height={24}
-              />
-            </TabsTrigger>
-            <TabsTrigger value="shop">
-              <Image src="/images/shop.svg" alt="logo" width={24} height={24} />
-            </TabsTrigger>
-          </TabsList>
-        )}
+          <TabsTrigger value="task">
+            <Image src="/images/task.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
+          <TabsTrigger value="bag">
+            <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
+          <TabsTrigger value="market">
+            <Image src="/images/market.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
+          <TabsTrigger value="shop">
+            <Image src="/images/shop.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
+        </TabsList>
+
         <TabsContent value="home" className="h-full">
           <HomeScreen />
         </TabsContent>

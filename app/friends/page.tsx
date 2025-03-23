@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { initBackButton } from "@telegram-apps/sdk";
@@ -13,7 +14,7 @@ import { toast } from "sonner";
 export default function SubmitItem() {
   const [backButton] = initBackButton();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, refetch } = useUser();
   const utils = useUtils();
   useEffect(() => {
     backButton.show();
@@ -22,6 +23,14 @@ export default function SubmitItem() {
       router.back();
     });
   }, []);
+
+  console.log(user);
+
+  const claimEnergy = useApi({
+    key: ["claim-energy"],
+    method: "POST",
+    url: "user/claim-referral-energy",
+  }).post;
 
   const onShare = async () => {
     try {
@@ -65,8 +74,13 @@ export default function SubmitItem() {
             {user?.referralEnergy}
           </div>
           <Button
-            disabled={!user?.referralEnergy}
+            disabled={!user?.referralEnergy || claimEnergy?.isPending}
             className="px-3 py-1 bg-[#a668ff] rounded-3xl justify-center items-center gap-2 flex"
+            onClick={async () => {
+              await claimEnergy?.mutateAsync({});
+              await refetch?.();
+            }}
+            isLoading={claimEnergy?.isPending}
           >
             <div className="text-center text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
               Claim

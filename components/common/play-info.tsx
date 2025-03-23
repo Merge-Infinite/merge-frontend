@@ -59,7 +59,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
           <Image src="/images/ad.svg" alt="explore" width={24} height={24} />
         </div>
       </div>
-      <Image src="/images/prompt.svg" alt="explore" width={24} height={24} />
+      <Image src="/images/recipe.svg" alt="explore" width={24} height={24} />
     </div>
   );
 }

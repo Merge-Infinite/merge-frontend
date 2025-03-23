@@ -41,13 +41,21 @@ interface ApiResponse<T = unknown> {
 // Get base config with authorization
 const getConfig = (): ApiConfig => {
   const token = localStorage.getItem("token");
-  const config: ApiConfig = {
+  console.log("token", token);
+  if (token) {
+    return {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  }
+  return {
     headers: {
       "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
+      Authorization: "",
     },
   };
-  return config;
 };
 
 // Main API function
@@ -58,7 +66,6 @@ const apiCall = async <T = unknown>(
   customConfig: Record<string, unknown> = {}
 ): Promise<T> => {
   const axiosConfig = getConfig();
-  // Convert custom headers to string values to match ApiConfig type
   const customHeaders: Record<string, string> = {};
   Object.entries(customConfig).forEach(([key, value]) => {
     customHeaders[key] = String(value);

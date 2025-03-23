@@ -5,11 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WalletApp from "@/lib/wallet";
 import { AppDispatch } from "@/lib/wallet/store";
 import { AppMode, updateAppMode } from "@/lib/wallet/store/app-context";
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 export function HomeScreen() {
-  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const setAppMode = useCallback(
     (mode: AppMode) => {

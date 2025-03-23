@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
 import { useCallback, useState } from "react";
-import GamePlayInfo from "../common/play-info";
 import { DndProvider, XYCoord } from "react-dnd";
 import { TouchBackend } from "react-dnd-touch-backend";
 import DraggableBox from "../common/DraggableBox";
+import MergingArea from "../common/MergingArea";
+import GamePlayInfo from "../common/play-info";
 interface PlayGameProps {
   explore?: number;
   reward?: number;
@@ -14,10 +17,6 @@ interface PlayGameProps {
   dep?: number;
   freq?: number;
 }
-import { HTML5Backend } from "react-dnd-html5-backend";
-import MergingArea from "../common/MergingArea";
-import useApi from "@/hooks/useApi";
-import { useUser } from "@/hooks/useUser";
 
 export default function PlayGame({}: PlayGameProps) {
   const { inventory, refetchInventory } = useUser();
@@ -128,7 +127,7 @@ export default function PlayGame({}: PlayGameProps) {
       <div className="w-full h-full bg-black">
         <GamePlayInfo />
 
-        <div className="h-[30%] mt-4">
+        <div className="h-[40%] mt-4">
           <MergingArea
             onDrop={handleDrop}
             onDropandMerge={handleDropToMerge}
@@ -136,7 +135,7 @@ export default function PlayGame({}: PlayGameProps) {
             onRemove={handleRemove}
           ></MergingArea>
         </div>
-        <div className="flex-col justify-start items-start gap-5 inline-flex">
+        <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-1/2">
           <div className="self-stretch justify-start items-start gap-6 inline-flex">
             <div className="grow shrink basis-0 rounded-3xl flex-col justify-start items-start gap-1 inline-flex">
               <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">

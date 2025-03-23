@@ -27,6 +27,10 @@ export function mists_to_sui(balance: number) {
   return BN(balance).dividedBy(MIST_PER_SUI.toString()).toString();
 }
 
+export function shortenName(name: string = "", start = 4, end = 2) {
+  return name?.slice(0, start) + "..." + name?.slice(-end);
+}
+
 export const emojiToString = (emoji: string): string => {
   const codePoints = Array.from(emoji)
     .map((char) => {

@@ -12,7 +12,7 @@ import { SubmittedTab } from "./components/submitted";
 export default function Challenge() {
   const searchParams = useSearchParams();
   const day = searchParams.get("day");
-
+  const type = searchParams.get("type");
   const [backButton] = initBackButton();
   const { user } = useUser();
   const router = useRouter();
@@ -30,8 +30,11 @@ export default function Challenge() {
 
   return (
     <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] ">
-      <Tabs defaultValue="challenges" className="w-full h-full ">
-        <TabsList className="flex justify-center gap-6 bg-transparent">
+      <div className="justify-start text-white text-sm font-bold font-['Sora'] leading-normal w-full">
+        {type === "daily" ? "Daily" : "Web3"}
+      </div>
+      <Tabs defaultValue="challenges" className="w-full h-full">
+        <TabsList className="flex justify-start gap-6 bg-transparent">
           <TabsTrigger
             value="challenges"
             className=" data-[state=active]:border-b-2"
@@ -53,7 +56,7 @@ export default function Challenge() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="challenges" className="h-full">
-          <ChallengeTab day={day} />
+          <ChallengeTab day={day || "1"} type={type || "daily"} />
         </TabsContent>
         <TabsContent value="submitted" className="h-full">
           <SubmittedTab />

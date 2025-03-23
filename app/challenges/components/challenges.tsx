@@ -2,15 +2,13 @@
 
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import useApi from "@/hooks/useApi";
-import { useUser } from "@/hooks/useUser";
 import { initBackButton } from "@telegram-apps/sdk";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { ChallengeItem } from "./item";
-export const ChallengeTab = ({ day }: { day: string }) => {
+export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
   const [backButton] = initBackButton();
   const router = useRouter();
-  const { inventory } = useUser();
 
   useEffect(() => {
     backButton.show();
@@ -26,16 +24,21 @@ export const ChallengeTab = ({ day }: { day: string }) => {
     url: `challenges/daily/${Number(day)}`,
   }).get;
 
+  const fetchSubmissionsToday = useApi({
+    key: ["submissions-today"],
+    method: "GET",
+    url: `challenges/submissions/today`,
+  }).get;
+
   useEffect(() => {
     fetchDailyChallenges?.refetch();
-  }, [fetchDailyChallenges]);
+    fetchSubmissionsToday?.refetch();
+  }, [fetchDailyChallenges, fetchSubmissionsToday]);
 
   if (fetchDailyChallenges?.isPending) {
     return <SkeletonCard />;
   }
 
-  console.log(inventory);
-  console.log(fetchDailyChallenges?.data?.items);
   return (
     <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex">
       <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
@@ -44,9 +47,11 @@ export const ChallengeTab = ({ day }: { day: string }) => {
       </div>
       <div className="self-stretch justify-start items-center gap-2 inline-flex flex-wrap">
         {fetchDailyChallenges?.data?.items?.map((item: any) => {
-          const isOwned = !!inventory?.find((inventoryItem: any) => {
-            return inventoryItem.itemId === item?.item?.id;
-          });
+          const isOwned = !!fetchSubmissionsToday?.data?.find(
+            (submission: any) => {
+              return submission.dailyChallengeItem.item.id === item.item?.id;
+            }
+          );
           return (
             <ChallengeItem
               key={item.id}
@@ -54,7 +59,7 @@ export const ChallengeTab = ({ day }: { day: string }) => {
               icon={item.item.emoji}
               itemChallengeId={item.id}
               itemId={item.item.id}
-              inventory={inventory}
+              inventory={fetchSubmissionsToday?.data}
               className={isOwned ? "text-black bg-white" : "text-white"}
               onClick={() => {
                 router.push(`/submit?itemChallengeId=${item.id}`);
