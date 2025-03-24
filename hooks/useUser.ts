@@ -42,9 +42,9 @@ export function useUser() {
       const existUser = localStorage.getItem("user");
       if (existUser) {
         const localUser = JSON.parse(existUser);
-        // if (initData?.user?.id !== localUser?.id) {
-        //   localStorage.clear();
-        // }
+        if (Number(initData?.user?.id) !== Number(localUser?.telegramId)) {
+          localStorage.clear();
+        }
         setUser(localUser);
       }
       const existToken = localStorage.getItem("token");
