@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SkeletonCard } from "@/components/common/SkeletonCard";
+import SplashScreen from "@/components/common/Spash";
 import { BagScreen } from "@/components/screen/bag/bag";
 import { HomeScreen } from "@/components/screen/home/home";
 import { NFTMarket } from "@/components/screen/market/market";
@@ -36,7 +36,7 @@ export default function Home() {
   }, []);
   console.log(`tabMode: ${tabMode}`);
   if (!isAuthenticated || !authed) {
-    return <SkeletonCard />;
+    return <SplashScreen />;
   }
 
   return (
