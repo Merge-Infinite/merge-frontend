@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { convertEmojiCode } from "@/lib/utils";
+import { cn, shortenName } from "@/lib/utils";
 import Image from "next/image";
 import React, {
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
-  useCallback,
-  useMemo,
 } from "react";
 import { useDrag, useDragDropManager, useDrop } from "react-dnd";
+import MergeLoadingAnimation from "./MergeLoadingAnimation";
 
 // ItemTypes for drag and drop
 export const ItemTypes = {
@@ -25,7 +26,11 @@ const DraggableBox = ({
   amount,
   onDrop,
   onRemove,
+  isHidden,
+  isNew,
   isFromInventory,
+  isMerging,
+  mergingTarget,
 }: {
   id: string;
   title: string;
@@ -36,8 +41,13 @@ const DraggableBox = ({
   onDrop?: (id: string, item: any) => void;
   onRemove?: (id: string) => void;
   isFromInventory: boolean;
+  isHidden?: boolean;
+  isNew?: boolean;
+  isMerging?: boolean;
+  mergingTarget?: { [key: string]: any };
 }) => {
-  // Memoize the item object to prevent unnecessary re-renders
+  console.log(isMerging);
+  console.log(mergingTarget);
   const item = useMemo(
     () => ({ id, title, emoji, left, top }),
     [id, title, emoji, left, top]
@@ -99,8 +109,8 @@ const DraggableBox = ({
       const offset = monitor.getSourceClientOffset();
       if (offset) {
         setPosition({
-          x: offset.x + 35,
-          y: offset.y + 18,
+          x: offset.x + 65,
+          y: offset.y + 15,
         });
       }
     };
@@ -128,6 +138,10 @@ const DraggableBox = ({
     },
     [drag, drop]
   );
+
+  // if (isHidden) {
+  //   return null;
+  // }
 
   // Memoize the style object
   const style = useMemo(
@@ -160,22 +174,33 @@ const DraggableBox = ({
   return (
     <div
       ref={ref}
-      className="h-8 px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex"
+      className={cn(
+        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
+        isMerging && mergingTarget?.id === id && "bg-gray-300",
+        isHidden && "hidden",
+        isNew && "animate-bounce scale-110"
+      )}
       style={style}
     >
-      <div className="text-black text-xs font-normal font-['Sora'] capitalize leading-normal">
-        <span className="mr-1">{emoji}</span> {title}
+      <div
+        className={cn(
+          "text-black text-xs font-normal font-['Sora'] capitalize leading-normal",
+          isMerging && mergingTarget?.id === id && "opacity-0"
+        )}
+      >
+        <span className="mr-1">{emoji}</span> {shortenName(title)}
         {amount && amount > 0 ? `(${amount})` : ""}
       </div>
-      {!isFromInventory && (
+      {!isFromInventory && !isMerging && (
         <Image
           onClick={handleRemove}
           src="/images/remove.svg"
           alt="fire"
-          width={24}
-          height={24}
+          width={18}
+          height={18}
         />
       )}
+      {isMerging && mergingTarget?.id === id && <MergeLoadingAnimation />}
     </div>
   );
 };
@@ -190,5 +215,9 @@ export default React.memo(
     prevProps.left === nextProps.left &&
     prevProps.top === nextProps.top &&
     prevProps.amount === nextProps.amount &&
-    prevProps.isFromInventory === nextProps.isFromInventory
+    prevProps.isFromInventory === nextProps.isFromInventory &&
+    prevProps.isMerging === nextProps.isMerging &&
+    prevProps.mergingTarget === nextProps.mergingTarget &&
+    prevProps.isNew === nextProps.isNew &&
+    prevProps.isHidden === nextProps.isHidden
 );

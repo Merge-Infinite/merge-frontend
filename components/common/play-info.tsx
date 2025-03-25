@@ -30,7 +30,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
               height={24}
             />
             <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-              {user?.userBalance?.energyBalance.toLocaleString()}
+              {user?.userBalance?.energyBalance.toLocaleString()}/48
             </div>
           </div>
           <Image
@@ -39,7 +39,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
             width={32}
             height={32}
             onClick={() => {
-              dispatch(updateTabMode(TabMode.SHOP));
+              dispatch(updateTabMode(TabMode.HOME));
               router.back();
             }}
           />

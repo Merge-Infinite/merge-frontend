@@ -24,16 +24,29 @@ export default function PlayGame({}: PlayGameProps) {
   const { inventory, refetchInventory } = useUser();
   const [mergingBoxes, setMergingBoxes] = useState({});
   const { isMobile } = useTelegramDevice();
-
+  const [targetBox, setTargetBox] = useState({});
   const mergeApi = useApi({
     key: ["craft-word"],
     method: "POST",
-    url: "craft-word",
+    url: "user/craft-word",
   }).post;
   const handleDropToMerge = useCallback(
     async (targetId: number, droppedItem: any) => {
       // If we have two items in merging area, combine them
+      const targetBox = (mergingBoxes as any)[targetId];
+      if (!targetBox) return;
+      setTargetBox(targetBox);
+      setMergingBoxes((prev: any) => {
+        const newBoxes = { ...prev };
 
+        if (newBoxes[droppedItem.id]) {
+          newBoxes[droppedItem.id] = {
+            ...newBoxes[droppedItem.id],
+            isHidden: true,
+          };
+        }
+        return newBoxes;
+      });
       try {
         // Simulate API call
         const response: any = await mergeApi?.mutateAsync({
@@ -58,8 +71,36 @@ export default function PlayGame({}: PlayGameProps) {
           };
         });
         await refetchInventory?.();
+        setTimeout(() => {
+          setMergingBoxes((prev: any) => {
+            const newBoxes = { ...prev };
+            if (newBoxes[newElement.id]) {
+              newBoxes[newElement.id] = {
+                ...newBoxes[newElement.id],
+                isNew: false,
+              };
+            }
+            return newBoxes;
+          });
+        }, 1000);
       } catch (error) {
         console.error("Error combining elements:", error);
+        setMergingBoxes((prev: any) => {
+          const newBoxes = { ...prev };
+          if (newBoxes[targetId]) {
+            newBoxes[targetId] = {
+              ...newBoxes[targetId],
+              isHidden: false,
+            };
+          }
+          if (newBoxes[droppedItem.id]) {
+            newBoxes[droppedItem.id] = {
+              ...newBoxes[droppedItem.id],
+              isHidden: false,
+            };
+          }
+          return newBoxes;
+        });
       }
     },
     [mergingBoxes]
@@ -130,9 +171,11 @@ export default function PlayGame({}: PlayGameProps) {
             onDropandMerge={handleDropToMerge}
             mergingBoxes={mergingBoxes}
             onRemove={handleRemove}
+            isMerging={mergeApi?.isPending ?? false}
+            mergingTarget={targetBox}
           ></MergingArea>
         </div>
-        <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-1/2">
+        <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-1/2 w-full">
           <div className="self-stretch justify-start items-start gap-6 inline-flex">
             <div className="grow shrink basis-0 rounded-3xl flex-col justify-start items-start gap-1 inline-flex">
               <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">

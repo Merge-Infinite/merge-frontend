@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, {
-  useCallback,
-  useRef,
-  useMemo,
-  useState,
-  useEffect,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDrop, XYCoord } from "react-dnd";
 import DraggableBox, { ItemTypes } from "./DraggableBox";
 
@@ -15,13 +9,16 @@ export const MergingArea = ({
   onDropandMerge,
   mergingBoxes,
   onRemove,
+  mergingTarget,
+  isMerging,
 }: {
   onDrop: (item: any, delta: XYCoord, clientOffset: XYCoord) => void;
   onDropandMerge: (targetId: number, droppedItem: any) => void;
   mergingBoxes: { [key: string]: any };
   onRemove: (id: string) => void;
+  mergingTarget: { [key: string]: any };
+  isMerging: boolean;
 }) => {
-  // Memoize the drop handler to prevent unnecessary recreations
   const handleDrop = useCallback(
     (droppedItem: any, monitor) => {
       const delta = monitor.getDifferenceFromInitialOffset() as XYCoord;
@@ -84,6 +81,10 @@ export const MergingArea = ({
         isFromInventory={false}
         onDrop={handleDropAndMerge}
         onRemove={handleRemove}
+        isHidden={box.isHidden}
+        isNew={box.isNew}
+        isMerging={isMerging}
+        mergingTarget={mergingTarget}
       />
     ));
   }, [visibleBoxes, handleDropAndMerge, handleRemove]);
@@ -118,7 +119,11 @@ const areEqual = (prevProps: any, nextProps: any) => {
       prevBox.top !== nextBox.top ||
       prevBox.title !== nextBox.title ||
       prevBox.emoji !== nextBox.emoji ||
-      prevBox.amount !== nextBox.amount
+      prevBox.amount !== nextBox.amount ||
+      prevBox.isHidden !== nextBox.isHidden ||
+      prevBox.isNew !== nextBox.isNew ||
+      prevBox.isMerging !== nextBox.isMerging ||
+      prevBox.mergingTarget !== nextBox.mergingTarget
     ) {
       return false;
     }
