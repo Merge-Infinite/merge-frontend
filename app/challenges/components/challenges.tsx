@@ -35,10 +35,6 @@ export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
     fetchSubmissionsToday?.refetch();
   }, [fetchDailyChallenges, fetchSubmissionsToday]);
 
-  if (fetchDailyChallenges?.isPending) {
-    return <SkeletonCard />;
-  }
-
   return (
     <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex">
       <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
@@ -46,27 +42,31 @@ export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
         elements:
       </div>
       <div className="self-stretch justify-start items-center gap-2 inline-flex flex-wrap">
-        {fetchDailyChallenges?.data?.items?.map((item: any) => {
-          const isOwned = !!fetchSubmissionsToday?.data?.find(
-            (submission: any) => {
-              return submission.dailyChallengeItem.item.id === item.item?.id;
-            }
-          );
-          return (
-            <ChallengeItem
-              key={item.id}
-              name={item.item.handle}
-              icon={item.item.emoji}
-              itemChallengeId={item.id}
-              itemId={item.item.id}
-              inventory={fetchSubmissionsToday?.data}
-              className={isOwned ? "text-black bg-white" : "text-white"}
-              onClick={() => {
-                router.push(`/submit?itemChallengeId=${item.id}`);
-              }}
-            />
-          );
-        })}
+        {fetchDailyChallenges?.isPending || fetchSubmissionsToday?.isPending ? (
+          <SkeletonCard />
+        ) : (
+          fetchDailyChallenges?.data?.items?.map((item: any) => {
+            const isOwned = !!fetchSubmissionsToday?.data?.find(
+              (submission: any) => {
+                return submission.dailyChallengeItem.item.id === item.item?.id;
+              }
+            );
+            return (
+              <ChallengeItem
+                key={item.id}
+                name={item.item.handle}
+                icon={item.item.emoji}
+                itemChallengeId={item.id}
+                itemId={item.item.id}
+                inventory={fetchSubmissionsToday?.data}
+                className={isOwned ? "text-black bg-white" : "text-white"}
+                onClick={() => {
+                  router.push(`/submit?itemChallengeId=${item.id}`);
+                }}
+              />
+            );
+          })
+        )}
       </div>
     </div>
   );

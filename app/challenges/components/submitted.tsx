@@ -1,5 +1,6 @@
 "use client";
 
+import { SkeletonCard } from "@/components/common/SkeletonCard";
 import useApi from "@/hooks/useApi";
 import { initBackButton } from "@telegram-apps/sdk";
 import { useRouter } from "next/navigation";
@@ -37,14 +38,18 @@ export const SubmittedTab = () => {
         </span>
       </div>
       <div className="self-stretch justify-start items-center gap-2 inline-flex flex-wrap">
-        {fetchSubmittedItems?.data?.map((item: any) => (
-          <ChallengeItem
-            key={item.id}
-            name={item.dailyChallengeItem.item.handle}
-            icon={item.dailyChallengeItem.item.emoji}
-            className={"bg-white text-black"}
-          />
-        ))}
+        {fetchSubmittedItems?.isPending ? (
+          <SkeletonCard />
+        ) : (
+          fetchSubmittedItems?.data?.map((item: any) => (
+            <ChallengeItem
+              key={item.id}
+              name={item.dailyChallengeItem.item.handle}
+              icon={item.dailyChallengeItem.item.emoji}
+              className={"bg-white text-black"}
+            />
+          ))
+        )}
       </div>
     </div>
   );

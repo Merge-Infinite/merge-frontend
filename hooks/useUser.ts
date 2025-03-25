@@ -38,14 +38,19 @@ export function useUser() {
   }).post;
 
   const login = async () => {
+    console.log("login");
     try {
       const existUser = localStorage.getItem("user");
       if (existUser) {
         const localUser = JSON.parse(existUser);
-        if (Number(initData?.user?.id) !== Number(localUser?.telegramId)) {
+        if (localUser.id) {
+          if (Number(initData?.user?.id) !== Number(localUser?.telegramId)) {
+            localStorage.clear();
+          }
+          setUser(localUser);
+        } else {
           localStorage.clear();
         }
-        setUser(localUser);
       }
       const existToken = localStorage.getItem("token");
       if (!existToken) {

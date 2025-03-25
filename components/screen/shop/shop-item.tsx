@@ -1,5 +1,6 @@
 "use client";
 
+import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import useApi from "@/hooks/useApi";
@@ -155,62 +156,66 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           Energy
         </CardHeader>
         <CardContent className="w-full">
-          {fetchProducts?.data
-            ?.filter((product) => product.type === "ENERGY")
-            .map((product) => (
-              <div
-                key={product.id}
-                className="self-stretch py-2 justify-between items-center inline-flex w-full"
-              >
-                <div className="justify-start items-center gap-2 flex">
-                  <div className="justify-start items-center flex gap-2">
-                    <Image
-                      src="/images/energy.svg"
-                      alt="star"
-                      width={24}
-                      height={24}
-                    />
-                    <div className="text-white text-sm font-normal leading-normal">
-                      {product.value}
-                    </div>
-                  </div>
-                  <div className="text-white text-sm font-semibold uppercase leading-normal tracking-wide">
-                    =
-                  </div>
-                  <div className="justify-start items-center flex">
-                    {currency === "star" ? (
-                      <Image
-                        src="/images/star.svg"
-                        alt="star"
-                        width={24}
-                        height={24}
-                      />
-                    ) : (
-                      <Image
-                        src="/images/sui.svg"
-                        alt="star"
-                        width={24}
-                        height={24}
-                      />
-                    )}
-                    <div className="text-white text-sm font-normal leading-normal">
-                      {product.price}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  className="bg-white rounded-3xl justify-center items-center gap-2 flex w-fit"
-                  size={"sm"}
-                  disabled={createPurchase?.isPending || isLoading}
-                  isLoading={createPurchase?.isPending || isLoading}
-                  onClick={() => onBuy(product)}
+          {fetchProducts?.isPending ? (
+            <SkeletonCard />
+          ) : (
+            fetchProducts?.data
+              ?.filter((product) => product.type === "ENERGY")
+              .map((product) => (
+                <div
+                  key={product.id}
+                  className="self-stretch py-2 justify-between items-center inline-flex w-full"
                 >
-                  <div className="text-black text-xs font-normal uppercase leading-normal">
-                    Buy
+                  <div className="justify-start items-center gap-2 flex">
+                    <div className="justify-start items-center flex gap-2">
+                      <Image
+                        src="/images/energy.svg"
+                        alt="star"
+                        width={24}
+                        height={24}
+                      />
+                      <div className="text-white text-sm font-normal leading-normal">
+                        {product.value}
+                      </div>
+                    </div>
+                    <div className="text-white text-sm font-semibold uppercase leading-normal tracking-wide">
+                      =
+                    </div>
+                    <div className="justify-start items-center flex">
+                      {currency === "star" ? (
+                        <Image
+                          src="/images/star.svg"
+                          alt="star"
+                          width={24}
+                          height={24}
+                        />
+                      ) : (
+                        <Image
+                          src="/images/sui.svg"
+                          alt="star"
+                          width={24}
+                          height={24}
+                        />
+                      )}
+                      <div className="text-white text-sm font-normal leading-normal">
+                        {product.price}
+                      </div>
+                    </div>
                   </div>
-                </Button>
-              </div>
-            ))}
+                  <Button
+                    className="bg-white rounded-3xl justify-center items-center gap-2 flex w-fit"
+                    size={"sm"}
+                    disabled={createPurchase?.isPending || isLoading}
+                    isLoading={createPurchase?.isPending || isLoading}
+                    onClick={() => onBuy(product)}
+                  >
+                    <div className="text-black text-xs font-normal uppercase leading-normal">
+                      Buy
+                    </div>
+                  </Button>
+                </div>
+              ))
+          )}
         </CardContent>
       </Card>
       <Card className=" py-2 rounded-2xl border border-[#1f1f1f] flex-col justify-start items-start inline-flex w-full">
@@ -223,62 +228,66 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           </div>
         </CardHeader>
         <CardContent className="w-full">
-          {fetchProducts?.data
-            ?.filter((product) => product.type === "SUBSCRIPTION")
-            .map((product) => (
-              <div
-                key={product.id}
-                className="self-stretch py-2 justify-between items-center inline-flex w-full"
-              >
-                <div className="justify-start items-center gap-2 flex">
-                  <div className="justify-start items-center flex gap-2">
-                    <Image
-                      src="/images/vip.svg"
-                      alt="star"
-                      width={24}
-                      height={24}
-                    />
-                    <div className="text-white text-sm font-normal leading-normal">
-                      {product.value} Month
-                    </div>
-                  </div>
-                  <div className="text-white text-sm font-semibold uppercase leading-normal tracking-wide">
-                    =
-                  </div>
-                  <div className="justify-start items-center flex">
-                    {currency === "star" ? (
-                      <Image
-                        src="/images/star.svg"
-                        alt="star"
-                        width={24}
-                        height={24}
-                      />
-                    ) : (
-                      <Image
-                        src="/images/sui.svg"
-                        alt="star"
-                        width={24}
-                        height={24}
-                      />
-                    )}
-                    <div className="text-white text-sm font-normal leading-normal">
-                      {product.price}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  className="bg-white rounded-3xl justify-center items-center gap-2 flex w-fit"
-                  size={"sm"}
-                  disabled={createPurchase?.isPending || isLoading}
-                  isLoading={createPurchase?.isPending || isLoading}
-                  onClick={() => onBuy(product)}
+          {fetchProducts?.isPending ? (
+            <SkeletonCard />
+          ) : (
+            fetchProducts?.data
+              ?.filter((product) => product.type === "SUBSCRIPTION")
+              .map((product) => (
+                <div
+                  key={product.id}
+                  className="self-stretch py-2 justify-between items-center inline-flex w-full"
                 >
-                  <div className="text-black text-xs font-normal uppercase leading-normal">
-                    Subscription
+                  <div className="justify-start items-center gap-2 flex">
+                    <div className="justify-start items-center flex gap-2">
+                      <Image
+                        src="/images/vip.svg"
+                        alt="star"
+                        width={24}
+                        height={24}
+                      />
+                      <div className="text-white text-sm font-normal leading-normal">
+                        {product.value} Month
+                      </div>
+                    </div>
+                    <div className="text-white text-sm font-semibold uppercase leading-normal tracking-wide">
+                      =
+                    </div>
+                    <div className="justify-start items-center flex">
+                      {currency === "star" ? (
+                        <Image
+                          src="/images/star.svg"
+                          alt="star"
+                          width={24}
+                          height={24}
+                        />
+                      ) : (
+                        <Image
+                          src="/images/sui.svg"
+                          alt="star"
+                          width={24}
+                          height={24}
+                        />
+                      )}
+                      <div className="text-white text-sm font-normal leading-normal">
+                        {product.price}
+                      </div>
+                    </div>
                   </div>
-                </Button>
-              </div>
-            ))}
+                  <Button
+                    className="bg-white rounded-3xl justify-center items-center gap-2 flex w-fit"
+                    size={"sm"}
+                    disabled={createPurchase?.isPending || isLoading}
+                    isLoading={createPurchase?.isPending || isLoading}
+                    onClick={() => onBuy(product)}
+                  >
+                    <div className="text-black text-xs font-normal uppercase leading-normal">
+                      Subscription
+                    </div>
+                  </Button>
+                </div>
+              ))
+          )}
         </CardContent>
       </Card>
     </div>

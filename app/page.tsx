@@ -34,7 +34,8 @@ export default function Home() {
     dispatch(updateAppMode(AppMode.GAMES));
     backButton.hide();
   }, []);
-  console.log(`tabMode: ${tabMode}`);
+  console.log(`isAuthenticated: ${isAuthenticated}`);
+  console.log(`authed: ${authed}`);
   if (!isAuthenticated || !authed) {
     return <SplashScreen />;
   }
