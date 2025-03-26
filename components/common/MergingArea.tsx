@@ -13,7 +13,7 @@ export const MergingArea = ({
   isMerging,
 }: {
   onDrop: (item: any, delta: XYCoord, clientOffset: XYCoord) => void;
-  onDropandMerge: (targetId: number, droppedItem: any) => void;
+  onDropandMerge: (targetInstanceId: string, droppedItem: any) => void;
   mergingBoxes: { [key: string]: any };
   onRemove: (id: string) => void;
   mergingTarget: { [key: string]: any };
@@ -51,8 +51,8 @@ export const MergingArea = ({
 
   // Memoize the handler for box merging
   const handleDropAndMerge = useCallback(
-    (targetId: string, droppedItem: any) => {
-      onDropandMerge(Number(targetId), droppedItem);
+    (targetInstanceId: string, droppedItem: any) => {
+      onDropandMerge(targetInstanceId, droppedItem);
     },
     [onDropandMerge]
   );
@@ -77,7 +77,7 @@ export const MergingArea = ({
     return visibleBoxes.map((box: any) => (
       <DraggableBox
         {...box}
-        key={box.id}
+        key={box.instanceId}
         isFromInventory={false}
         onDrop={handleDropAndMerge}
         onRemove={handleRemove}

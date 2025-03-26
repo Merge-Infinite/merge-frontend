@@ -1,8 +1,8 @@
-import styles from "./index.module.scss";
-import { useBiometricAuth } from "../../hooks/useBiometricAuth";
-import FingerPrint from "../../assets/icons/fingerprint.svg";
-import { Extendable } from "../../types";
 import classnames from "classnames";
+import FingerPrint from "../../assets/icons/fingerprint.svg";
+import { useBiometricAuth } from "../../hooks/useBiometricAuth";
+import { Extendable } from "../../types";
+import styles from "./index.module.scss";
 
 export type BiometricAuthProps = Extendable & {
   onSuccess?: () => void;

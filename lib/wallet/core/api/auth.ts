@@ -152,10 +152,7 @@ export class AuthApi implements IAuthApi {
   public async login(password: string) {
     const t = Date.now();
     const token = await this.loadTokenWithPassword(password);
-    console.log("loadTokenWithPassword", Date.now() - t);
-    console.log("token", token);
     await maybeFixDataConsistency(this.storage, token);
-    console.log("maybeFixDataConsistency", Date.now() - t);
     this.session.setToken(token);
     return token;
   }

@@ -36,7 +36,7 @@ export default function Home() {
   }, []);
   console.log(`isAuthenticated: ${isAuthenticated}`);
   console.log(`authed: ${authed}`);
-  if (!isAuthenticated || !authed) {
+  if (!isAuthenticated && !authed) {
     return <SplashScreen />;
   }
 
@@ -45,6 +45,7 @@ export default function Home() {
       <Tabs
         defaultValue={tabMode || "home"}
         value={tabMode}
+        className="w-full"
         onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
       >
         <TabsList

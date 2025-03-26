@@ -109,7 +109,7 @@ export function useUser() {
   }, [initDataRaw]);
 
   return {
-    user,
+    user: getMe?.data,
     inventory: userInventory?.data,
     refetchInventory: userInventory?.refetch,
     refetch: getMe?.refetch,

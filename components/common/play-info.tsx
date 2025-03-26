@@ -5,6 +5,7 @@ import { AppDispatch } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 interface GamePlayInfoProps {
   explore?: number;
@@ -18,6 +19,8 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
   const { user } = useUser();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {}, [user]);
   return (
     <div className="w-full justify-between items-center inline-flex p-4">
       <div className="justify-start items-center gap-2 flex">

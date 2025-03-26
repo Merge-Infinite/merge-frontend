@@ -19,6 +19,7 @@ export const ItemTypes = {
 // DraggableBox component
 const DraggableBox = ({
   id,
+  instanceId,
   title,
   emoji,
   left,
@@ -33,12 +34,13 @@ const DraggableBox = ({
   mergingTarget,
 }: {
   id: string;
+  instanceId: string;
   title: string;
   emoji: string;
   left?: number;
   top?: number;
   amount?: number;
-  onDrop?: (id: string, item: any) => void;
+  onDrop?: (instanceId: string, item: any) => void;
   onRemove?: (id: string) => void;
   isFromInventory: boolean;
   isHidden?: boolean;
@@ -46,17 +48,17 @@ const DraggableBox = ({
   isMerging?: boolean;
   mergingTarget?: { [key: string]: any };
 }) => {
-  console.log(isMerging);
-  console.log(mergingTarget);
   const item = useMemo(
-    () => ({ id, title, emoji, left, top }),
-    [id, title, emoji, left, top]
+    () => ({ id, instanceId, title, emoji, left, top, originalId: id }),
+    [id, instanceId, title, emoji, left, top]
   );
 
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.BOX,
-      item,
+      item: (monitor) => {
+        return item;
+      },
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
@@ -67,8 +69,9 @@ const DraggableBox = ({
   // Memoize the drop callback
   const handleDrop = useCallback(
     (dropItem: any) => {
-      if (dropItem.id !== id) {
-        onDrop?.(id, dropItem);
+      console.log("dropItem", dropItem);
+      if (dropItem.instanceId !== instanceId) {
+        onDrop?.(instanceId, dropItem);
       }
     },
     [id, onDrop]
@@ -107,10 +110,11 @@ const DraggableBox = ({
 
     const updatePosition = () => {
       const offset = monitor.getSourceClientOffset();
-      if (offset) {
+      if (offset && elementRef.current) {
+        // Position the element so that its center is at the cursor position
         setPosition({
-          x: offset.x + 65,
-          y: offset.y + 15,
+          x: offset.x,
+          y: offset.y,
         });
       }
     };
@@ -154,8 +158,8 @@ const DraggableBox = ({
             top: position.y,
             pointerEvents: "none" as const,
             zIndex: 1000,
-            transform: "translate(-50%, -50%)",
-            willChange: "transform", // Hint to browser for optimization
+            willChange: "transform",
+            cursor: "grabbing",
           }
         : {
             opacity: 1,
@@ -164,19 +168,23 @@ const DraggableBox = ({
               : ("absolute" as const),
             left,
             top,
+            cursor: "grab",
           },
     [isDragging, position.x, position.y, isFromInventory, left, top]
   );
 
   // Memoize the remove handler
-  const handleRemove = useCallback(() => onRemove?.(id), [onRemove, id]);
+  const handleRemove = useCallback(
+    () => onRemove?.(instanceId),
+    [onRemove, instanceId]
+  );
 
   return (
     <div
       ref={ref}
       className={cn(
         "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
-        isMerging && mergingTarget?.id === id && "bg-gray-300",
+        isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
         isHidden && "hidden",
         isNew && "animate-bounce scale-110"
       )}
@@ -185,7 +193,7 @@ const DraggableBox = ({
       <div
         className={cn(
           "text-black text-xs font-normal font-['Sora'] capitalize leading-normal",
-          isMerging && mergingTarget?.id === id && "opacity-0"
+          isMerging && mergingTarget?.instanceId === instanceId && "opacity-0"
         )}
       >
         <span className="mr-1">{emoji}</span> {title}
@@ -200,7 +208,9 @@ const DraggableBox = ({
           height={18}
         />
       )}
-      {isMerging && mergingTarget?.id === id && <MergeLoadingAnimation />}
+      {isMerging && mergingTarget?.instanceId === instanceId && (
+        <MergeLoadingAnimation />
+      )}
     </div>
   );
 };
@@ -210,6 +220,7 @@ export default React.memo(
   DraggableBox,
   (prevProps, nextProps) =>
     prevProps.id === nextProps.id &&
+    prevProps.instanceId === nextProps.instanceId &&
     prevProps.title === nextProps.title &&
     prevProps.emoji === nextProps.emoji &&
     prevProps.left === nextProps.left &&

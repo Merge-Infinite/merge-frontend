@@ -17,18 +17,9 @@ const Session = (props: Extendable) => {
   const apiClient = useApiClient();
   const { isSetuped, authenticate } = useBiometricAuth();
 
-  async function verifyAuthStatus(ac: AbortController) {
-    try {
-      console.log("starting login");
-      await apiClient.callFunc<string, string>("auth", "login", "123456");
-
-      dispatch(updateAuthed(true));
-    } catch (e) {
-      dispatch(updateAuthed(false));
-    }
-  }
-
   useEffect(() => {
+    if (initialized && authed) {
+    }
     if (!authed && initialized) {
       // Create an interval to repeatedly attempt login until authenticated
       const loginInterval = setInterval(async () => {
@@ -36,28 +27,17 @@ const Session = (props: Extendable) => {
           console.log("Attempting login via interval");
           await apiClient.callFunc<string, string>("auth", "login", "123456");
           dispatch(updateAuthed(true));
-          // Clear interval once successfully authenticated
           clearInterval(loginInterval);
         } catch (e) {
-          alert(e);
           console.log("Login attempt failed, will retry");
         }
-      }, 3000); // Try every 5 seconds
+      }, 3000);
 
-      // Clean up interval on component unmount
       return () => {
         clearInterval(loginInterval);
       };
     }
   }, [authed, initialized, isSetuped]);
-
-  useEffect(() => {
-    dispatch(updateAuthed(true));
-    const controller = new AbortController();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   if (!authed && initialized) {
     return <SkeletonCard />;

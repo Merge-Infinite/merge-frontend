@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { convertEmojiCode, NFT_MODULE_NAME, NFT_PACKAGE_ID } from "@/lib/utils";
@@ -28,7 +27,7 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import React, { Fragment, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-
+import { toast } from "sonner";
 export const CardItem = React.memo(
   ({
     element,
@@ -45,7 +44,6 @@ export const CardItem = React.memo(
     emoji: string;
     onListingComplete?: () => void;
   }) => {
-    const { toast } = useToast();
     const apiClient = useApiClient();
     const marketplaceListings = useApi({
       key: ["syncUserBag"],
@@ -112,12 +110,9 @@ export const CardItem = React.memo(
         console.log(id);
         // Ensure user has kiosk data
         if (!user?.kiosk?.objectId || !user?.kiosk?.ownerCapId) {
-          toast({
-            title: "Error",
-            description:
-              "Kiosk information not found. Please refresh and try again.",
-            variant: "destructive",
-          });
+          toast.error(
+            "Kiosk information not found. Please refresh and try again."
+          );
           setTransactionStatus("error");
           return;
         }
@@ -177,10 +172,7 @@ export const CardItem = React.memo(
             });
 
             setTransactionStatus("success");
-            toast({
-              title: "Success!",
-              description: "Your NFT has been listed successfully",
-            });
+            toast.success("Your NFT has been listed successfully");
 
             // Notify parent component if callback is provided
             if (onListingComplete) {
@@ -192,32 +184,20 @@ export const CardItem = React.memo(
           } catch (error) {
             console.error("Backend sync error:", error);
             setTransactionStatus("error");
-            toast({
-              title: "Sync Error",
-              description:
-                "Transaction was successful but we couldn't sync with our servers. Please try again or contact support.",
-              variant: "destructive",
-            });
+            toast.error(
+              "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
+            );
           }
         } else {
           setTransactionStatus("error");
-          toast({
-            title: "Transaction Failed",
-            description: "Failed to list NFT. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to list NFT. Please try again.");
         }
       } catch (error) {
         console.error("Transaction error:", error);
         setTransactionStatus("error");
-        toast({
-          title: "Error",
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
       } finally {
       }
     }

@@ -19,7 +19,7 @@ export function OnchainBagScreen() {
   });
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full h-full">
       {/* Search Bar */}
       <div className="self-stretch h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
         <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">

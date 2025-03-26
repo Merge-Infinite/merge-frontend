@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import {
@@ -24,7 +23,7 @@ import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-
+import { toast } from "sonner";
 export const MarketItem = React.memo(
   ({
     element,
@@ -52,7 +51,6 @@ export const MarketItem = React.memo(
     isOwned?: boolean;
   }) => {
     const apiClient = useApiClient();
-    const { toast } = useToast();
     const { user } = useUser();
     const appContext = useSelector((state: RootState) => state.appContext);
     const { address } = useAccount(appContext.accountId);
@@ -82,10 +80,7 @@ export const MarketItem = React.memo(
     const handleCopyId = () => {
       navigator.clipboard.writeText(nftId);
       setCopied(true);
-      toast({
-        title: "Copied!",
-        description: "NFT ID copied to clipboard",
-      });
+      toast.success("NFT ID copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     };
 
@@ -94,10 +89,7 @@ export const MarketItem = React.memo(
         setLoading(true);
 
         // Show processing toast
-        toast({
-          title: "Processing Purchase",
-          description: "Transaction in progress...",
-        });
+        toast.info("Transaction in progress...");
 
         const txb = new Transaction();
         const paymentCoin = txb.splitCoins(txb.gas, [
@@ -148,10 +140,7 @@ export const MarketItem = React.memo(
 
         if (response && response.digest) {
           // Show transaction submitted toast
-          toast({
-            title: "Transaction Submitted",
-            description: "Finalizing your purchase...",
-          });
+          toast.success("Transaction Submitted");
 
           // Sync with backend
           try {
@@ -161,38 +150,23 @@ export const MarketItem = React.memo(
             });
 
             // Success message
-            toast({
-              title: "Purchase Successful!",
-              description: `You are now the owner of ${element} ${emoji}`,
-            });
+            toast.success(`You are now the owner of ${element} ${emoji}`);
 
             if (onBuy) {
               onBuy();
             }
           } catch (error) {
             console.error("Backend sync error:", error);
-            toast({
-              title: "Note",
-              description:
-                "Purchase completed but we couldn't update our records. Your NFT is in your wallet.",
-              variant: "destructive",
-            });
+            toast.error(
+              "Purchase completed but we couldn't update our records. Your NFT is in your wallet."
+            );
           }
         } else {
-          toast({
-            title: "Transaction Failed",
-            description: "Failed to purchase NFT. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to purchase NFT. Please try again.");
         }
       } catch (error) {
         console.error("Purchase error:", error);
-        toast({
-          title: "Purchase Failed",
-          description:
-            error.message || "Something went wrong. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Something went wrong. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -239,35 +213,20 @@ export const MarketItem = React.memo(
               transactionDigest: response.digest,
             });
 
-            toast({
-              title: "Success!",
-              description: "Your NFT has been delisted successfully",
-            });
+            toast.success("Your NFT has been delisted successfully");
           } catch (error) {
             console.error("Backend sync error:", error);
-            toast({
-              title: "Sync Error",
-              description:
-                "Transaction was successful but we couldn't sync with our servers. Please try again or contact support.",
-              variant: "destructive",
-            });
+            toast.error(
+              "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
+            );
           }
         } else {
-          toast({
-            title: "Transaction Failed",
-            description: "Failed to delist NFT. Please try again.",
-            variant: "destructive",
-          });
+          toast.error("Failed to delist NFT. Please try again.");
         }
       } catch (error) {
-        toast({
-          title: "Error",
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }

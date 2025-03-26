@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useTelegramDevice } from "@/hooks/use-device";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
@@ -21,9 +20,9 @@ interface PlayGameProps {
 }
 
 export default function PlayGame({}: PlayGameProps) {
-  const { inventory, refetchInventory } = useUser();
+  const { inventory, refetchInventory, refetch } = useUser();
   const [mergingBoxes, setMergingBoxes] = useState({});
-  const { isMobile } = useTelegramDevice();
+  const [instanceCounter, setInstanceCounter] = useState(0);
   const [targetBox, setTargetBox] = useState({});
   const mergeApi = useApi({
     key: ["craft-word"],
@@ -31,17 +30,22 @@ export default function PlayGame({}: PlayGameProps) {
     url: "user/craft-word",
   }).post;
   const handleDropToMerge = useCallback(
-    async (targetId: number, droppedItem: any) => {
+    async (targetInstanceId: string, droppedItem: any) => {
       // If we have two items in merging area, combine them
-      const targetBox = (mergingBoxes as any)[targetId];
+      const targetBox = (mergingBoxes as any)[targetInstanceId];
+      console.log("targetBox", targetBox);
+      console.log("droppedItem", droppedItem);
       if (!targetBox) return;
       setTargetBox(targetBox);
+      const targetItemId = targetBox.originalId || targetBox.id;
+      const droppedItemId = droppedItem.originalId || droppedItem.id;
       setMergingBoxes((prev: any) => {
         const newBoxes = { ...prev };
+        const droppedInstanceId = droppedItem.instanceId;
 
-        if (newBoxes[droppedItem.id]) {
-          newBoxes[droppedItem.id] = {
-            ...newBoxes[droppedItem.id],
+        if (newBoxes[droppedInstanceId]) {
+          newBoxes[droppedInstanceId] = {
+            ...newBoxes[droppedInstanceId],
             isHidden: true,
           };
         }
@@ -50,33 +54,38 @@ export default function PlayGame({}: PlayGameProps) {
       try {
         // Simulate API call
         const response: any = await mergeApi?.mutateAsync({
-          item1: targetId,
-          item2: droppedItem.id,
+          item1: targetItemId,
+          item2: droppedItemId,
         });
+        const newInstanceId = `${response.id}_${Date.now()}`;
         const newElement = {
-          id: response.id,
+          id: newInstanceId,
+          originalId: response.id,
+          instanceId: newInstanceId,
           title: response.handle,
           emoji: response.emoji,
           left: droppedItem.left,
           top: droppedItem.top,
+          isNew: true,
         };
 
         setMergingBoxes((prev: any) => {
           const newBoxes = { ...prev };
-          delete newBoxes[targetId];
-          delete newBoxes[droppedItem.id];
+          delete newBoxes[targetInstanceId];
+          delete newBoxes[droppedItem.instanceId];
           return {
             ...newBoxes,
-            [newElement.id]: newElement,
+            [newInstanceId]: newElement,
           };
         });
-        await refetchInventory?.();
+        refetchInventory?.();
+        refetch?.();
         setTimeout(() => {
           setMergingBoxes((prev: any) => {
             const newBoxes = { ...prev };
-            if (newBoxes[newElement.id]) {
-              newBoxes[newElement.id] = {
-                ...newBoxes[newElement.id],
+            if (newBoxes[newInstanceId]) {
+              newBoxes[newInstanceId] = {
+                ...newBoxes[newInstanceId],
                 isNew: false,
               };
             }
@@ -87,15 +96,15 @@ export default function PlayGame({}: PlayGameProps) {
         console.error("Error combining elements:", error);
         setMergingBoxes((prev: any) => {
           const newBoxes = { ...prev };
-          if (newBoxes[targetId]) {
-            newBoxes[targetId] = {
-              ...newBoxes[targetId],
+          if (newBoxes[targetInstanceId]) {
+            newBoxes[targetInstanceId] = {
+              ...newBoxes[targetInstanceId],
               isHidden: false,
             };
           }
-          if (newBoxes[droppedItem.id]) {
-            newBoxes[droppedItem.id] = {
-              ...newBoxes[droppedItem.id],
+          if (newBoxes[droppedItem.instanceId]) {
+            newBoxes[droppedItem.instanceId] = {
+              ...newBoxes[droppedItem.instanceId],
               isHidden: false,
             };
           }
@@ -108,7 +117,8 @@ export default function PlayGame({}: PlayGameProps) {
 
   const handleDrop = useCallback(
     (droppedItem: any, delta: XYCoord, clientOffset: XYCoord) => {
-      console.log(droppedItem);
+      const instanceId = `${droppedItem.id}_${Date.now()}_${instanceCounter}`;
+      setInstanceCounter((prev) => prev + 1);
       if (
         droppedItem.id &&
         droppedItem.left !== undefined &&
@@ -117,13 +127,14 @@ export default function PlayGame({}: PlayGameProps) {
         if (delta && delta.x && delta.y) {
           const left = Math.round(droppedItem.left + delta.x);
           const top = Math.round(droppedItem.top + delta.y);
+          const itemId = droppedItem.instanceId || instanceId;
 
           setMergingBoxes((prev: any) => ({
             ...prev,
-            [droppedItem.id]: {
-              id: droppedItem.id,
-              title: droppedItem.title,
-              emoji: droppedItem.emoji,
+            [itemId]: {
+              ...droppedItem,
+              originalId: droppedItem.id,
+              instanceId: itemId,
               left,
               top,
             },
@@ -136,8 +147,10 @@ export default function PlayGame({}: PlayGameProps) {
 
           setMergingBoxes((prev: any) => ({
             ...prev,
-            [droppedItem.id]: {
+            [instanceId]: {
               id: droppedItem.id,
+              originalId: droppedItem.id,
+              instanceId: instanceId,
               title: droppedItem.title,
               emoji: droppedItem.emoji,
               left: left,
@@ -151,10 +164,10 @@ export default function PlayGame({}: PlayGameProps) {
   );
 
   const handleRemove = useCallback(
-    (id: string) => {
+    (instanceId: string) => {
       setMergingBoxes((prev: any) => {
         const newBoxes = { ...prev };
-        delete newBoxes[id];
+        delete newBoxes[instanceId];
         return newBoxes;
       });
     },

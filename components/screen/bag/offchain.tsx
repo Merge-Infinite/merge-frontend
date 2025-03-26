@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
 import {
   emojiToString,
@@ -32,6 +31,7 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 export function OffchainBagScreen() {
   const apiClient = useApiClient();
@@ -98,18 +98,12 @@ export function OffchainBagScreen() {
 
   async function mintNFTs() {
     if (!selectedItem || !mintQuantity || mintQuantity <= 0) {
-      toast({
-        title: "Please select an item and enter a valid quantity",
-        variant: "destructive",
-      });
+      toast.error("Please select an item and enter a valid quantity");
       return null;
     }
 
     if (mintQuantity > selectedItem.amount) {
-      toast({
-        title: "You don't have enough items to mint",
-        variant: "destructive",
-      });
+      toast.error("You don't have enough items to mint");
       return null;
     }
     setIsMinting(true);
@@ -153,10 +147,9 @@ export function OffchainBagScreen() {
           itemId: selectedItem.itemId,
           amount: mintQuantity,
         });
-        toast({
-          title: "NFTs minted successfully!",
-          description: `You've minted ${mintQuantity} ${selectedItem.handle} NFTs`,
-        });
+        toast.success(
+          `You've minted ${mintQuantity} ${selectedItem.handle} NFTs`
+        );
 
         getUserBagApi?.refetch();
         handleCloseModal();
@@ -166,11 +159,7 @@ export function OffchainBagScreen() {
       return null;
     } catch (error) {
       console.error("Error minting NFTs:", error);
-      toast({
-        title: "Failed to mint NFTs",
-        description: error.message || "Please try again later",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Please try again later");
       return null;
     } finally {
       setIsMinting(false);

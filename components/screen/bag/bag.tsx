@@ -6,7 +6,7 @@ import { OnchainBagScreen } from "./onchain";
 export function BagScreen() {
   return (
     <div
-      className="flex flex-col items-center justify-start"
+      className="flex flex-col items-center justify-start w-full"
       style={{
         paddingBottom: 100,
       }}
@@ -28,7 +28,7 @@ export function BagScreen() {
         </TabsList>
         <TabsContent
           value="off-chain"
-          className="overflow-y-auto"
+          className="overflow-y-auto w-full"
           style={{
             height: "calc(var(--tg-viewport-height) - 180px)",
           }}
@@ -37,7 +37,7 @@ export function BagScreen() {
         </TabsContent>
         <TabsContent
           value="on-chain"
-          className="overflow-y-auto"
+          className="overflow-y-auto w-full"
           style={{
             height: "calc(var(--tg-viewport-height) - 180px)",
           }}
