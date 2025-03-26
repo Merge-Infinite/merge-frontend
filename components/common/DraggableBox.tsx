@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { cn, shortenName } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import React, {
   useCallback,
@@ -188,7 +188,7 @@ const DraggableBox = ({
           isMerging && mergingTarget?.id === id && "opacity-0"
         )}
       >
-        <span className="mr-1">{emoji}</span> {shortenName(title)}
+        <span className="mr-1">{emoji}</span> {title}
         {amount && amount > 0 ? `(${amount})` : ""}
       </div>
       {!isFromInventory && !isMerging && (

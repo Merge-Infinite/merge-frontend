@@ -19,7 +19,7 @@ export function ErrorPage({
 
       <Button
         onClick={() => {
-          window.open("https://tingdepin.com", "_blank");
+          window.open("https://merg3.xyz", "_blank");
         }}
         className="w-fit px-4 capitalize"
       >
