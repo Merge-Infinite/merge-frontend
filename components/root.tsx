@@ -76,7 +76,7 @@ function App(props: PropsWithChildren) {
           <AppRoot
             appearance={themeParams.isDark ? "dark" : "light"}
             platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
-            className="h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)] "
+            className=" w-full h-full"
           >
             {props.children}
           </AppRoot>

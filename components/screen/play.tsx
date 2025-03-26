@@ -162,9 +162,10 @@ export default function PlayGame({}: PlayGameProps) {
   );
 
   console.log("isMobile", isMobile);
+  alert(isMobile);
   return (
     <DndProvider backend={isMobile ? TouchBackend : HTML5Backend}>
-      <div className="w-full h-full bg-black">
+      <div className="w-full h-full bg-white">
         <GamePlayInfo />
 
         <div className="h-[40%] mt-4">

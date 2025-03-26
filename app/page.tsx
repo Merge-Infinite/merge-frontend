@@ -41,10 +41,9 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] p-4">
+    <div className="flex flex-col items-center h-full w-full p-4">
       <Tabs
         defaultValue={tabMode || "home"}
-        className="w-full h-full "
         value={tabMode}
         onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
       >
