@@ -4,6 +4,7 @@ import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
 import { SELLER_ADDRESS } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
@@ -26,6 +27,7 @@ import { toast } from "sonner";
 
 export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const apiClient = useApiClient();
+  const { user } = useUser();
   const invoice = initInvoice();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { data: network } = useNetwork(appContext.networkId);
@@ -124,7 +126,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
         <div className="self-stretch px-4 py-2 bg-neutral-950 bg-opacity-60 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#1f1f1f] inline-flex flex-col justify-start items-start gap-2">
           <div className="self-stretch inline-flex justify-center items-center gap-2">
             <div className="flex-1 justify-start text-white text-base font-bold font-['Sora'] leading-normal">
-              Hi Noname!!!
+              Hi {user?.username}!!!
             </div>
           </div>
           <div className="inline-flex justify-start items-center gap-2">
