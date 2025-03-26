@@ -5,10 +5,10 @@ import { useTelegramDevice } from "@/hooks/use-device";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
-import React, { useCallback, useState } from "react";
-import { DndProvider, XYCoord } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import { TouchBackend } from "react-dnd-touch-backend";
+import { HTML5toTouch } from "rdndmb-html5-to-touch";
+import { useCallback, useState } from "react";
+import { XYCoord } from "react-dnd";
+import { DndProvider } from "react-dnd-multi-backend";
 import DraggableBox from "../common/DraggableBox";
 import MergingArea from "../common/MergingArea";
 import GamePlayInfo from "../common/play-info";
@@ -161,12 +161,8 @@ export default function PlayGame({}: PlayGameProps) {
     [mergingBoxes]
   );
 
-  const backend = React.useMemo(() => {
-    return isMobile ? TouchBackend : HTML5Backend;
-  }, [isMobile]);
-
   return (
-    <DndProvider backend={TouchBackend}>
+    <DndProvider options={HTML5toTouch}>
       <div className="w-full h-full bg-black">
         <GamePlayInfo />
 
