@@ -3,9 +3,10 @@
 import PlayGame from "@/components/screen/play";
 import { initBackButton } from "@telegram-apps/sdk";
 
-import { useEffect } from "react";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
   const [backButton] = initBackButton();
@@ -20,7 +21,7 @@ export default function Home() {
   }, []);
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <SkeletonCard />;
   }
 
   return (

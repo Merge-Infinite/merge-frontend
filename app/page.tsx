@@ -41,7 +41,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] ">
+    <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] p-4">
       <Tabs
         defaultValue={tabMode || "home"}
         className="w-full h-full "

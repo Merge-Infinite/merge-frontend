@@ -160,6 +160,8 @@ export default function PlayGame({}: PlayGameProps) {
     },
     [mergingBoxes]
   );
+
+  console.log("isMobile", isMobile);
   return (
     <DndProvider backend={isMobile ? TouchBackend : HTML5Backend}>
       <div className="w-full h-full bg-black">
