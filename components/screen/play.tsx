@@ -166,7 +166,7 @@ export default function PlayGame({}: PlayGameProps) {
   }, [isMobile]);
 
   return (
-    <DndProvider backend={backend}>
+    <DndProvider backend={TouchBackend}>
       <div className="w-full h-full bg-black">
         <GamePlayInfo />
 
