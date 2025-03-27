@@ -82,15 +82,15 @@ export function useAdsgram({
   const claimReward = useCallback(
     async (sid: string, result: ShowPromiseResult) => {
       try {
-        const response = await claimAdRewardApi({
+        const response = await claimAdRewardApi?.mutateAsync({
           sessionId: sid,
           completionTimestamp: Date.now(),
         });
 
-        if (response.data?.success) {
+        if (response?.success) {
           onReward(result);
         } else {
-          toast.error(response.data?.message || "Failed to claim reward");
+          toast.error(response?.message || "Failed to claim reward");
           onError?.(result);
         }
       } catch (error: any) {

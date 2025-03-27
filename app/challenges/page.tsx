@@ -24,10 +24,6 @@ export default function Challenge() {
     });
   }, []);
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] ">
       <div className="justify-start text-white text-sm font-bold font-['Sora'] leading-normal w-full">

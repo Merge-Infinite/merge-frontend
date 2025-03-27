@@ -15,10 +15,9 @@ const ElementItem: React.FC<ElementItemProps> = ({
   emoji,
   amount,
 }) => {
-  console.log(emoji.toString());
   return (
     <div className="px-3 py-1  rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white">
-      <div className="text-white text-xs font-normal capitalize leading-normal">
+      <div className="text-white text-xs font-normal  leading-normal uppercase">
         <span className="mr-1">{emoji}</span> {handle}
         {amount && amount > 0 ? `(${amount})` : ""}
       </div>

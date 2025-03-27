@@ -82,7 +82,15 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
           <Image src="/images/ad.svg" alt="explore" width={24} height={24} />
         </Button>
       </div>
-      <Image src="/images/recipe.svg" alt="explore" width={24} height={24} />
+      <Image
+        src="/images/recipe.svg"
+        onClick={() => {
+          router.push("/recipe");
+        }}
+        alt="explore"
+        width={24}
+        height={24}
+      />
     </div>
   );
 }
