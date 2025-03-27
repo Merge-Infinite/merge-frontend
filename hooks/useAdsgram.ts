@@ -70,7 +70,6 @@ export function useAdsgram({
       try {
         await adStartedApi?.mutateAsync({
           sessionId: sid,
-          timestamp: Date.now(),
         });
       } catch (error) {
         console.error("Failed to record ad start:", error);
@@ -84,7 +83,7 @@ export function useAdsgram({
       try {
         const response = await claimAdRewardApi?.mutateAsync({
           sessionId: sid,
-          completionTimestamp: Date.now(),
+          completionDate: Date.now(),
         });
 
         if (response?.success) {
