@@ -1,4 +1,3 @@
-import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useApiClient } from "../hooks/useApiClient";
@@ -18,8 +17,6 @@ const Session = (props: Extendable) => {
   const { isSetuped, authenticate } = useBiometricAuth();
 
   useEffect(() => {
-    if (initialized && authed) {
-    }
     if (!authed && initialized) {
       // Create an interval to repeatedly attempt login until authenticated
       const loginInterval = setInterval(async () => {
@@ -38,10 +35,6 @@ const Session = (props: Extendable) => {
       };
     }
   }, [authed, initialized, isSetuped]);
-
-  if (!authed && initialized) {
-    return <SkeletonCard />;
-  }
 
   return <>{props.children}</>;
 };
