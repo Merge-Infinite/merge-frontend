@@ -11,6 +11,7 @@ export const MergingArea = ({
   onRemove,
   mergingTarget,
   isMerging,
+  inventory,
 }: {
   onDrop: (item: any, delta: XYCoord, clientOffset: XYCoord) => void;
   onDropandMerge: (targetInstanceId: string, droppedItem: any) => void;
@@ -18,16 +19,54 @@ export const MergingArea = ({
   onRemove: (id: string) => void;
   mergingTarget: { [key: string]: any };
   isMerging: boolean;
+  inventory: any[];
 }) => {
+  // Track items that have been used from inventory to prevent overuse
+  const [usedItems, setUsedItems] = useState<Record<string, number>>({});
+
+  // Reset used items when inventory changes (e.g., after a successful merge)
+  useEffect(() => {
+    setUsedItems({});
+  }, [inventory]);
+
   const handleDrop = useCallback(
     (droppedItem: any, monitor) => {
       const delta = monitor.getDifferenceFromInitialOffset() as XYCoord;
       const clientOffset = monitor.getClientOffset() as XYCoord;
 
+      // Check if this is an inventory item and if we have enough amount
+      if (droppedItem.isFromInventory) {
+        const originalId = droppedItem.originalId || droppedItem.id;
+        const inventoryItem = inventory.find(
+          (item) => item.itemId === originalId
+        );
+
+        if (!inventoryItem) return undefined;
+
+        // For basic items, we don't need to check amount
+        if (!inventoryItem.isBasic) {
+          // Calculate how many we've already used
+          const currentUsed = usedItems[originalId] || 0;
+
+          // Check if we have enough available
+          if (currentUsed >= inventoryItem.amount) {
+            // Not enough available
+            console.log("Not enough items available");
+            return undefined;
+          }
+
+          // Update the count of used items
+          setUsedItems((prev) => ({
+            ...prev,
+            [originalId]: (prev[originalId] || 0) + 1,
+          }));
+        }
+      }
+
       onDrop(droppedItem, delta, clientOffset);
       return undefined;
     },
-    [onDrop]
+    [onDrop, inventory, usedItems]
   );
 
   const [, drop] = useDrop(
@@ -44,17 +83,64 @@ export const MergingArea = ({
   // Memoize the handler for box removal
   const handleRemove = useCallback(
     (id: string) => {
+      // When removing an item, we need to update our usedItems count
+      const box = mergingBoxes[id];
+      if (box) {
+        const originalId = box.originalId || box.id;
+
+        // If this is a non-basic item from inventory, decrement the used count
+        const inventoryItem = inventory.find(
+          (item) => item.itemId === originalId
+        );
+        if (inventoryItem && !inventoryItem.isBasic) {
+          setUsedItems((prev) => ({
+            ...prev,
+            [originalId]: Math.max(0, (prev[originalId] || 0) - 1),
+          }));
+        }
+      }
+
       onRemove(id);
     },
-    [onRemove]
+    [onRemove, mergingBoxes, inventory]
   );
 
-  // Memoize the handler for box merging
+  // Update usedItems counter when items are merged
   const handleDropAndMerge = useCallback(
     (targetInstanceId: string, droppedItem: any) => {
+      // First check if the item being dropped is from inventory and has limited amount
+      if (droppedItem.isFromInventory) {
+        const originalId = droppedItem.originalId || droppedItem.id;
+        const inventoryItem = inventory.find(
+          (item) => item.itemId === originalId
+        );
+
+        if (inventoryItem && !inventoryItem.isBasic) {
+          // Calculate how many we've already used
+          const currentUsed = usedItems[originalId] || 0;
+
+          // Check if we have enough available
+          if (currentUsed >= inventoryItem.amount) {
+            // Not enough available
+            console.log("Not enough items available for merging");
+            return;
+          }
+
+          // Update the count of used items
+          setUsedItems((prev) => ({
+            ...prev,
+            [originalId]: (prev[originalId] || 0) + 1,
+          }));
+        }
+      }
+
+      // When two items are merged, we need to account for both items being "consumed"
       onDropandMerge(targetInstanceId, droppedItem);
+
+      // After successful merge, items will be removed from the board
+      // The handleRemove function will be called, which will decrement the usedItems counts
     },
-    [onDropandMerge]
+    [onDropandMerge, inventory, usedItems]
   );
 
   // Convert mergingBoxes object to array only when it changes
@@ -74,20 +160,53 @@ export const MergingArea = ({
 
   // Cache box components for better performance
   const boxComponents = useMemo(() => {
-    return visibleBoxes.map((box: any) => (
-      <DraggableBox
-        {...box}
-        key={box.instanceId}
-        isFromInventory={false}
-        onDrop={handleDropAndMerge}
-        onRemove={handleRemove}
-        isHidden={box.isHidden}
-        isNew={box.isNew}
-        isMerging={isMerging}
-        mergingTarget={mergingTarget}
-      />
-    ));
-  }, [visibleBoxes, handleDropAndMerge, handleRemove]);
+    return visibleBoxes.map((box: any) => {
+      // For each box on the board, check if it's from inventory and has limited amount
+      let isDisabled = false;
+
+      if (!box.isFromInventory) {
+        const originalId = box.originalId || box.id;
+        const inventoryItem = inventory.find(
+          (item) => item.itemId === originalId
+        );
+
+        // If this is a non-basic inventory item, check available amount
+        if (inventoryItem && !inventoryItem.isBasic) {
+          // Count how many of this item are currently on the board
+          const itemsOnBoard = visibleBoxes.filter(
+            (b) =>
+              !b.isHidden &&
+              (b.originalId === originalId || b.id === originalId)
+          ).length;
+
+          // If there are more on the board than in inventory, disable dragging for this one
+          isDisabled = itemsOnBoard > inventoryItem.amount;
+        }
+      }
+
+      return (
+        <DraggableBox
+          {...box}
+          key={box.instanceId}
+          isFromInventory={false}
+          onDrop={handleDropAndMerge}
+          onRemove={handleRemove}
+          isHidden={box.isHidden}
+          isNew={box.isNew}
+          isMerging={isMerging}
+          mergingTarget={mergingTarget}
+          isDisabled={isDisabled}
+        />
+      );
+    });
+  }, [
+    visibleBoxes,
+    handleDropAndMerge,
+    handleRemove,
+    inventory,
+    isMerging,
+    mergingTarget,
+  ]);
 
   return (
     <div ref={drop} className="relative h-full will-change-contents">
@@ -98,6 +217,9 @@ export const MergingArea = ({
 
 // Custom comparison function to prevent unnecessary rerenders
 const areEqual = (prevProps: any, nextProps: any) => {
+  // Check if inventory changed
+  if (prevProps.inventory !== nextProps.inventory) return false;
+
   // Only re-render when mergingBoxes actually changes
   if (
     Object.keys(prevProps.mergingBoxes).length !==

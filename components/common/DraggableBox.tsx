@@ -32,9 +32,10 @@ const DraggableBox = ({
   isFromInventory,
   isMerging,
   mergingTarget,
+  isDisabled,
 }: {
   id: string;
-  instanceId: string;
+  instanceId?: string;
   title: string;
   emoji: string;
   left?: number;
@@ -47,10 +48,21 @@ const DraggableBox = ({
   isNew?: boolean;
   isMerging?: boolean;
   mergingTarget?: { [key: string]: any };
+  isDisabled?: boolean;
 }) => {
   const item = useMemo(
-    () => ({ id, instanceId, title, emoji, left, top, originalId: id }),
-    [id, instanceId, title, emoji, left, top]
+    () => ({
+      id,
+      instanceId,
+      title,
+      emoji,
+      left,
+      top,
+      originalId: id,
+      isFromInventory,
+      amount,
+    }),
+    [id, instanceId, title, emoji, left, top, isFromInventory, amount]
   );
 
   const [{ isDragging }, drag] = useDrag(
@@ -59,11 +71,12 @@ const DraggableBox = ({
       item: (monitor) => {
         return item;
       },
+      canDrag: !isDisabled && !isMerging,
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
     }),
-    [item] // Only depend on the memoized item
+    [item, isDisabled, isMerging] // Include isDisabled in dependencies
   );
 
   // Memoize the drop callback
@@ -74,7 +87,7 @@ const DraggableBox = ({
         onDrop?.(instanceId, dropItem);
       }
     },
-    [id, onDrop]
+    [id, onDrop, instanceId]
   );
 
   const [, drop] = useDrop(
@@ -143,9 +156,9 @@ const DraggableBox = ({
     [drag, drop]
   );
 
-  // if (isHidden) {
-  //   return null;
-  // }
+  if (isHidden) {
+    return null;
+  }
 
   // Memoize the style object
   const style = useMemo(
@@ -162,15 +175,15 @@ const DraggableBox = ({
             cursor: "grabbing",
           }
         : {
-            opacity: 1,
+            opacity: isDisabled ? 0.5 : 1,
             position: isFromInventory
               ? ("static" as const)
               : ("absolute" as const),
             left,
             top,
-            cursor: "grab",
+            cursor: isDisabled ? "not-allowed" : "grab",
           },
-    [isDragging, position.x, position.y, isFromInventory, left, top]
+    [isDragging, position.x, position.y, isFromInventory, left, top, isDisabled]
   );
 
   // Memoize the remove handler
@@ -185,7 +198,7 @@ const DraggableBox = ({
       className={cn(
         "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
         isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
-        isHidden && "hidden",
+        isDisabled && "bg-gray-200",
         isNew && "animate-bounce scale-110"
       )}
       style={style}
@@ -193,7 +206,8 @@ const DraggableBox = ({
       <div
         className={cn(
           "text-black text-xs font-normal font-['Sora'] capitalize leading-normal",
-          isMerging && mergingTarget?.instanceId === instanceId && "opacity-0"
+          isMerging && mergingTarget?.instanceId === instanceId && "opacity-0",
+          isDisabled && "text-gray-500"
         )}
       >
         <span className="mr-1">{emoji}</span> {title}
@@ -230,5 +244,6 @@ export default React.memo(
     prevProps.isMerging === nextProps.isMerging &&
     prevProps.mergingTarget === nextProps.mergingTarget &&
     prevProps.isNew === nextProps.isNew &&
-    prevProps.isHidden === nextProps.isHidden
+    prevProps.isHidden === nextProps.isHidden &&
+    prevProps.isDisabled === nextProps.isDisabled
 );
