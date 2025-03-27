@@ -120,6 +120,26 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
     }
   }
 
+  const timeLeft = React.useMemo(() => {
+    if (!user?.userBalance?.subscriptionEndDate) {
+      return;
+    }
+    const now = new Date();
+    const difference =
+      new Date(user?.userBalance?.subscriptionEndDate).getTime() -
+      now.getTime();
+
+    if (difference <= 0) {
+      return;
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(
+      (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+    return `${days}d ${hours}h`;
+  }, [user?.userBalance?.subscriptionEndDate]);
+
   return (
     <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex ">
       {currency === "sui" && (
@@ -279,12 +299,22 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                   <Button
                     className="bg-white rounded-3xl justify-center items-center gap-2 flex w-fit"
                     size={"sm"}
-                    disabled={createPurchase?.isPending || isLoading}
+                    disabled={
+                      createPurchase?.isPending ||
+                      isLoading ||
+                      (user?.userBalance?.subscriptionEndDate &&
+                        new Date(user?.userBalance?.subscriptionEndDate) >
+                          new Date())
+                    }
                     isLoading={createPurchase?.isPending || isLoading}
                     onClick={() => onBuy(product)}
                   >
                     <div className="text-black text-xs font-normal uppercase leading-normal">
-                      Subscription
+                      {user?.userBalance?.subscriptionEndDate &&
+                      new Date(user?.userBalance?.subscriptionEndDate) >
+                        new Date()
+                        ? timeLeft
+                        : "Subscription"}
                     </div>
                   </Button>
                 </div>
