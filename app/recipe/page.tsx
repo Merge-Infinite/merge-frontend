@@ -7,16 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useAdsgram from "@/hooks/useAdsgram";
 import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
+import { AppDispatch } from "@/lib/wallet/store";
+import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { Loader2, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 export default function Home() {
   const [backButton] = initBackButton();
   const router = useRouter();
+  const { user } = useUser();
   const [item, setItem] = useState<any>(null);
+  const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     backButton.show();
 
@@ -45,6 +51,13 @@ export default function Home() {
     },
   });
 
+  const shouldDisable = useMemo(() => {
+    return (
+      user?.userBalance?.subscriptionEndDate &&
+      new Date(user?.userBalance?.subscriptionEndDate) > new Date()
+    );
+  }, [user?.userBalance?.subscriptionEndDate]);
+
   return (
     <div className="flex flex-col items-center  h-full">
       <div className="w-full p-4 inline-flex flex-col justify-start items-start gap-2">
@@ -59,7 +72,14 @@ export default function Home() {
           <br />
           2.Skip the video to get the recipe:
         </div>
-        <Button className=" bg-[#a668ff] rounded-3xl inline-flex justify-center items-center gap-2 w-fit">
+        <Button
+          className=" bg-[#a668ff] rounded-3xl inline-flex justify-center items-center gap-2 w-fit"
+          disabled={shouldDisable}
+          onClick={() => {
+            dispatch(updateTabMode(TabMode.SHOP));
+            router.push("/");
+          }}
+        >
           <Image
             src="/images/vip.svg"
             alt="subscription"
@@ -86,7 +106,9 @@ export default function Home() {
                   key={index}
                   onClick={() => {
                     setItem(item);
-                    showAd();
+                    if (!shouldDisable) {
+                      showAd();
+                    }
                   }}
                   className="cursor-pointer transition-transform hover:scale-105"
                 >
