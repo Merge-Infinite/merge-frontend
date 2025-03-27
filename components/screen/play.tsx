@@ -45,6 +45,9 @@ export default function PlayGame({}: PlayGameProps) {
       const targetBox = (mergingBoxes as any)[targetInstanceId];
       if (!targetBox) return;
 
+      console.log("targetBox", targetBox);
+      console.log("droppedItem", droppedItem);
+
       // Check if either item is from inventory and has limited amount
       const checkItemAvailability = (item: any) => {
         const originalId = item.originalId || item.id;
@@ -158,7 +161,7 @@ export default function PlayGame({}: PlayGameProps) {
         });
       }
     },
-    [mergingBoxes, inventory, mergeApi, refetchInventory, refetch]
+    [mergingBoxes, inventory]
   );
 
   const handleDrop = useCallback(

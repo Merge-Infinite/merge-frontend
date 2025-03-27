@@ -108,6 +108,8 @@ export const MergingArea = ({
   // Update usedItems counter when items are merged
   const handleDropAndMerge = useCallback(
     (targetInstanceId: string, droppedItem: any) => {
+      console.log("handleDropAndMerge targetInstanceId", targetInstanceId);
+      console.log("handleDropAndMerge droppedItem", droppedItem);
       // First check if the item being dropped is from inventory and has limited amount
       if (droppedItem.isFromInventory) {
         const originalId = droppedItem.originalId || droppedItem.id;
@@ -133,6 +135,11 @@ export const MergingArea = ({
           }));
         }
       }
+
+      console.log(
+        "onDropandMerge targetInstanceId droppedItem",
+        targetInstanceId
+      );
 
       // When two items are merged, we need to account for both items being "consumed"
       onDropandMerge(targetInstanceId, droppedItem);

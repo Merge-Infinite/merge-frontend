@@ -156,10 +156,6 @@ const DraggableBox = ({
     [drag, drop]
   );
 
-  if (isHidden) {
-    return null;
-  }
-
   // Memoize the style object
   const style = useMemo(
     () =>
@@ -199,7 +195,8 @@ const DraggableBox = ({
         "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
         isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
         isDisabled && "bg-gray-200",
-        isNew && "animate-bounce scale-110"
+        isNew && "animate-bounce scale-110",
+        isHidden && "hidden"
       )}
       style={style}
     >
