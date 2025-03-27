@@ -1,12 +1,15 @@
 "use client";
 
+import useAdsgram from "@/hooks/useAdsgram";
 import { useUser } from "@/hooks/useUser";
 import { AppDispatch } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback } from "react";
 import { useDispatch } from "react-redux";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 interface GamePlayInfoProps {
   explore?: number;
   reward?: number;
@@ -20,7 +23,20 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  useEffect(() => {}, [user]);
+  const onReward = useCallback(async () => {
+    toast.success("Rewarded");
+  }, []);
+
+  const onError = useCallback((result: any) => {
+    toast.error(result?.description || "Error");
+  }, []);
+
+  const showAd = useAdsgram({
+    blockId: "9126",
+    onReward,
+    onError,
+  });
+
   return (
     <div className="w-full justify-between items-center inline-flex p-4">
       <div className="justify-start items-center gap-2 flex">
@@ -47,7 +63,11 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
             }}
           />
         </div>
-        <div className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex">
+        <Button
+          className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex w-fit bg-transparent"
+          size="default"
+          onClick={showAd}
+        >
           <div className="justify-start items-center flex">
             <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
               +5
@@ -60,7 +80,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
             />
           </div>
           <Image src="/images/ad.svg" alt="explore" width={24} height={24} />
-        </div>
+        </Button>
       </div>
       <Image src="/images/recipe.svg" alt="explore" width={24} height={24} />
     </div>

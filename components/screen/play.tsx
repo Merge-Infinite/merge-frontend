@@ -33,8 +33,6 @@ export default function PlayGame({}: PlayGameProps) {
     async (targetInstanceId: string, droppedItem: any) => {
       // If we have two items in merging area, combine them
       const targetBox = (mergingBoxes as any)[targetInstanceId];
-      console.log("targetBox", targetBox);
-      console.log("droppedItem", droppedItem);
       if (!targetBox) return;
       setTargetBox(targetBox);
       const targetItemId = targetBox.originalId || targetBox.id;
