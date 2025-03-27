@@ -1,16 +1,16 @@
 import classnames from "classnames";
-import IconWaterDrop from "../../../assets/icons/waterdrop.svg";
+import SuiIcon from "../../../assets/icons/sui.svg";
 import IconToken from "../../../assets/icons/token.svg";
-import VerifiedIcon from "../../../assets/icons/verified.svg";
 import UnverifiedIcon from "../../../assets/icons/unverified.svg";
-import styles from "./index.module.scss";
-import { Extendable } from "../../../types";
+import VerifiedIcon from "../../../assets/icons/verified.svg";
+import IconWaterDrop from "../../../assets/icons/waterdrop.svg";
 import TokenIcon from "../../../components/TokenIcon";
+import Tooltip from "../../../components/Tooltip";
 import Typo from "../../../components/Typo";
 import { formatCurrency } from "../../../core";
+import { Extendable } from "../../../types";
 import { isSuiToken } from "../../../utils/check";
-import Tooltip from "../../../components/Tooltip";
-import SuiIcon from "../../../assets/icons/sui.svg";
+import styles from "./index.module.scss";
 type TokenItemProps = Extendable & {
   symbol: string;
   type: string;
@@ -52,7 +52,6 @@ const TokenItem = (props: TokenItemProps) => {
   if (iconURL) {
     tokenIcon = iconURL;
   }
-  console.log(tokenIcon);
   const isSUI = isSuiToken(coinType);
 
   return (

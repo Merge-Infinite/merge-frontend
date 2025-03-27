@@ -1,36 +1,35 @@
-import styles from "./index.module.scss";
-import commonStyles from "./common.module.scss";
-import Typo from "../../components/Typo";
-import Button from "../../components/Button";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
-import { useAccount } from "../../hooks/useAccount";
-import Nav from "../../components/Nav";
-import TokenItem from "./TokenItem";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import AddressInputPage from "./AddressInput";
-import SendConfirm from "./SendConfirm";
+import { useApolloClient } from "@apollo/client";
+import { useCallback, useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
-import { CoinDto } from "../../hooks/coin/useCoins";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import Button from "../../components/Button";
+import message from "../../components/message";
+import Nav from "../../components/Nav";
+import Typo from "../../components/Typo";
+import { DEFAULT_SUI_COIN } from "../../constants/coin";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
   calculateCoinAmount,
 } from "../../core";
-import { DEFAULT_SUI_COIN } from "../../constants/coin";
-import { SendData } from "./types";
-import { compareCoinAmount } from "../../utils/check";
-import message from "../../components/message";
-import { useNetwork } from "../../hooks/useNetwork";
-import { useApiClient } from "../../hooks/useApiClient";
-import { OmitToken } from "../../types";
-import useSuiBalance from "../../hooks/coin/useSuiBalance";
 import { getTransactionBlock } from "../../core/utils/txb-factory";
-import createTransferCoinTxb from "./utils/createTransferCoinTxb";
-import useGasBudgetForTransferCoin from "./hooks/useGasBudgetForTranferCoin";
+import { CoinDto } from "../../hooks/coin/useCoins";
+import useSuiBalance from "../../hooks/coin/useSuiBalance";
+import { useAccount } from "../../hooks/useAccount";
+import { useApiClient } from "../../hooks/useApiClient";
+import { useNetwork } from "../../hooks/useNetwork";
+import { RootState } from "../../store";
+import { OmitToken } from "../../types";
+import { compareCoinAmount } from "../../utils/check";
+import AddressInputPage from "./AddressInput";
 import useCoinsWithSuiOnTop from "./hooks/useCoinsWithSuiOnTop";
-import { useApolloClient } from "@apollo/client";
+import useGasBudgetForTransferCoin from "./hooks/useGasBudgetForTranferCoin";
+import styles from "./index.module.scss";
+import SendConfirm from "./SendConfirm";
+import TokenItem from "./TokenItem";
+import { SendData } from "./types";
+import createTransferCoinTxb from "./utils/createTransferCoinTxb";
 enum Mode {
   symbol,
   address,
@@ -179,6 +178,8 @@ const SendPage = () => {
                       wrappedChain={coin.wrappedChain}
                       bridge={coin.bridge}
                       onClick={(coinType) => {
+                        console.log(coinType);
+                        console.log(coin);
                         setSelectedCoin(coin);
                         setSendData((prev) => ({
                           ...prev,
