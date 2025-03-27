@@ -1,25 +1,19 @@
-import styles from "./index.module.scss";
-import { Link } from "react-router-dom";
-import { Modal } from "../../../components/modals";
-import WaterDropIcon from "../../../components/WaterDropIcon";
-import Typo from "../../../components/Typo";
-import QRCodeSVG from "qrcode.react";
-import classnames from "classnames";
-import Address from "../../../components/Address";
-import Skeleton from "react-loading-skeleton";
-import { formatCurrency, formatSUI } from "../../../core";
-import message from "../../../components/message";
-import { useEffect, useState } from "react";
-import { LoadingSpokes } from "../../../components/Loading";
-import Banner from "../Banner";
-import { useFeatureFlagsWithNetwork } from "../../../hooks/useFeatureFlags";
-import useSuiBalance from "../../../hooks/coin/useSuiBalance";
-import useCoins from "../../../hooks/coin/useCoins";
 import { useQuery } from "@apollo/client";
-import { GET_SUPPORT_SWAP_COINS } from "../../../utils/graphql/query";
+import classnames from "classnames";
+import QRCodeSVG from "qrcode.react";
+import { useEffect, useState } from "react";
+import Skeleton from "react-loading-skeleton";
+import { Link } from "react-router-dom";
 import SuiIcon from "../../../assets/icons/sui.svg";
-import IconQrCode from "../../../assets/icons/qrcode.svg";
-import Image from "next/image";
+import Address from "../../../components/Address";
+import message from "../../../components/message";
+import { Modal } from "../../../components/modals";
+import Typo from "../../../components/Typo";
+import { formatCurrency } from "../../../core";
+import useCoins from "../../../hooks/coin/useCoins";
+import { useFeatureFlagsWithNetwork } from "../../../hooks/useFeatureFlags";
+import { GET_SUPPORT_SWAP_COINS } from "../../../utils/graphql/query";
+import styles from "./index.module.scss";
 export type ReceiveButtonProps = {
   address: string;
 };
@@ -89,6 +83,7 @@ function MainPage({ address, networkId }: DashboardProps) {
   const faucetApi =
     featureFlags?.faucet_api ?? `https://faucet.${networkId}.sui.io/gas`;
   // preload swap data
+  console.log(networkId);
   useQuery(GET_SUPPORT_SWAP_COINS, {
     fetchPolicy: "cache-and-network",
     variables: {
@@ -114,13 +109,29 @@ function MainPage({ address, networkId }: DashboardProps) {
         "rounded-2xl border border-[#1f1f1f] p-4 gap-4 flex flex-col"
       )}
     >
-      <Address
-        value={address}
-        className={classnames(
-          "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 w-fit"
-        )}
-      />
-
+      <div className="flex items-center justify-between gap-2">
+        <Address
+          value={address}
+          className={classnames(
+            "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 w-fit"
+          )}
+        />
+        <div className="flex gap-2 justify-center items-center border border-white rounded-3xl px-3 py-1">
+          <div
+            style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: networkId.includes("testnet")
+                ? "#FFD700"
+                : "#00FF00",
+            }}
+          ></div>
+          <div className="text-white text-xs font-normal font-['Sora'] capitalize leading-normal">
+            {networkId.includes("testnet") ? "Testnet" : "Mainnet"}
+          </div>
+        </div>
+      </div>
       <div className={"flex gap-2 items-center"}>
         <SuiIcon width={24} height={24} />
         {isLoading || coinsError ? (
