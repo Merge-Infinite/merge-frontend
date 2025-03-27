@@ -108,6 +108,8 @@ export default function Home() {
                     setItem(item);
                     if (!shouldDisable) {
                       showAd();
+                    } else {
+                      router.push(`/recipe-detail?id=${item.itemId}`);
                     }
                   }}
                   className="cursor-pointer transition-transform hover:scale-105"
