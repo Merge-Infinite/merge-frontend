@@ -1,39 +1,39 @@
-import { Network } from '../../../core';
-import { useFeatureFlags } from './useFeatureFlags';
-import { useMemo } from 'react';
-import { isNonEmptyArray } from '../utils/check';
+import { Network } from "@/lib/wallet/core";
+import { useMemo } from "react";
+import { isNonEmptyArray } from "../utils/check";
+import { useFeatureFlags } from "./useFeatureFlags";
 
 const DEFAULT_NETWORKS = new Map([
   [
-    'devnet',
+    "devnet",
     {
-      id: 'devnet',
-      name: 'devnet',
-      queryRpcUrl: 'https://devnet.suiet.app',
-      txRpcUrl: 'https://devnet.suiet.app',
-      graphqlUrl: 'https://devnet.suiet.app/query',
+      id: "devnet",
+      name: "devnet",
+      queryRpcUrl: "https://devnet.suiet.app",
+      txRpcUrl: "https://devnet.suiet.app",
+      graphqlUrl: "https://devnet.suiet.app/query",
       versionCacheTimoutInSeconds: 0,
     },
   ],
   [
-    'testnet',
+    "testnet",
     {
-      id: 'testnet',
-      name: 'testnet',
-      queryRpcUrl: 'https://testnet.suiet.app',
-      txRpcUrl: 'https://testnet.suiet.app',
-      graphqlUrl: 'https://testnet.suiet.app/query',
+      id: "testnet",
+      name: "testnet",
+      queryRpcUrl: "https://testnet.suiet.app",
+      txRpcUrl: "https://testnet.suiet.app",
+      graphqlUrl: "https://testnet.suiet.app/query",
       versionCacheTimoutInSeconds: 0,
     },
   ],
   [
-    'mainnet',
+    "mainnet",
     {
-      id: 'mainnet',
-      name: 'mainnet',
-      queryRpcUrl: 'https://mainnet.suiet.app',
-      txRpcUrl: 'https://mainnet.suiet.app',
-      graphqlUrl: 'https://mainnet.suiet.app/query',
+      id: "mainnet",
+      name: "mainnet",
+      queryRpcUrl: "https://mainnet.suiet.app",
+      txRpcUrl: "https://mainnet.suiet.app",
+      graphqlUrl: "https://mainnet.suiet.app/query",
       versionCacheTimoutInSeconds: 0,
     },
   ],
@@ -52,14 +52,14 @@ function trimUndefinedValue(obj: Record<string, any>) {
 export function useNetwork(networkId: string) {
   const defaultNetwork =
     DEFAULT_NETWORKS.get(networkId) ??
-    (DEFAULT_NETWORKS.get('mainnet') as Network);
+    (DEFAULT_NETWORKS.get("mainnet") as Network);
   const featureFlags = useFeatureFlags();
 
   const data: Network | undefined = useMemo(() => {
     // first try featureFlags
     if (
       !featureFlags ||
-      typeof featureFlags.networks !== 'object' ||
+      typeof featureFlags.networks !== "object" ||
       !isNonEmptyArray(Object.keys(featureFlags.networks))
     ) {
       return defaultNetwork;

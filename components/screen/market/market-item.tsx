@@ -15,6 +15,7 @@ import {
 } from "@/lib/wallet/core/api/txn";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
+import { useFeatureFlags } from "@/lib/wallet/hooks/useFeatureFlags";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
@@ -50,6 +51,8 @@ export const MarketItem = React.memo(
     seller_kiosk: string;
     isOwned?: boolean;
   }) => {
+    const featureFlags = useFeatureFlags();
+
     const apiClient = useApiClient();
     const { user } = useUser();
     const appContext = useSelector((state: RootState) => state.appContext);
@@ -78,10 +81,14 @@ export const MarketItem = React.memo(
     }).post;
 
     const handleCopyId = () => {
-      navigator.clipboard.writeText(nftId);
-      setCopied(true);
-      toast.success("NFT ID copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
+      const currentNetworkConfig = featureFlags.networks[appContext.networkId];
+      window.open(
+        currentNetworkConfig.explorer_url + "/object/" + nftId,
+        "_blank"
+      );
+      // setCopied(true);
+      // toast.success("NFT ID copied to clipboard");
+      // setTimeout(() => setCopied(false), 2000);
     };
 
     async function purchaseNFT(): Promise<void> {
