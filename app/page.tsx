@@ -6,11 +6,13 @@ import { HomeScreen } from "@/components/screen/home/home";
 import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
   TabMode,
   updateAppMode,
+  updateAuthed,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
 import { initBackButton } from "@telegram-apps/sdk";
@@ -23,10 +25,14 @@ import { useAuth } from "./context/AuthContext";
 export default function Home() {
   const [backButton] = initBackButton();
   const { isAuthenticated } = useAuth();
+  const apiClient = useApiClient();
 
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
   const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
+  const initialized = useSelector(
+    (state: RootState) => state.appContext.initialized
+  );
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   useEffect(() => {
@@ -34,9 +40,27 @@ export default function Home() {
     dispatch(updateAppMode(AppMode.GAMES));
     backButton.hide();
   }, []);
-  console.log(`isAuthenticated: ${isAuthenticated}`);
-  console.log(`authed: ${authed}`);
-  if (!isAuthenticated && !authed) {
+
+  useEffect(() => {
+    if (!authed && initialized) {
+      const loginInterval = setInterval(async () => {
+        try {
+          console.log("Attempting login via interval");
+          await apiClient.callFunc<string, string>("auth", "login", "123456");
+          dispatch(updateAuthed(true));
+          clearInterval(loginInterval);
+        } catch (e) {
+          console.log("Login attempt failed, will retry");
+        }
+      }, 3000);
+
+      return () => {
+        clearInterval(loginInterval);
+      };
+    }
+  }, [authed, initialized]);
+
+  if (!isAuthenticated || !authed) {
     return <SplashScreen />;
   }
 
