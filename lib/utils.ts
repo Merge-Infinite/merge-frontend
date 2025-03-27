@@ -49,7 +49,7 @@ export const NFT_PACKAGE_ID =
 export const POLICY_ID =
   "0xc7131ef9b5294036856acedbe80b409997754d4c98ab464977b04ae0fe073021";
 export const NFT_MODULE_NAME = "element_nft";
-export const MINT_NFT_FEE = 50000000;
+export const MINT_NFT_FEE = 0.05;
 export const suiClient = new SuiClient({
   url: getFullnodeUrl(process.env.NEXT_PUBLIC_SUI_NETWORK as any),
 });

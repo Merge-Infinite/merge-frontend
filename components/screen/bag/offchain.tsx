@@ -111,7 +111,9 @@ export function OffchainBagScreen() {
       let tx = new Transaction();
 
       // Split Sui coin for payment
-      const paymentCoin = tx.splitCoins(tx.gas, [MINT_NFT_FEE]);
+      const paymentCoin = tx.splitCoins(tx.gas, [
+        MINT_NFT_FEE * Number(MIST_PER_SUI),
+      ]);
 
       tx.moveCall({
         target: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"mint"}`,
@@ -308,7 +310,7 @@ export function OffchainBagScreen() {
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
                       <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
-                        Fee: {MINT_NFT_FEE / Number(MIST_PER_SUI)} SUI
+                        Fee: {MINT_NFT_FEE} SUI
                       </div>
                       <Image
                         src="/images/sui.svg"
