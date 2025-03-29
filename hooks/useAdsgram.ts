@@ -6,7 +6,7 @@ import useApi from "./useApi";
 
 export interface UseAdsgramParams {
   blockId: string;
-  onReward: (result: ShowPromiseResult) => void;
+  onReward: (sid: string, result: ShowPromiseResult) => void;
   onError?: (result: ShowPromiseResult) => void;
 }
 
@@ -29,12 +29,6 @@ export function useAdsgram({
     key: ["user", "adStarted"],
     method: "POST",
     url: "user/ad-started",
-  }).post;
-
-  const claimAdRewardApi = useApi({
-    key: ["user", "claimAdReward"],
-    method: "POST",
-    url: "user/claim-ad-reward",
   }).post;
 
   useEffect(() => {
@@ -78,30 +72,6 @@ export function useAdsgram({
     [adStartedApi]
   );
 
-  const claimReward = useCallback(
-    async (sid: string, result: ShowPromiseResult) => {
-      try {
-        const response = await claimAdRewardApi?.mutateAsync({
-          sessionId: sid,
-          completionDate: Date.now(),
-        });
-
-        if (response?.success) {
-          onReward(result);
-        } else {
-          toast.error(response?.message || "Failed to claim reward");
-          onError?.(result);
-        }
-      } catch (error: any) {
-        console.error("Failed to claim reward:", error);
-        toast.error(error?.response?.data?.message || "Error claiming reward");
-        onError?.(result);
-      } finally {
-      }
-    },
-    [claimAdRewardApi, onReward, onError]
-  );
-
   return useCallback(async () => {
     if (isLoading) return;
 
@@ -119,7 +89,7 @@ export function useAdsgram({
         AdControllerRef.current
           .show()
           .then((result: ShowPromiseResult) => {
-            claimReward(sid, result);
+            onReward(sid, result);
           })
           .catch((result: ShowPromiseResult) => {
             onError?.(result);
@@ -136,7 +106,7 @@ export function useAdsgram({
       console.error("Error in showAd flow:", error);
       toast.error("Something went wrong");
     }
-  }, [isLoading, createAdSession, recordAdStart, claimReward, onError]);
+  }, [isLoading, createAdSession, recordAdStart, onError]);
 }
 
 export default useAdsgram;

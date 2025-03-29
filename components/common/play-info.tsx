@@ -1,6 +1,7 @@
 "use client";
 
 import useAdsgram from "@/hooks/useAdsgram";
+import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { AppDispatch } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
@@ -30,9 +31,17 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
   const [isRecipeListOpen, setIsRecipeListOpen] = useState(false);
   const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const claimAdRewardApi = useApi({
+    key: ["user", "claimAdReward"],
+    method: "POST",
+    url: "user/claim-ad-reward",
+  }).post;
 
-  const onReward = useCallback(async () => {
-    toast.success("Rewarded");
+  const onReward = useCallback(async (sid: string, result: any) => {
+    await claimAdRewardApi?.mutateAsync({
+      sessionId: sid,
+      completionDate: Date.now(),
+    });
   }, []);
 
   const onError = useCallback((result: any) => {
