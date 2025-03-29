@@ -8,9 +8,9 @@ import { HTML5toTouch } from "rdndmb-html5-to-touch";
 import { useCallback, useEffect, useState } from "react";
 import { XYCoord } from "react-dnd";
 import { DndProvider } from "react-dnd-multi-backend";
-import DraggableBox from "../common/DraggableBox";
-import MergingArea from "../common/MergingArea";
-import GamePlayInfo from "../common/play-info";
+import DraggableBox from "../../common/DraggableBox";
+import MergingArea from "../../common/MergingArea";
+import GamePlayInfo from "../../common/play-info";
 
 interface PlayGameProps {
   explore?: number;

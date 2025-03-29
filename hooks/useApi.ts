@@ -32,6 +32,8 @@ interface ApiHookParams {
   method: Method;
   url: string;
   customConfig?: Record<string, unknown>;
+  enabled?: boolean;
+  validateParams?: () => boolean;
 }
 
 interface ApiResponse<T = unknown> {
@@ -41,7 +43,6 @@ interface ApiResponse<T = unknown> {
 // Get base config with authorization
 const getConfig = (): ApiConfig => {
   const token = localStorage.getItem("token");
-  console.log("token", token);
   if (token) {
     return {
       headers: {
@@ -119,8 +120,11 @@ export default function useApi<T = unknown>({
   method,
   url,
   customConfig,
+  enabled = true,
+  validateParams = () => true,
 }: ApiHookParams) {
   const queryClient = new QueryClient();
+  const isEnabled = enabled && validateParams();
 
   switch (method) {
     case "GET": {
@@ -128,7 +132,7 @@ export default function useApi<T = unknown>({
         queryKey: key,
         queryFn: async () => apiCall<T>(method, url),
         retry: 0,
-        enabled: false,
+        enabled: isEnabled,
         staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: true,
       });
