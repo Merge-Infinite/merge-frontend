@@ -40,7 +40,11 @@ export default function PlayGame({}: PlayGameProps) {
   }).post;
 
   const handleDropToMerge = useCallback(
-    async (targetInstanceId: string, droppedItem: any) => {
+    async (
+      targetInstanceId: string,
+      droppedItem: any,
+      isFromInventory: boolean
+    ) => {
       // If we have two items in merging area, combine them
       const targetBox = (mergingBoxes as any)[targetInstanceId];
       if (!targetBox) return;
@@ -94,7 +98,7 @@ export default function PlayGame({}: PlayGameProps) {
         }
         return newBoxes;
       });
-
+      if (isFromInventory) return;
       try {
         // Call the API to merge items
         const response: any = await mergeApi?.mutateAsync({
@@ -191,7 +195,7 @@ export default function PlayGame({}: PlayGameProps) {
 
       const instanceId = `${droppedItem.id}_${Date.now()}_${instanceCounter}`;
       setInstanceCounter((prev) => prev + 1);
-
+      console.log("droppedItem", droppedItem);
       if (
         droppedItem.id &&
         droppedItem.left !== undefined &&

@@ -13,8 +13,17 @@ export const MergingArea = ({
   isMerging,
   inventory,
 }: {
-  onDrop: (item: any, delta: XYCoord, clientOffset: XYCoord) => void;
-  onDropandMerge: (targetInstanceId: string, droppedItem: any) => void;
+  onDrop: (
+    item: any,
+    delta: XYCoord,
+    clientOffset: XYCoord,
+    isFromInventory: boolean
+  ) => void;
+  onDropandMerge: (
+    targetInstanceId: string,
+    droppedItem: any,
+    isFromInventory: boolean
+  ) => void;
   mergingBoxes: { [key: string]: any };
   onRemove: (id: string) => void;
   mergingTarget: { [key: string]: any };
@@ -142,7 +151,11 @@ export const MergingArea = ({
       );
 
       // When two items are merged, we need to account for both items being "consumed"
-      onDropandMerge(targetInstanceId, droppedItem);
+      onDropandMerge(
+        targetInstanceId,
+        droppedItem,
+        droppedItem.isFromInventory
+      );
 
       // After successful merge, items will be removed from the board
       // The handleRemove function will be called, which will decrement the usedItems counts
