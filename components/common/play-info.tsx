@@ -1,7 +1,6 @@
 "use client";
 
 import useAdsgram from "@/hooks/useAdsgram";
-import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { AppDispatch } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
@@ -31,29 +30,6 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
   const [isRecipeListOpen, setIsRecipeListOpen] = useState(false);
   const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const getUserBagApi = useApi({
-    key: ["getUserBag"],
-    method: "GET",
-    url: "user/mybags",
-  }).get;
-
-  const getRecipeApi = useApi({
-    key: ["getRecipe"],
-    method: "GET",
-    url: selectedItem
-      ? `recipes/item/${selectedItem.itemId || selectedItem.id}/craftable`
-      : "",
-    enabled: !!selectedItem,
-  }).get;
-
-  const getItemApi = useApi({
-    key: ["getItem"],
-    method: "GET",
-    url: selectedItem
-      ? `recipes/item/${selectedItem.itemId || selectedItem.id}`
-      : "",
-    enabled: !!selectedItem,
-  }).get;
 
   const onReward = useCallback(async () => {
     toast.success("Rewarded");
@@ -71,8 +47,6 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
 
   const handleItemSelect = (item: any) => {
     setSelectedItem(item);
-    getRecipeApi?.refetch();
-    getItemApi?.refetch();
     setIsRecipeDetailOpen(true);
     setIsRecipeListOpen(false);
   };
@@ -93,9 +67,6 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
       setIsRecipeListOpen(true);
     } else {
       setIsRecipeListOpen(!isRecipeListOpen);
-      if (!isRecipeListOpen) {
-        getUserBagApi?.refetch();
-      }
     }
   };
 
@@ -155,7 +126,10 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
       <Sheet open={isRecipeListOpen} onOpenChange={setIsRecipeListOpen}>
         <SheetContent
           side="bottom"
-          className="bg-[#141414] text-white border-t border-[#333333] h-[70%]"
+          className="bg-[#141414] text-white border-t border-[#333333]"
+          style={{
+            height: "90%",
+          }}
         >
           <RecipeList onItemClick={handleItemSelect} />
         </SheetContent>
@@ -164,8 +138,11 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
       <Sheet open={isRecipeDetailOpen} onOpenChange={setIsRecipeDetailOpen}>
         <SheetContent
           side="bottom"
-          className="bg-[#141414] text-white border-t border-[#333333] h-[70%]"
+          className="bg-[#141414] text-white border-t border-[#333333]"
           showClose={false}
+          style={{
+            height: "90%",
+          }}
         >
           <SheetHeader className="w-[80%] flex flex-row items-center gap-2">
             <ArrowLeftIcon

@@ -60,7 +60,9 @@ export default function Home() {
     }
   }, [authed, initialized]);
 
-  if (!isAuthenticated || !authed) {
+  console.log(initialized, authed);
+
+  if (!isAuthenticated || (initialized && !authed)) {
     return <SplashScreen />;
   }
 

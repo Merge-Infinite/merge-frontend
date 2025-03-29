@@ -130,6 +130,7 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "text-encoding": "0.7.0",
+    "use-debounce": "^10.0.4",
     "utils": "link:@mysten/sui/utils",
     "uuid": "9.0.0"
   },

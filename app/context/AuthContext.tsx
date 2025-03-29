@@ -18,25 +18,13 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const {
-    user,
-    inventory,
-    refetch: refetchUser,
-    refetchInventory,
-    isLoading,
-    error,
-  } = useUser();
+  const { user } = useUser();
 
   const isAuthenticated = !!user;
 
-  // Context value
+  // // Context value
   const value = {
     user,
-    inventory,
-    isLoading,
-    error,
-    refetchUser,
-    refetchInventory,
     isAuthenticated,
   };
 

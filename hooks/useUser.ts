@@ -3,16 +3,22 @@ import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import useApi from "./useApi";
 
 export function useUser() {
+  // Constants and state
   const { initDataRaw, initData } = retrieveLaunchParams();
   const lp = useLaunchParams();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address } = useAccount(appContext.accountId);
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const isLoggedInRef = useRef(false);
+  const initializedRef = useRef(false);
+  // API endpoints
   const authApi = useApi({
     key: ["auth"],
     method: "POST",
@@ -23,12 +29,14 @@ export function useUser() {
     key: ["auth"],
     method: "GET",
     url: "user/me",
+    enabled: false,
   }).get;
 
   const userInventory = useApi({
     key: ["user", "inventory"],
     method: "GET",
     url: "user/inventory",
+    enabled: false,
   }).get;
 
   const saveAddressApi = useApi({
@@ -37,83 +45,132 @@ export function useUser() {
     url: "user/saveAddress",
   }).post;
 
-  const login = async () => {
-    console.log("login");
+  // Helper to handle localStorage safely
+  const getLocalStorage = useCallback((key: string) => {
     try {
-      const existUser = localStorage.getItem("user");
-      if (existUser) {
-        const localUser = JSON.parse(existUser);
-        if (localUser.id) {
-          if (Number(initData?.user?.id) !== Number(localUser?.telegramId)) {
-            localStorage.clear();
-          }
-          setUser(localUser);
-        } else {
-          localStorage.clear();
-        }
-      }
-      const existToken = localStorage.getItem("token");
-      if (!existToken) {
-        const response: any = await authApi?.mutateAsync({
-          initData: initDataRaw,
-          referralCode: lp.startParam,
-        });
-        if (response.accessToken) {
-          localStorage.setItem("token", response.accessToken);
-        }
-      }
-      await getUser();
-      await getUserInventory();
-    } catch (error) {
-      console.log(error);
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (e) {
+      console.error(`Error parsing ${key} from localStorage:`, e);
+      localStorage.removeItem(key);
+      return null;
     }
-  };
+  }, []);
 
-  const getUser = async () => {
+  const setLocalStorage = useCallback((key: string, value: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      console.error(`Error setting ${key} in localStorage:`, e);
+      return false;
+    }
+  }, []);
+
+  // User data management
+  const getUser = useCallback(async () => {
     try {
       const response = await getMe?.refetch();
-      setUser(response?.data);
-      localStorage.setItem("user", JSON.stringify(response?.data));
+      if (response?.data) {
+        setUser(response.data);
+        setLocalStorage("user", response.data);
+      }
+      return response;
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching user:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
+      return null;
     }
-  };
+  }, [getMe, setLocalStorage]);
 
-  const saveAddress = async () => {
+  const getUserInventory = useCallback(async () => {
+    try {
+      return await userInventory?.refetch();
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+      return null;
+    }
+  }, [userInventory]);
+
+  const saveAddress = useCallback(async () => {
+    if (!address) return null;
+
     try {
       await saveAddressApi?.mutateAsync({ address });
       const response = await getMe?.refetch();
-      localStorage.setItem("user", JSON.stringify(response?.data));
+      if (response?.data) {
+        setLocalStorage("user", response.data);
+      }
+      return response;
     } catch (error) {
-      console.log(error);
+      console.error("Error saving address:", error);
+      return null;
     }
-  };
-  useEffect(() => {
-    if (address && !getMe?.data?.walletAddress) {
-      saveAddress();
-    }
-  }, [address]);
+  }, [address, getMe, saveAddressApi, setLocalStorage]);
 
-  const getUserInventory = async () => {
+  const login = useCallback(async () => {
+    if (!initDataRaw || isLoggedInRef.current || initializedRef.current) return;
+
+    isLoggedInRef.current = true;
+    initializedRef.current = true;
+    setIsLoading(true);
+    setError(null);
+
     try {
-      await userInventory?.refetch();
+      const storedUser = getLocalStorage("user");
+      const telegramIdMatches =
+        storedUser?.id &&
+        Number(initData?.user?.id) === Number(storedUser?.telegramId);
+      if (storedUser && telegramIdMatches) {
+        setUser(storedUser);
+      } else if (storedUser) {
+        localStorage.clear();
+      }
+      // Handle authentication token only if not already authenticated
+      const token = localStorage.getItem("token");
+      if (!token) {
+        const response = await authApi?.mutateAsync({
+          initData: initDataRaw,
+          referralCode: lp.startParam,
+        });
+        if (response?.accessToken) {
+          localStorage.setItem("token", response.accessToken);
+          // Get user data after initial authentication
+          await Promise.all([getUser(), getUserInventory()]);
+          return;
+        }
+      }
+      await getUserInventory();
     } catch (error) {
-      console.log(error);
-    }
-  };
+      console.error("Login error:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      isLoggedInRef.current = false;
 
+      setIsLoading(false);
+    }
+  }, [lp.startParam]);
+
+  // Effects
   useEffect(() => {
     if (initDataRaw) {
       login();
     }
-  }, [initDataRaw]);
+  }, [initDataRaw, login]);
 
+  useEffect(() => {
+    if (address && getMe?.data && !getMe.data.walletAddress) {
+      saveAddress();
+    }
+  }, [address, getMe?.data, saveAddress]);
+
+  // Return values
   return {
-    user: getMe?.data,
+    user,
     inventory: userInventory?.data,
     refetchInventory: userInventory?.refetch,
     refetch: getMe?.refetch,
-    isLoading: false,
-    error: null,
+    isLoading,
+    error,
   };
 }

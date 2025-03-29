@@ -7,6 +7,7 @@ interface ElementItemProps {
   handle: string;
   emoji: string;
   amount?: number;
+  customIcon?: React.ReactNode;
 }
 
 const ElementItem: React.FC<ElementItemProps> = ({
@@ -14,11 +15,13 @@ const ElementItem: React.FC<ElementItemProps> = ({
   handle,
   emoji,
   amount,
+  customIcon,
 }) => {
   return (
     <div className="px-3 py-1  rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white text-white text-xs uppercase">
       <span className="">{emoji}</span> {handle}
       {amount && amount > 0 ? `(${amount})` : ""}
+      {customIcon && customIcon}
     </div>
   );
 };

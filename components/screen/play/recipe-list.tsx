@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 
 export const RecipeList = ({
   onItemClick,
@@ -25,9 +26,12 @@ export const RecipeList = ({
 }) => {
   const [backButton] = initBackButton();
   const router = useRouter();
+  const [search, setSearch] = useState("");
   const { user } = useUser();
   const [item, setItem] = useState<any>(null);
   const dispatch = useDispatch<AppDispatch>();
+  const [debouncedText] = useDebounce(search, 1000);
+
   useEffect(() => {
     backButton.show();
 
@@ -39,12 +43,12 @@ export const RecipeList = ({
   const getUserBagApi = useApi({
     key: ["getUserBag"],
     method: "GET",
-    url: "user/mybags",
+    url: `recipes/suggest?search=${debouncedText}`,
   }).get;
 
   useEffect(() => {
     getUserBagApi?.refetch();
-  }, []);
+  }, [debouncedText]);
 
   const showAd = useAdsgram({
     blockId: "9126",
@@ -68,7 +72,11 @@ export const RecipeList = ({
       <SheetHeader className="w-[80%]">
         <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
           <SearchIcon className="w-5 h-5 text-white" />
-          <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
+          <Input
+            className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </SheetHeader>
       <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
@@ -77,7 +85,7 @@ export const RecipeList = ({
         2.Skip the video to get the recipe:
       </div>
       <Button
-        className=" bg-[#a668ff] rounded-3xl inline-flex justify-center items-center gap-2 w-fit"
+        className="flex justify-center items-center gap-2 w-fit px-4 py-2"
         disabled={shouldDisable}
         onClick={() => {
           dispatch(updateTabMode(TabMode.SHOP));
@@ -98,14 +106,16 @@ export const RecipeList = ({
       <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
         Recipe:
       </div>
-      <div className="self-stretch inline-flex justify-start items-center gap-2 flex-wrap content-center overflow-y-auto">
+      <div className="flex justify-start items-center gap-2 flex-wrap content-center overflow-y-auto">
         {getUserBagApi?.isPending ? (
           <div className="flex flex-col items-center justify-center w-full h-64">
             <Loader2 className="h-8 w-8 animate-spin text-[#68ffd1] mb-2" />
             <p className="text-gray-400">Loading inventory...</p>
           </div>
-        ) : getUserBagApi?.data && getUserBagApi?.data?.length > 0 ? (
-          <div className="flex flex-wrap gap-2 w-full">
+        ) : getUserBagApi?.data &&
+          getUserBagApi?.data?.length > 0 &&
+          !getUserBagApi.isPending ? (
+          <div className="flex flex-wrap gap-2 w-full h-full">
             {getUserBagApi?.data?.map((item, index) => (
               <div
                 key={index}
@@ -119,7 +129,19 @@ export const RecipeList = ({
                 }}
                 className="cursor-pointer transition-transform hover:scale-105"
               >
-                <ElementItem {...item} />
+                <ElementItem
+                  {...item}
+                  customIcon={
+                    !user?.userBalance?.subscriptionEndDate && (
+                      <Image
+                        src="/images/ad.svg"
+                        alt="subscription"
+                        width={24}
+                        height={24}
+                      />
+                    )
+                  }
+                />
               </div>
             ))}
           </div>

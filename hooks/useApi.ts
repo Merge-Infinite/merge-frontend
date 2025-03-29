@@ -42,6 +42,16 @@ interface ApiResponse<T = unknown> {
 
 // Get base config with authorization
 const getConfig = (): ApiConfig => {
+  // Don't try to access localStorage during SSR
+  if (typeof window === "undefined") {
+    return {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "",
+      },
+    };
+  }
+
   const token = localStorage.getItem("token");
   if (token) {
     return {
@@ -75,7 +85,7 @@ const apiCall = async <T = unknown>(
 
   try {
     const instance = axiosInstances;
-    const fullUrl = `${baseUrl}/${url}`;
+    const fullUrl = `${url}`;
     let response: ApiResponse<T>;
 
     switch (method) {
@@ -99,9 +109,10 @@ const apiCall = async <T = unknown>(
       const status = error.response?.status;
       if (status === 401) {
         console.log("401 error");
-        localStorage.clear();
-        window.location.href = window.location.origin;
-        window.location.reload();
+        // Only clear localStorage in browser context
+        if (typeof window !== "undefined") {
+          localStorage.clear();
+        }
       }
 
       const errorMessage =
@@ -114,16 +125,26 @@ const apiCall = async <T = unknown>(
   }
 };
 
+// Create a singleton QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 0,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 // Main hook
 export default function useApi<T = unknown>({
   key,
   method,
   url,
   customConfig,
-  enabled = true,
+  enabled = false,
   validateParams = () => true,
 }: ApiHookParams) {
-  const queryClient = new QueryClient();
   const isEnabled = enabled && validateParams();
 
   switch (method) {
@@ -131,11 +152,9 @@ export default function useApi<T = unknown>({
       const query = useQuery({
         queryKey: key,
         queryFn: async () => apiCall<T>(method, url),
-        retry: 0,
         enabled: isEnabled,
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        refetchOnWindowFocus: true,
       });
+
       return { get: query };
     }
 
@@ -143,29 +162,29 @@ export default function useApi<T = unknown>({
       const mutation = useMutation({
         mutationFn: (data: unknown) =>
           apiCall<T>(method, url, data, customConfig),
-        retry: 0,
-
         onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: key });
           data.message && toast(data.message, {});
         },
         onError: (error: any) => {
-          console.log(error.message);
+          console.error(error.message);
           (error.message || error.response?.data?.message) &&
             toast(error.message || error.response?.data?.message, {});
         },
       });
 
-      const safePost = (data: unknown) => {
+      // Throttle mutation calls to prevent duplicate requests
+      const mutateAsync = async (data: unknown) => {
         if (!mutation.isPending) {
-          mutation.mutate(data);
+          return mutation.mutateAsync(data);
         }
+        return null;
       };
 
       return {
         post: {
           ...mutation,
-          mutate: safePost,
+          mutateAsync,
         },
       };
     }
@@ -174,25 +193,23 @@ export default function useApi<T = unknown>({
       const mutation = useMutation({
         mutationFn: (data: { id: number } & Record<string, unknown>) =>
           apiCall<T>(method, `${url}/${data.id}`, data),
-        retry: 0,
-
         onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: key });
           data.message && toast(data.message, {});
         },
         onError: (error: any) => {
-          console.log(error);
+          console.error(error);
           error.response?.data?.message &&
             toast(error.response?.data?.message, {});
         },
       });
+
       return { put: mutation };
     }
 
     case "DELETE": {
       const mutation = useMutation({
         mutationFn: (id: string) => apiCall<T>(method, `${url}/${id}`),
-        retry: 0,
         onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: key });
           data.message && toast(data.message, {});
@@ -202,6 +219,7 @@ export default function useApi<T = unknown>({
             toast(error.response?.data?.message, {});
         },
       });
+
       return { delete: mutation };
     }
 

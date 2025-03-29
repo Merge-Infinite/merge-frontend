@@ -21,7 +21,7 @@ export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
   const fetchDailyChallenges = useApi({
     key: ["daily-challenges"],
     method: "GET",
-    url: `challenges/daily/${Number(day)}`,
+    url: `challenges/daily`,
   }).get;
 
   const fetchSubmissionsToday = useApi({

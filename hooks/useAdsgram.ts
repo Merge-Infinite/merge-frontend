@@ -119,11 +119,9 @@ export function useAdsgram({
         AdControllerRef.current
           .show()
           .then((result: ShowPromiseResult) => {
-            // User watched ad till the end
             claimReward(sid, result);
           })
           .catch((result: ShowPromiseResult) => {
-            // User got error during playing ad or skipped ad
             onError?.(result);
           });
       } else {
