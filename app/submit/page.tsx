@@ -32,6 +32,7 @@ export default function SubmitItem() {
     key: ["crafted-items-today"],
     method: "GET",
     url: `challenges/crafted-items/today?itemId=${fetchItemChallenge?.data?.item?.id}`,
+    enabled: false,
   }).get;
 
   useEffect(() => {
@@ -44,7 +45,9 @@ export default function SubmitItem() {
   }, [fetchItemChallenge, fetchCraftedItemsToday]);
 
   useEffect(() => {
-    fetchCraftedItemsToday?.refetch();
+    if (fetchItemChallenge?.data?.item?.id) {
+      fetchCraftedItemsToday?.refetch();
+    }
   }, [fetchItemChallenge?.data?.item?.id]);
 
   return (
