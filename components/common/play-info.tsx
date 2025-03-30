@@ -55,7 +55,10 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
     onError,
   });
 
+  console.log("selectedItem", selectedItem);
+
   const handleItemSelect = (item: any) => {
+    console.log("item", item);
     setSelectedItem(item);
     setIsRecipeDetailOpen(true);
     setIsRecipeListOpen(false);

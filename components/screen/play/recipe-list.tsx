@@ -14,7 +14,7 @@ import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { Loader2, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
@@ -31,6 +31,7 @@ export const RecipeList = ({
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [debouncedText] = useDebounce(search, 1000);
+  const selectedItemRef = useRef<any>(null);
 
   useEffect(() => {
     backButton.show();
@@ -50,15 +51,41 @@ export const RecipeList = ({
     getUserBagApi?.refetch();
   }, [debouncedText]);
 
+  useEffect(() => {
+    selectedItemRef.current = selectedItem;
+  }, [selectedItem]);
+
+  const handleReward = useCallback(
+    (sid: string, result: any) => {
+      if (selectedItemRef.current) {
+        onItemClick(selectedItemRef.current);
+      } else {
+        toast.error("No item selected");
+      }
+    },
+    [onItemClick]
+  );
+
   const { showAd, isLoading } = useAdsgram({
     blockId: "9126",
-    onReward: (sid: string, result: any) => {
-      onItemClick(selectedItem);
-    },
+    onReward: handleReward,
     onError: (e: any) => {
       toast.error(e?.description || "Error");
     },
   });
+
+  const handleItemClick = useCallback(
+    (item: any) => {
+      setSelectedItem(item);
+      selectedItemRef.current = item;
+      if (!shouldDisable) {
+        showAd();
+      } else {
+        onItemClick(item);
+      }
+    },
+    [showAd]
+  );
 
   const shouldDisable = useMemo(() => {
     return (
@@ -119,15 +146,7 @@ export const RecipeList = ({
             {getUserBagApi?.data?.map((item, index) => (
               <div
                 key={index}
-                onClick={() => {
-                  setSelectedItem(item);
-                  showAd();
-                  // if (!shouldDisable) {
-                  //   showAd();
-                  // } else {
-                  //   onItemClick(item);
-                  // }
-                }}
+                onClick={() => handleItemClick(item)}
                 className={`cursor-pointer transition-transform hover:scale-105 ${
                   selectedItem?.id === item?.id && isLoading
                     ? "opacity-50 px-10 py-1 rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white text-white "
