@@ -49,7 +49,6 @@ export function useNFTList(options?: UseNFTListOptions) {
           showDisplay: true,
         },
       });
-      console.log("data", data);
       if (data && data.length > 0) {
         const nftList = data.map(({ data }) => {
           const display = data?.display?.data;

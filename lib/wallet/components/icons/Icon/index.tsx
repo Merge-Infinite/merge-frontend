@@ -1,15 +1,10 @@
-import React, {
-  CSSProperties,
-  ElementType,
-  ReactElement,
-  ReactNode,
-} from "react";
+import { CSSProperties, ElementType, ReactNode } from "react";
 import { Extendable } from "../../../types";
 
-import * as imgs from "./imgs";
-import { nftImgUrl } from "../../../utils/nft";
 import classNames from "classnames";
 import Image from "next/image";
+import { nftImgUrl } from "../../../utils/nft";
+import * as imgs from "./imgs";
 
 export type IconProps = Extendable & {
   icon: {
@@ -71,8 +66,6 @@ export function iconType(icon: string | ReactNode): IconType {
  */
 const Icon = (props: IconProps) => {
   const { icon, alt = "icon" } = props;
-  console.log("type", iconType(icon));
-  console.log("icon", icon);
 
   const renderIcon = () => {
     switch (iconType(icon)) {

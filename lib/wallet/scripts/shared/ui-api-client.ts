@@ -1,18 +1,18 @@
 // src/lib/api/DirectApiClient.ts
+import { cloneDeep } from "lodash-es";
 import mitt, { Emitter } from "mitt";
-import { isDev } from "../../utils/env";
-import { ErrorCode } from "../background/errors";
 import {
   AccountApi,
   AuthApi,
   getStorage,
+  IStorage,
   NetworkApi,
   TransactionApi,
   WalletApi,
-  IStorage,
 } from "../../core";
+import { isDev } from "../../utils/env";
 import { DappBgApi } from "../background/bg-api/dapp";
-import { cloneDeep } from "lodash-es";
+import { ErrorCode } from "../background/errors";
 
 // Types
 export interface CallFuncOption {
@@ -22,7 +22,6 @@ export interface CallFuncOption {
 
 function log(message: string, details?: any, devOnly = true) {
   if (devOnly && !isDev) return;
-  console.log("[direct api client]", message, details);
 }
 
 export interface ApiClientEventListeners {
@@ -152,7 +151,6 @@ export class WebApiClient {
 
     // Prepare parameters
     const params = payload ? cloneDeep(payload) : {};
-    console.log("params", params);
     // Inject token if withAuth is true
     if (options?.withAuth === true) {
       try {

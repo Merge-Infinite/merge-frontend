@@ -48,7 +48,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
     toast.error(result?.description || "Error");
   }, []);
 
-  const showAd = useAdsgram({
+  const { showAd, isLoading } = useAdsgram({
     blockId: "9126",
     onReward,
     onError,
@@ -109,6 +109,8 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
           className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex w-fit bg-transparent"
           size="default"
           onClick={showAd}
+          disabled={isLoading}
+          isLoading={isLoading}
         >
           <div className="justify-start items-center flex">
             <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">

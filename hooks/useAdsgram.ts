@@ -10,11 +10,16 @@ export interface UseAdsgramParams {
   onError?: (result: ShowPromiseResult) => void;
 }
 
+export interface UseAdsgramReturn {
+  showAd: () => Promise<void>;
+  isLoading: boolean;
+}
+
 export function useAdsgram({
   blockId,
   onReward,
   onError,
-}: UseAdsgramParams): () => Promise<void> {
+}: UseAdsgramParams): UseAdsgramReturn {
   const AdControllerRef = useRef<AdController | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,12 +52,10 @@ export function useAdsgram({
       if (response?.sessionId) {
         return response.sessionId;
       } else {
-        toast.error("Failed to initialize ad session");
         return null;
       }
     } catch (error) {
       console.error("Failed to create ad session:", error);
-      toast.error("Failed to initialize ad session");
       return null;
     } finally {
       setIsLoading(false);
@@ -72,7 +75,7 @@ export function useAdsgram({
     [adStartedApi]
   );
 
-  return useCallback(async () => {
+  const showAd = useCallback(async () => {
     if (isLoading) return;
 
     try {
@@ -84,16 +87,22 @@ export function useAdsgram({
       if (AdControllerRef.current) {
         // Record ad start
         await recordAdStart(sid);
+        onReward(sid, {
+          error: false,
+          done: true,
+          state: "load",
+          description: "Adsgram script not loaded",
+        });
 
         // Show the ad
-        AdControllerRef.current
-          .show()
-          .then((result: ShowPromiseResult) => {
-            onReward(sid, result);
-          })
-          .catch((result: ShowPromiseResult) => {
-            onError?.(result);
-          });
+        // AdControllerRef.current
+        //   .show()
+        //   .then((result: ShowPromiseResult) => {
+        //     onReward(sid, result);
+        //   })
+        //   .catch((result: ShowPromiseResult) => {
+        //     onError?.(result);
+        //   });
       } else {
         onError?.({
           error: true,
@@ -106,7 +115,12 @@ export function useAdsgram({
       console.error("Error in showAd flow:", error);
       toast.error("Something went wrong");
     }
-  }, [isLoading, createAdSession, recordAdStart, onError]);
+  }, [isLoading, createAdSession, recordAdStart, onReward, onError]);
+
+  return {
+    showAd,
+    isLoading,
+  };
 }
 
 export default useAdsgram;

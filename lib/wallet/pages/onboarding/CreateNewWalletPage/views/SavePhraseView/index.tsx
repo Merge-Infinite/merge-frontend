@@ -1,12 +1,12 @@
-import styles from "./index.module.scss";
-import { Extendable } from "../../../../../types";
+import { Button } from "@/components/ui/button";
+import classNames from "classnames";
+import Skeleton from "react-loading-skeleton";
 import CopyIcon from "../../../../../components/CopyIcon";
 import message from "../../../../../components/message";
-import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
 import { isNonEmptyArray } from "../../../../../core";
-import Skeleton from "react-loading-skeleton";
-import classNames from "classnames";
-import { Button } from "@/components/ui/button";
+import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
+import { Extendable } from "../../../../../types";
+import styles from "./index.module.scss";
 
 type PhraseDisplayProps = Extendable & {
   phrases: string[] | undefined;
@@ -54,8 +54,6 @@ export const PhraseDisplay = (props: PhraseDisplayProps) => {
 };
 
 const SavePhraseView = (props: SavePhraseView) => {
-  console.log("props.phrases", props.phrases);
-  console.log("isNonEmptyArray(props.phrases)", props.onNext);
   return (
     <SettingOneLayout titles={[]} desc={"Copy and save your recovery phrase."}>
       <section className={"mt-[24px]"}>

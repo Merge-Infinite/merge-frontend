@@ -1,10 +1,10 @@
-import { Account, GetAddressParams } from "../../../core";
-import { useApiClient } from "./useApiClient";
 import { useEffect, useState } from "react";
-import { OmitToken } from "../types";
-import { BackgroundApiClient } from "../scripts/shared/ui-api-client";
-import { isNonEmptyArray } from "../utils/check";
 import { useQuery } from "react-query";
+import { Account, GetAddressParams } from "../../../core";
+import { BackgroundApiClient } from "../scripts/shared/ui-api-client";
+import { OmitToken } from "../types";
+import { isNonEmptyArray } from "../utils/check";
+import { useApiClient } from "./useApiClient";
 
 // memory cache variable, mapping accountId -> address
 const _addressMemoryCache_ = new Map<string, string>();
@@ -17,7 +17,6 @@ export async function getAddress(
   apiClient: BackgroundApiClient,
   params: OmitToken<GetAddressParams>
 ): Promise<string | string[]> {
-  // console.log('getAddress params', params);
   if (isNonEmptyArray(params.batchAccountIds)) {
     // batch mode
     const batchAccountIds = params.batchAccountIds as string[];
@@ -39,11 +38,7 @@ export async function getAddress(
     const needFetchIds = Array.from(needFetchIdMap.values()).map(
       (item) => item.id
     );
-    // console.log('getAddress cachedResult', cachedResult);
-    // console.log('getAddress needFetchIds', needFetchIds);
     if (!isNonEmptyArray(needFetchIds)) {
-      // empty list, return all addresses from cache
-      // console.log('getAddress all from cache', cachedResult);
       return cachedResult;
     }
     // otherwise, fetch uncached data, cached and return merged data

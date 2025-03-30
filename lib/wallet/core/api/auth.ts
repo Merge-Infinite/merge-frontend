@@ -122,7 +122,6 @@ export class AuthApi implements IAuthApi {
       try {
         await this.login(newPassword);
       } finally {
-        console.log("login", Date.now() - t);
       }
     }
   }
@@ -169,11 +168,9 @@ export class AuthApi implements IAuthApi {
     const t = Date.now();
     const salt = Buffer.from(meta.cipher.salt, "hex");
     const token = crypto.password2Token(password, salt);
-    console.log("password2Token", Date.now() - t);
     if (!crypto.validateToken(token, meta.cipher)) {
       throw new Error("Invalid password");
     }
-    console.log("validateToken", Date.now() - t);
     return token.toString("hex");
   }
 

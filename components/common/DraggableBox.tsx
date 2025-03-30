@@ -82,7 +82,6 @@ const DraggableBox = ({
   // Memoize the drop callback
   const handleDrop = useCallback(
     (dropItem: any) => {
-      console.log("dropItem", dropItem);
       if (dropItem.instanceId !== instanceId) {
         onDrop?.(instanceId, dropItem);
       }

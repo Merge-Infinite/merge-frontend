@@ -32,7 +32,6 @@ export class ChromeStorage implements WebStorage {
   }
 
   async setItem(key: string, item: string | null): Promise<void> {
-    console.log("this.isClient()", this.isClient());
     if (!this.isClient()) return;
     localStorage.setItem(key, item ?? "");
   }

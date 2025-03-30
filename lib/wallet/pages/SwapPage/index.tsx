@@ -1,74 +1,52 @@
 // import cetus from '@cetusprotocol/cetus-sui-clmm-sdk';
-import SDK, {
+import { useQuery } from "@apollo/client";
+import {
   Percentage,
   SdkOptions,
   adjustForSlippage,
-  TransactionUtil,
   d,
 } from "@cetusprotocol/cetus-sui-clmm-sdk/dist";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
-import { useAccount } from "../../hooks/useAccount";
-import {
-  TransactionBlock,
-  getTotalGasUsed,
-  is,
-  getExecutionStatusGasSummary,
-} from "@mysten/sui.js";
+import { TransactionBlock, getTotalGasUsed } from "@mysten/sui.js";
 import { SuiSignAndExecuteTransactionBlockOutput } from "@mysten/wallet-standard";
 import BN from "bn.js";
-import React, {
-  Key,
-  useEffect,
-  useState,
-  CSSProperties,
-  ReactNode,
-  useRef,
-  useMemo,
-  useCallback,
-} from "react";
-import AppLayout, { LayoutMode } from "../../layouts/AppLayout";
-import { Extendable, OmitToken } from "../../types";
-import Img from "../../components/Img";
+import { debounce } from "lodash-es";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import Alert from "../../components/Alert";
 import Button from "../../components/Button";
-import { useQuery } from "@apollo/client";
-import { GET_SUPPORT_SWAP_COINS } from "../../utils/graphql/query";
+import Message from "../../components/message";
 import { TokenInfo } from "../../components/TokenItem";
-import { Token } from "graphql";
-import { CoinType } from "../../types/coin";
-import useCoins from "../../hooks/coin/useCoins";
 import {
   CetusSwapClient,
-  formatCurrency,
-  formatSUI,
   SendAndExecuteTxParams,
-  SwapCoin,
-  SwapCoinPair,
   TxEssentials,
   calculateCoinAmount,
+  formatSUI,
 } from "../../core";
-import { debounce } from "lodash-es";
-import Message from "../../components/message";
-import { useAsyncEffect } from "ahooks";
+import useCoins from "../../hooks/coin/useCoins";
 import { dryRunTransactionBlock } from "../../hooks/transaction/useDryRunTransactionBlock";
+import { useAccount } from "../../hooks/useAccount";
 import { useApiClient } from "../../hooks/useApiClient";
 import { useNetwork } from "../../hooks/useNetwork";
+import AppLayout, { LayoutMode } from "../../layouts/AppLayout";
+import { RootState } from "../../store";
+import { OmitToken } from "../../types";
+import { CoinType } from "../../types/coin";
+import { GET_SUPPORT_SWAP_COINS } from "../../utils/graphql/query";
 import SwapItem from "./swapItem";
-import Alert from "../../components/Alert";
 // import { ExchageIcon}
 import IconExchange from "../../assets/icons/exchange.svg";
-import formatInputCoinAmount from "../../components/InputAmount/formatInputCoinAmount";
 
-import { useFeatureFlagsWithNetwork } from "../../hooks/useFeatureFlags";
-import { useNavigate } from "react-router-dom";
-import Slider from "./slider";
+import { Separator } from "@/components/ui/separator";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import Big from "big.js";
 import classNames from "classnames";
+import { useNavigate } from "react-router-dom";
+import Tooltip from "../../components/Tooltip";
+import { useFeatureFlagsWithNetwork } from "../../hooks/useFeatureFlags";
 import { isSuiToken } from "../../utils/check";
 import AssetChangeConfirmPage from "../AssetChangeConfirmPage";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
-import Tooltip from "../../components/Tooltip";
-import { Separator } from "@/components/ui/separator";
+import Slider from "./slider";
 export default function SwapPage() {
   const { accountId, walletId, networkId } = useSelector(
     (state: RootState) => state.appContext
@@ -106,7 +84,6 @@ export default function SwapPage() {
     },
     skip: !address,
   });
-  console.log("data", data);
   const filteredData = data?.supportedSwapCoins?.filter((coin: CoinType) => {
     if (!coin.swapPool?.cetus) {
       return false;
@@ -115,7 +92,6 @@ export default function SwapPage() {
     return coin.swapPool?.cetus?.length >= 0;
   });
 
-  console.log("filteredData", filteredData);
   const [slippageValue, setSlippageValue] = useState<number>(5);
   const slippagePercentage = useMemo(
     () => Percentage.fromDecimal(d(slippageValue)),
@@ -167,7 +143,6 @@ export default function SwapPage() {
     const transactionBlock =
       cetusSwapClient.current.buildSwapTransaction(payload);
 
-    console.log("transactionBlock", transactionBlock);
     return transactionBlock;
   };
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -227,7 +202,6 @@ export default function SwapPage() {
         );
         // console.log('swapPool', swapPool);
         if (!swapPool) {
-          console.log("no avaliable pool");
           setErrorMessage("Token pair not avaliable");
           setIsSwapAvailable(false);
           setSwapLoading(false);
@@ -271,25 +245,17 @@ export default function SwapPage() {
             amount: amount.toString(),
           });
         } catch (e) {
-          console.log(
-            // 'input',
-            // {
-            //   fromCoinType,
-            //   toCoinType,
-            // },
-            {
-              pool,
-              current_sqrt_price: pool.current_sqrt_price,
-              coinTypeA: swapPool.coinTypeA,
-              coinTypeB: swapPool.coinTypeB,
-              decimalsA: coinInfoA.metadata.decimals, // coin a 's decimals
-              decimalsB: coinInfoB.metadata.decimals, // coin b 's decimals
-              a2b,
-              by_amount_in: byAmountIn,
-              amount: amount.toString(),
-            }
-          );
-          console.log("res", e);
+          console.log({
+            pool,
+            current_sqrt_price: pool.current_sqrt_price,
+            coinTypeA: swapPool.coinTypeA,
+            coinTypeB: swapPool.coinTypeB,
+            decimalsA: coinInfoA.metadata.decimals, // coin a 's decimals
+            decimalsB: coinInfoB.metadata.decimals, // coin b 's decimals
+            a2b,
+            by_amount_in: byAmountIn,
+            amount: amount.toString(),
+          });
         }
         if (!res) {
           setIsSwapAvailable(false);
@@ -321,8 +287,6 @@ export default function SwapPage() {
             .toString()
         );
         setEstimatedTxFee(res.estimatedFeeAmount);
-
-        console.log("res", res);
 
         if (Number(res?.estimatedAmountOut) === 0) {
           setSwapLoading(false);

@@ -28,7 +28,7 @@ export const RecipeList = ({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const { user } = useUser();
-  const [item, setItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [debouncedText] = useDebounce(search, 1000);
 
@@ -50,10 +50,10 @@ export const RecipeList = ({
     getUserBagApi?.refetch();
   }, [debouncedText]);
 
-  const showAd = useAdsgram({
+  const { showAd, isLoading } = useAdsgram({
     blockId: "9126",
-    onReward: () => {
-      onItemClick(item);
+    onReward: (sid: string, result: any) => {
+      onItemClick(selectedItem);
     },
     onError: (e: any) => {
       toast.error(e?.description || "Error");
@@ -120,28 +120,37 @@ export const RecipeList = ({
               <div
                 key={index}
                 onClick={() => {
-                  setItem(item);
-                  if (!shouldDisable) {
-                    showAd();
-                  } else {
-                    onItemClick(item);
-                  }
+                  setSelectedItem(item);
+                  showAd();
+                  // if (!shouldDisable) {
+                  //   showAd();
+                  // } else {
+                  //   onItemClick(item);
+                  // }
                 }}
-                className="cursor-pointer transition-transform hover:scale-105"
+                className={`cursor-pointer transition-transform hover:scale-105 ${
+                  selectedItem?.id === item?.id && isLoading
+                    ? "opacity-50 px-10 py-1 rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white text-white "
+                    : ""
+                }`}
               >
-                <ElementItem
-                  {...item}
-                  customIcon={
-                    !user?.userBalance?.subscriptionEndDate && (
-                      <Image
-                        src="/images/ad.svg"
-                        alt="subscription"
-                        width={24}
-                        height={24}
-                      />
-                    )
-                  }
-                />
+                {selectedItem?.id === item?.id && isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ElementItem
+                    {...item}
+                    customIcon={
+                      !user?.userBalance?.subscriptionEndDate && (
+                        <Image
+                          src="/images/ad.svg"
+                          alt="subscription"
+                          width={24}
+                          height={24}
+                        />
+                      )
+                    }
+                  />
+                )}
               </div>
             ))}
           </div>

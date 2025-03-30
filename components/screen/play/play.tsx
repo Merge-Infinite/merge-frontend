@@ -49,9 +49,6 @@ export default function PlayGame({}: PlayGameProps) {
       const targetBox = (mergingBoxes as any)[targetInstanceId];
       if (!targetBox) return;
 
-      console.log("targetBox", targetBox);
-      console.log("droppedItem", droppedItem);
-
       // Check if either item is from inventory and has limited amount
       const checkItemAvailability = (item: any) => {
         const originalId = item.originalId || item.id;
@@ -78,7 +75,6 @@ export default function PlayGame({}: PlayGameProps) {
         !checkItemAvailability(targetBox) ||
         !checkItemAvailability(droppedItem)
       ) {
-        console.log("Not enough items available for merging");
         return;
       }
 
@@ -187,7 +183,6 @@ export default function PlayGame({}: PlayGameProps) {
 
           // If we've already used all available items, prevent dropping
           if (usedCount >= inventoryItem.amount) {
-            console.log("Cannot drop - not enough items available");
             return;
           }
         }
@@ -195,7 +190,6 @@ export default function PlayGame({}: PlayGameProps) {
 
       const instanceId = `${droppedItem.id}_${Date.now()}_${instanceCounter}`;
       setInstanceCounter((prev) => prev + 1);
-      console.log("droppedItem", droppedItem);
       if (
         droppedItem.id &&
         droppedItem.left !== undefined &&

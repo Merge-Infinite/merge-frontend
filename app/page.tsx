@@ -45,13 +45,10 @@ export default function Home() {
     if (!authed && initialized) {
       const loginInterval = setInterval(async () => {
         try {
-          console.log("Attempting login via interval");
           await apiClient.callFunc<string, string>("auth", "login", "123456");
           dispatch(updateAuthed(true));
           clearInterval(loginInterval);
-        } catch (e) {
-          console.log("Login attempt failed, will retry");
-        }
+        } catch (e) {}
       }, 3000);
 
       return () => {
