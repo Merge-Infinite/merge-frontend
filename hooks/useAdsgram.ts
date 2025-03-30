@@ -87,22 +87,16 @@ export function useAdsgram({
       if (AdControllerRef.current) {
         // Record ad start
         await recordAdStart(sid);
-        onReward(sid, {
-          error: false,
-          done: true,
-          state: "load",
-          description: "Adsgram script not loaded",
-        });
 
         // Show the ad
-        // AdControllerRef.current
-        //   .show()
-        //   .then((result: ShowPromiseResult) => {
-        //     onReward(sid, result);
-        //   })
-        //   .catch((result: ShowPromiseResult) => {
-        //     onError?.(result);
-        //   });
+        AdControllerRef.current
+          .show()
+          .then((result: ShowPromiseResult) => {
+            onReward(sid, result);
+          })
+          .catch((result: ShowPromiseResult) => {
+            onError?.(result);
+          });
       } else {
         onError?.({
           error: true,

@@ -169,7 +169,7 @@ export function useUser() {
     user,
     inventory: userInventory?.data,
     refetchInventory: userInventory?.refetch,
-    refetch: getMe?.refetch,
+    refetch: getUser,
     isLoading,
     error,
   };

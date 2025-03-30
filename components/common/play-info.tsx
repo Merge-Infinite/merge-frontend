@@ -25,7 +25,7 @@ interface GamePlayInfoProps {
 }
 
 export default function GamePlayInfo({}: GamePlayInfoProps) {
-  const { user } = useUser();
+  const { user, refetch } = useUser();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const [isRecipeListOpen, setIsRecipeListOpen] = useState(false);
@@ -42,6 +42,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
       sessionId: sid,
       completionDate: Date.now(),
     });
+    refetch?.();
   }, []);
 
   const onError = useCallback((result: any) => {
