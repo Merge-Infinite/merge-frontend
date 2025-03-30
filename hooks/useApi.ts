@@ -112,6 +112,7 @@ const apiCall = async <T = unknown>(
         // Only clear localStorage in browser context
         if (typeof window !== "undefined") {
           localStorage.clear();
+          window.location.reload();
         }
       }
 
