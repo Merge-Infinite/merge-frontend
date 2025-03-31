@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import Image from "next/image";
+import { SearchIcon } from "lucide-react";
 import { HTML5toTouch } from "rdndmb-html5-to-touch";
 import { useCallback, useEffect, useState } from "react";
 import { XYCoord } from "react-dnd";
 import { DndProvider } from "react-dnd-multi-backend";
+import { useDebounce } from "use-debounce";
 import DraggableBox from "../../common/DraggableBox";
 import MergingArea from "../../common/MergingArea";
 import GamePlayInfo from "../../common/play-info";
@@ -21,23 +23,23 @@ interface PlayGameProps {
 }
 
 export default function PlayGame({}: PlayGameProps) {
-  const { inventory, refetchInventory, refetch } = useUser();
   const [mergingBoxes, setMergingBoxes] = useState({});
   const [instanceCounter, setInstanceCounter] = useState(0);
   const [targetBox, setTargetBox] = useState({});
-  // Track used items to prevent overuse
-  const [usedItems, setUsedItems] = useState<Record<string, number>>({});
-
-  // Reset used items when inventory changes
-  useEffect(() => {
-    setUsedItems({});
-  }, [inventory]);
-
+  const [search, setSearch] = useState("");
+  const [debouncedText] = useDebounce(search, 1000);
+  const { inventory, refetchInventory, refetch } = useUser({
+    inventorySearch: debouncedText,
+  });
   const mergeApi = useApi({
     key: ["craft-word"],
     method: "POST",
     url: "user/craft-word",
   }).post;
+
+  useEffect(() => {
+    refetchInventory?.();
+  }, [debouncedText]);
 
   const handleDropToMerge = useCallback(
     async (
@@ -124,10 +126,8 @@ export default function PlayGame({}: PlayGameProps) {
           };
         });
 
-        // After successful merge, reset the used items tracking
         refetchInventory?.();
         refetch?.();
-        setUsedItems({});
 
         setTimeout(() => {
           setMergingBoxes((prev: any) => {
@@ -260,20 +260,13 @@ export default function PlayGame({}: PlayGameProps) {
           />
         </div>
         <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-1/2 w-full">
-          <div className="self-stretch justify-start items-start gap-6 inline-flex">
-            <div className="grow shrink basis-0 rounded-3xl flex-col justify-start items-start gap-1 inline-flex">
-              <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">
-                <Image
-                  src="/images/search.svg"
-                  alt="search"
-                  width={24}
-                  height={24}
-                />
-                <div className="grow shrink basis-0 h-6 text-[#5c5c5c] text-sm font-normal font-['Sora'] leading-normal">
-                  Search items...
-                </div>
-              </div>
-            </div>
+          <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+            <SearchIcon className="w-5 h-5 text-white" />
+            <Input
+              className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <div className="self-stretch flex-col justify-start items-start gap-1 flex">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
@@ -297,7 +290,7 @@ export default function PlayGame({}: PlayGameProps) {
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
-            <div className="relative justify-start items-center gap-2 inline-flex flex-wrap">
+            <div className="relative justify-start items-center gap-2 inline-flex flex-wrap  overflow-y-auto">
               {(inventory as any[])
                 ?.filter(
                   (element: any) => !element.isBasic && element.amount > 0

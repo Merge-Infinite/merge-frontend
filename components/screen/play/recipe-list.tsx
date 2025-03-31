@@ -41,14 +41,14 @@ export const RecipeList = ({
     });
   }, []);
 
-  const getUserBagApi = useApi({
-    key: ["getUserBag"],
+  const searchRecipeApi = useApi({
+    key: ["search-recipe"],
     method: "GET",
     url: `recipes/suggest?search=${debouncedText}`,
   }).get;
 
   useEffect(() => {
-    getUserBagApi?.refetch();
+    searchRecipeApi?.refetch();
   }, [debouncedText]);
 
   useEffect(() => {
@@ -134,16 +134,16 @@ export const RecipeList = ({
         Recipe:
       </div>
       <div className="flex justify-start items-center gap-2 flex-wrap content-center overflow-y-auto">
-        {getUserBagApi?.isPending ? (
+        {searchRecipeApi?.isPending ? (
           <div className="flex flex-col items-center justify-center w-full h-64">
             <Loader2 className="h-8 w-8 animate-spin text-[#68ffd1] mb-2" />
             <p className="text-gray-400">Loading inventory...</p>
           </div>
-        ) : getUserBagApi?.data &&
-          getUserBagApi?.data?.length > 0 &&
-          !getUserBagApi.isPending ? (
+        ) : searchRecipeApi?.data &&
+          searchRecipeApi?.data?.length > 0 &&
+          !searchRecipeApi.isPending ? (
           <div className="flex flex-wrap gap-2 w-full h-full">
-            {getUserBagApi?.data?.map((item, index) => (
+            {searchRecipeApi?.data?.map((item, index) => (
               <div
                 key={index}
                 onClick={() => handleItemClick(item)}

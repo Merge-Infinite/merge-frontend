@@ -4,10 +4,9 @@ import { FeatureFlagNetwork, FeatureFlagRes } from "../api";
 import { RootState } from "../store";
 import { updateFeatureFlag } from "../store/feature-flag";
 import defaultFeatureFlags from "../store/feature-flag/default-feature-flags.json";
-
 export function useFeatureFlags(): FeatureFlagRes {
   const featureFlag = useSelector((state: RootState) => state.featureFlag);
-  return featureFlag.flags;
+  return featureFlag.flags || defaultFeatureFlags;
 }
 
 /**
@@ -16,19 +15,22 @@ export function useFeatureFlags(): FeatureFlagRes {
 export function useFeatureFlagsWithNetwork(): FeatureFlagNetwork {
   const appContext = useSelector((state: RootState) => state.appContext);
   const featureFlags = useFeatureFlags();
-  return featureFlags?.networks[appContext.networkId];
+  return (
+    featureFlags?.networks[appContext.networkId] ||
+    defaultFeatureFlags.networks["testnet"]
+  );
 }
 
 // for provider
 export function useAutoLoadFeatureFlags() {
   const dispatch = useDispatch();
+  const data = defaultFeatureFlags;
 
   useEffect(() => {
-    if (defaultFeatureFlags) {
-      // update redux store
-      dispatch(updateFeatureFlag(defaultFeatureFlags));
+    if (data) {
+      dispatch(updateFeatureFlag(data));
     }
-  }, [defaultFeatureFlags]);
+  }, [data]);
 
-  return defaultFeatureFlags;
+  return data;
 }

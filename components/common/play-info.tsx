@@ -42,7 +42,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
       sessionId: sid,
       completionDate: Date.now(),
     });
-    refetch?.();
+    await refetch?.();
   }, []);
 
   const onError = useCallback((result: any) => {
@@ -54,8 +54,6 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
     onReward,
     onError,
   });
-
-  console.log("selectedItem", selectedItem);
 
   const handleItemSelect = (item: any) => {
     console.log("item", item);
@@ -104,8 +102,8 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
             width={32}
             height={32}
             onClick={() => {
-              dispatch(updateTabMode(TabMode.HOME));
-              router.back();
+              dispatch(updateTabMode(TabMode.SHOP));
+              router.push("/");
             }}
           />
         </div>

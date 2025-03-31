@@ -2,17 +2,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { initBackButton } from "@telegram-apps/sdk";
 
+import ElementItem from "@/components/common/ElementItem";
+import { RecipeDetail } from "@/components/screen/play/recipe-detail";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { useAdsgram } from "@/hooks/useAdsgram";
 import useApi from "@/hooks/useApi";
 import { shortenName } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function SubmitItem() {
   const searchParams = useSearchParams();
   const itemChallengeId = searchParams.get("itemChallengeId");
-
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
   const [backButton] = initBackButton();
   const router = useRouter();
 
@@ -50,6 +61,16 @@ export default function SubmitItem() {
     }
   }, [fetchItemChallenge?.data?.item?.id]);
 
+  const { showAd, isLoading } = useAdsgram({
+    blockId: "9126",
+    onReward: () => {
+      setIsRecipeDetailOpen(true);
+    },
+    onError: (e: any) => {
+      toast.error(e?.description || "Error");
+    },
+  });
+
   return (
     <div className="flex flex-col h-full gap-4 ">
       <div className="self-stretch justify-start items-center gap-2 inline-flex">
@@ -59,7 +80,12 @@ export default function SubmitItem() {
             {shortenName(fetchItemChallenge?.data?.item?.handle)}
           </div>
         </div>
-        <div className="px-3 py-1 rounded-3xl border border-white justify-center items-center gap-2 flex">
+        <Button
+          isLoading={isLoading}
+          disabled={isLoading}
+          onClick={showAd}
+          className="px-3 py-1 rounded-3xl border border-white justify-center items-center gap-2 flex w-fit"
+        >
           <div className="text-white text-xs font-normal leading-normal">
             View Recipe
           </div>
@@ -69,7 +95,7 @@ export default function SubmitItem() {
             width={24}
             height={24}
           />
-        </div>
+        </Button>
         <div className="justify-start items-start flex">
           <Image src={"images/points.svg"} alt="item" width={16} height={16} />
           <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
@@ -119,6 +145,27 @@ export default function SubmitItem() {
           Merge
         </div>
       </Button>
+
+      <Sheet open={isRecipeDetailOpen} onOpenChange={setIsRecipeDetailOpen}>
+        <SheetContent
+          side="bottom"
+          className="bg-[#141414] text-white border-t border-[#333333]"
+          showClose={true}
+          style={{
+            height: "90%",
+          }}
+        >
+          <SheetHeader className="w-[80%] flex flex-row items-center gap-2">
+            <SheetTitle className="text-white text-center">
+              <ElementItem
+                {...fetchItemChallenge?.data?.item}
+                amount={undefined}
+              />
+            </SheetTitle>
+          </SheetHeader>
+          <RecipeDetail item={fetchItemChallenge?.data?.item} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

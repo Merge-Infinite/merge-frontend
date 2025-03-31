@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import useApi from "./useApi";
 
-export function useUser() {
+export function useUser({ inventorySearch }: { inventorySearch?: string }) {
   // Constants and state
   const { initDataRaw, initData } = retrieveLaunchParams();
   const lp = useLaunchParams();
@@ -35,7 +35,7 @@ export function useUser() {
   const userInventory = useApi({
     key: ["user", "inventory"],
     method: "GET",
-    url: "user/inventory",
+    url: `user/inventory?search=${inventorySearch}`,
     enabled: false,
   }).get;
 
