@@ -28,9 +28,7 @@ export default function PlayGame({}: PlayGameProps) {
   const [targetBox, setTargetBox] = useState({});
   const [search, setSearch] = useState("");
   const [debouncedText] = useDebounce(search, 1000);
-  const { inventory, refetchInventory, refetch } = useUser({
-    inventorySearch: debouncedText,
-  });
+  const { inventory, refetchInventory, refetch } = useUser(debouncedText);
   const mergeApi = useApi({
     key: ["craft-word"],
     method: "POST",
