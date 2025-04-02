@@ -133,9 +133,9 @@ export const RecipeList = ({
       <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
         Recipe:
       </div>
-      <div className="flex justify-start items-center gap-2 flex-wrap content-center overflow-y-auto">
+      <div className="flex justify-start items-center gap-2 flex-wrap content-center overflow-y-auto w-full h-full">
         {searchRecipeApi?.isPending ? (
-          <div className="flex flex-col items-center justify-center w-full h-64">
+          <div className="flex flex-col items-center justify-center w-full h-full">
             <Loader2 className="h-8 w-8 animate-spin text-[#68ffd1] mb-2" />
             <p className="text-gray-400">Loading inventory...</p>
           </div>
