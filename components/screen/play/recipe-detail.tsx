@@ -29,10 +29,10 @@ interface Recipe {
 
 export const RecipeDetail = ({ item }: { item: Item }) => {
   const getRecipeApi = useApi({
-    key: ["getRecipe"],
+    key: ["getRecipe", item?.id ? item.id.toString() : ""],
     method: "GET",
     url: item?.id
-      ? `recipes/item/${item?.id}/craftable`
+      ? `recipes/item/${item.id}/craftable`
       : "recipes/item/1/craftable",
     enabled: false,
   }).get;
@@ -57,23 +57,28 @@ export const RecipeDetail = ({ item }: { item: Item }) => {
     );
   };
 
+  console.log(getRecipeApi?.isPending);
+
   return (
-    <div className="flex flex-col items-start h-full gap-4 mt-4 overflow-y-auto">
-      <div className="self-stretch inline-flex flex-col justify-start items-start gap-4">
-        {getRecipeApi?.isPending && (
+    <div className="flex flex-col items-start h-full gap-4 mt-4 ">
+      {getRecipeApi?.isPending && (
+        <div className="text-white text-center w-full">Loading recipes...</div>
+      )}
+
+      {getRecipeApi?.data?.recipes?.length === 0 &&
+        !getRecipeApi?.isPending && (
           <div className="text-white text-center w-full">
-            Loading recipes...
+            No recipes found for this item
           </div>
         )}
 
-        {getRecipeApi?.data?.recipes?.length === 0 &&
-          !getRecipeApi?.isPending && (
-            <div className="text-white text-center w-full">
-              No recipes found for this item
-            </div>
-          )}
-
-        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+      {!getRecipeApi?.isPending && (
+        <div
+          className="flex flex-col justify-start items-start gap-1 overflow-y-auto"
+          style={{
+            height: "90%",
+          }}
+        >
           {getRecipeApi?.data?.recipes?.map((recipe: Recipe, index: number) => (
             <div
               key={recipe.id}
@@ -97,7 +102,7 @@ export const RecipeDetail = ({ item }: { item: Item }) => {
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
