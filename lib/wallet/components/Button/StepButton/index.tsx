@@ -1,7 +1,7 @@
-import Button, { ButtonProps } from "../index";
-import { Icon } from "../../icons";
-import IconStepArrow from "../../../assets/icons/step-arrow.svg";
 import classnames from "classnames";
+import IconStepArrow from "../../../assets/icons/step-arrow.svg";
+import { Icon } from "../../icons";
+import Button, { ButtonProps } from "../index";
 import styles from "./index.module.scss";
 
 const StepButton = (props: ButtonProps) => {

@@ -12,7 +12,6 @@ import {
   AppMode,
   TabMode,
   updateAppMode,
-  updateAuthed,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
 import { initBackButton } from "@telegram-apps/sdk";
@@ -41,23 +40,24 @@ export default function Home() {
     backButton.hide();
   }, []);
 
-  useEffect(() => {
-    if (!authed && initialized) {
-      const loginInterval = setInterval(async () => {
-        try {
-          await apiClient.callFunc<string, string>("auth", "login", "123456");
-          dispatch(updateAuthed(true));
-          clearInterval(loginInterval);
-        } catch (e) {}
-      }, 3000);
+  // useEffect(() => {
+  //   if (!authed && initialized) {
+  //     const loginInterval = setInterval(async () => {
+  //       try {
+  //         await apiClient.callFunc<string, string>("auth", "login", "123456");
+  //         dispatch(updateAuthed(true));
+  //         clearInterval(loginInterval);
+  //       } catch (e) {}
+  //     }, 3000);
 
-      return () => {
-        clearInterval(loginInterval);
-      };
-    }
-  }, [authed, initialized]);
+  //     return () => {
+  //       clearInterval(loginInterval);
+  //     };
+  //   }
+  // }, [authed, initialized]);
 
-  if (!isAuthenticated || (initialized && !authed)) {
+  console.log(isAuthenticated, initialized, authed);
+  if (!isAuthenticated) {
     return <SplashScreen />;
   }
 

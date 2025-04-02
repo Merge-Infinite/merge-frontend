@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Nav from "@/lib/wallet/components/Nav";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -8,6 +9,7 @@ import { useEffectAdjustInitializedStatus } from "../../../hooks/useEffectAdjust
 import { PageEntry } from "../../../hooks/usePageEntry";
 import BrandLayout from "../../../layouts/BrandLayout";
 import { RootState } from "../../../store";
+import SetPasswordView from "./views/SetPasswordView";
 
 enum Step {
   WELCOME,
@@ -33,7 +35,7 @@ const WelcomePage = () => {
   async function handleCreateNewWallet() {
     nextRoute.current = "/onboard/create-new-wallet";
     setOnboardType(OnboardType.CREATE_NEW_WALLET);
-    await handleSetNewPassword();
+    setStep(Step.SET_PASSWORD);
   }
 
   function handleImportWallet() {
@@ -105,7 +107,21 @@ const WelcomePage = () => {
       }, 0);
       return null;
     }
-
+    if (step === Step.SET_PASSWORD) {
+      return (
+        <div className={"flex-1 bg-white"}>
+          <Nav
+            title={
+              onboardType === OnboardType.IMPORT_WALLET
+                ? "Import Wallet"
+                : "New Passcode"
+            }
+            onNavBack={handleNavBack}
+          />
+          <SetPasswordView type={"new"} onNext={handleSetNewPassword} />
+        </div>
+      );
+    }
     return renderWelcomeView();
   }
 

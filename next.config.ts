@@ -47,8 +47,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/:any*",
-        destination: "/",
+        // source: "/wallet/:any*",
+        // destination: "/inapp-wallet/:any*",
+        source: "/wallet/:any*",
+        destination: "/:any*",
       },
     ];
   },

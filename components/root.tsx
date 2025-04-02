@@ -20,34 +20,21 @@ import { useDidMount } from "@/hooks/useDidMount";
 import { AuthProvider } from "@/app/context/AuthContext";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
-import Session from "@/lib/wallet/components/Session";
 import { ApiClientContext } from "@/lib/wallet/hooks/useApiClient";
-import { useCustomApolloClient } from "@/lib/wallet/hooks/useCustomApolloClient";
 import { WebApiClient } from "@/lib/wallet/scripts/shared/ui-api-client";
-import { persistorStore, RootState, store } from "@/lib/wallet/store";
-import { ChromeStorage } from "@/lib/wallet/store/storage";
-import { ApolloProvider } from "@apollo/client";
+import { persistorStore, store } from "@/lib/wallet/store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   QueryClient as ReactQueryClient,
   QueryClientProvider as ReactQueryClientProvider,
 } from "react-query";
-import { Provider, useSelector } from "react-redux";
-import { BrowserRouter } from "react-router-dom";
+import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-
 function App(props: PropsWithChildren) {
   const lp = useLaunchParams();
   const miniApp = useMiniApp();
   const themeParams = useThemeParams();
   const viewport = useViewport();
-  const appContext = useSelector((state: RootState) => state.appContext);
-  const client = useCustomApolloClient(
-    appContext.networkId,
-    "suiet-desktop",
-    "1.0.0",
-    new ChromeStorage()
-  );
 
   useEffect(() => {
     miniApp.setHeaderColor("#000000");
@@ -65,26 +52,18 @@ function App(props: PropsWithChildren) {
     return undefined; // Always return something consistent
   }, [viewport]);
 
-  if (!client) {
-    return <h2>Initializing app...</h2>;
-  }
-
   return (
-    <ApolloProvider client={client}>
-      <AuthProvider>
-        <Session>
-          <AppRoot
-            appearance={themeParams.isDark ? "dark" : "light"}
-            platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
-            className=" w-full h-full"
-          >
-            {props.children}
-          </AppRoot>
-          <Toaster />
-          <SonnerToaster />
-        </Session>
-      </AuthProvider>
-    </ApolloProvider>
+    <AuthProvider>
+      <AppRoot
+        appearance={themeParams.isDark ? "dark" : "light"}
+        platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
+        className=" w-full h-full"
+      >
+        {props.children}
+      </AppRoot>
+      <Toaster />
+      <SonnerToaster />
+    </AuthProvider>
   );
 }
 
@@ -96,17 +75,15 @@ function RootInner({ children }: PropsWithChildren) {
   return (
     <SDKProvider acceptCustomStyles>
       <QueryClientProvider client={client}>
-        <BrowserRouter>
-          <Provider store={store}>
-            <PersistGate loading={null} persistor={persistorStore}>
-              <ReactQueryClientProvider client={new ReactQueryClient()}>
-                <ApiClientContext.Provider value={new WebApiClient()}>
-                  <App>{children}</App>
-                </ApiClientContext.Provider>
-              </ReactQueryClientProvider>
-            </PersistGate>
-          </Provider>
-        </BrowserRouter>
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistorStore}>
+            <ReactQueryClientProvider client={new ReactQueryClient()}>
+              <ApiClientContext.Provider value={new WebApiClient()}>
+                <App>{children}</App>
+              </ApiClientContext.Provider>
+            </ReactQueryClientProvider>
+          </PersistGate>
+        </Provider>
       </QueryClientProvider>
     </SDKProvider>
   );

@@ -1,13 +1,12 @@
-import Dashboard from "./Dashboard";
-import TokenList from "./TokenList";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store";
 import { useAccount } from "../../hooks/useAccount";
+import { useDappList } from "../../hooks/useDappList";
 import { useNftList } from "../../hooks/useNftList";
 import AppLayout, { LayoutMode } from "../../layouts/AppLayout";
-import { useDappList } from "../../hooks/useDappList";
-import BiometricSetup from "../../components/BiometricSetup";
+import { RootState } from "../../store";
+import Dashboard from "./Dashboard";
 import useCheckAvatarPfpValidness from "./hooks/useCheckAvatarPfpValidness";
+import TokenList from "./TokenList";
 
 function MainPage() {
   const { accountId, networkId, walletId } = useSelector(
@@ -19,7 +18,6 @@ function MainPage() {
   useDappList();
 
   useCheckAvatarPfpValidness(walletId, address);
-
   return (
     <AppLayout
       layoutMode={LayoutMode.WITHOUT_HEADER}

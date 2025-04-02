@@ -1,4 +1,3 @@
-import { suietHttp } from '../utils/request';
 export interface FeatureFlagNetwork {
   explorer_url: string;
   full_node_url: string;
@@ -33,11 +32,4 @@ export interface Versions {
   ios: string;
   android: string;
   chrome?: string;
-}
-
-export async function getFeatureFlags(): Promise<FeatureFlagRes> {
-  return await suietHttp({
-    url: '/feature-flag',
-    method: 'get',
-  });
 }

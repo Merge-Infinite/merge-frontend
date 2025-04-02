@@ -1,17 +1,14 @@
-import classnames from "classnames";
+import { useLocalStorageState } from "ahooks";
+import { default as classnames, default as classNames } from "classnames";
+import { ReactNode } from "react";
 import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
+import IconHome from "../../../assets/icons/bag.svg";
+import IconHistory from "../../../assets/icons/history.svg";
+import IconNFT from "../../../assets/icons/nft.svg";
+import IconSwap from "../../../assets/icons/swap.svg";
+import { useFeatureFlagsWithNetwork } from "../../../hooks/useFeatureFlags";
 import type { Extendable, StyleExtendable } from "../../../types";
 import styles from "./index.module.scss";
-import IconHome from "../../../assets/icons/bag.svg";
-import IconNFT from "../../../assets/icons/nft.svg";
-import IconHistory from "../../../assets/icons/history.svg";
-import IconGrid from "../../../assets/icons/grid.svg";
-import IconSwap from "../../../assets/icons/swap.svg";
-import IconExplore from "../../../assets/icons/explore.svg";
-import { ReactNode, useState } from "react";
-import { useFeatureFlagsWithNetwork } from "../../../hooks/useFeatureFlags";
-import { useLocalStorageState } from "ahooks";
-import classNames from "classnames";
 
 export type MenuProps = StyleExtendable;
 type MenuItemProps = StyleExtendable & {
@@ -67,22 +64,18 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
         width: "70%",
       }}
     >
-      <MenuItem to="/wallet/home" icon={<IconHome />} alt="home" />
+      <MenuItem to="/home" icon={<IconHome />} alt="home" />
       {/* <MenuItem to="/dapps" icon={<IconExplore />} alt="explore" /> */}
 
       <MenuItem
         redDot={!clickedSwap}
         onClick={() => setClickedSwap(true)}
-        to="/wallet/swap"
+        to="/swap"
         icon={<IconSwap />}
         alt="swap"
       />
 
-      <MenuItem
-        to="/wallet/transaction/flow"
-        icon={<IconHistory />}
-        alt="history"
-      />
+      <MenuItem to="/transaction/flow" icon={<IconHistory />} alt="history" />
       <MenuItem to="/wallet/nft" icon={<IconNFT />} alt="nft" />
 
       {/* <MenuItem

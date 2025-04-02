@@ -1,9 +1,8 @@
+import classnames from "classnames";
 import React, { CSSProperties } from "react";
 import IconNavArrow from "../../assets/icons/nav-arrow.svg";
-import { Icon } from "../icons";
 import { Extendable } from "../../types";
 import Typo from "../Typo";
-import classnames from "classnames";
 import styles from "./index.module.scss";
 
 export type NavProps = Extendable & {
@@ -37,7 +36,12 @@ const Nav = (props: NavProps) => {
   }
   return (
     <nav
-      className={classnames(styles["nav"], props.className, "!justify-between")}
+      className={classnames(
+        styles["nav"],
+        props.className,
+        "!justify-between",
+        "bg-black"
+      )}
       style={props.style}
     >
       <div

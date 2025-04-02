@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import { Navigate, Outlet, RouteObject } from "react-router-dom";
 import RequireInit from "../components/RequireInit";
+import Session from "../components/Session";
 import { withSus } from "../components/TheSuspense";
 
 const MainPage = lazy(async () => await import("../pages/MainPage"));
@@ -61,19 +62,12 @@ const routesConfig: RouteObject[] = [
     path: "/",
     element: (
       <RequireInit>
-        <Outlet />
+        <Session>
+          <Outlet />
+        </Session>
       </RequireInit>
     ),
     children: [
-      {
-        index: true,
-        element: <Navigate to="home" />,
-        // element: <Navigate to="test" />,
-      },
-      {
-        path: "test",
-        element: withSus(<TestPage />),
-      },
       {
         path: "home",
         element: withSus(<MainPage />),
@@ -180,7 +174,11 @@ const routesConfig: RouteObject[] = [
   },
   {
     path: "/*",
-    element: <Outlet />,
+    element: (
+      <Session>
+        <Outlet />
+      </Session>
+    ),
     children: [
       // reuse page component but with session project
       {
@@ -197,7 +195,9 @@ const routesConfig: RouteObject[] = [
     path: "/dapp",
     element: (
       <RequireInit>
-        <Outlet />
+        <Session>
+          <Outlet />
+        </Session>
       </RequireInit>
     ),
     children: [

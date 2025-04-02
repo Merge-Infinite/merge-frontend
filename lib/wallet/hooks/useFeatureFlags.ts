@@ -1,8 +1,6 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { FeatureFlagNetwork, FeatureFlagRes } from "../api";
 import { RootState } from "../store";
-import { updateFeatureFlag } from "../store/feature-flag";
 import defaultFeatureFlags from "../store/feature-flag/default-feature-flags.json";
 export function useFeatureFlags(): FeatureFlagRes {
   const featureFlag = useSelector((state: RootState) => state.featureFlag);
@@ -22,15 +20,15 @@ export function useFeatureFlagsWithNetwork(): FeatureFlagNetwork {
 }
 
 // for provider
-export function useAutoLoadFeatureFlags() {
-  const dispatch = useDispatch();
-  const data = defaultFeatureFlags;
+// export function useAutoLoadFeatureFlags() {
+//   const dispatch = useDispatch();
+//   const data = defaultFeatureFlags;
 
-  useEffect(() => {
-    if (data) {
-      dispatch(updateFeatureFlag(data));
-    }
-  }, [data]);
+//   useEffect(() => {
+//     if (data) {
+//       dispatch(updateFeatureFlag(data));
+//     }
+//   }, [data]);
 
-  return data;
-}
+//   return data;
+// }

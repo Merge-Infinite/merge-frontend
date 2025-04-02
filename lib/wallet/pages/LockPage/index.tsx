@@ -1,24 +1,29 @@
-import Typo from "../../components/Typo";
-import Button from "../../components/Button";
-import Form from "../../components/form/Form";
-import FormControl from "../../components/form/FormControl";
-import { useForm } from "react-hook-form";
 import {
-  getInputStateByFormState,
-  getPasswordValidation,
-} from "../../utils/form";
-import Input from "../../components/Input";
-import { useDispatch } from "react-redux";
-import { updateAuthed } from "../../store/app-context";
-import { useState } from "react";
-import ForgetPassword from "./ForgetPassword";
-import Nav from "../../components/Nav";
-import { AppDispatch } from "../../store";
-import { useApiClient } from "../../hooks/useApiClient";
-import BrandLayout from "../../layouts/BrandLayout";
-import BiometricAuth from "../../components/BiometricAuth";
-import styles from "./index.module.scss";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import classNames from "classnames";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import Button from "../../components/Button";
+import Nav from "../../components/Nav";
+import Typo from "../../components/Typo";
+import { useApiClient } from "../../hooks/useApiClient";
+import { AppDispatch } from "../../store";
+import { updateAuthed } from "../../store/app-context";
+import ForgetPassword from "./ForgetPassword";
+import styles from "./index.module.scss";
 
 type FormData = {
   password: string;
@@ -34,7 +39,7 @@ const LockPage = () => {
   });
   const [step, setStep] = useState(1);
   const dispatch = useDispatch<AppDispatch>();
-
+  const navigate = useNavigate();
   async function handleSubmit(data: FormData) {
     const result = await apiClient.callFunc<string, string>(
       "auth",
@@ -68,43 +73,51 @@ const LockPage = () => {
     );
   }
   return (
-    <BrandLayout
-      grayTitle={"Back to"}
-      blackTitle={"Mer3 Wallet"}
-      desc={"The best Sui wallet on Telegram."}
-      className=""
-    >
-      <div className={" flex-1 flex flex-col gap-4"}>
-        <section className={" w-full"}>
-          <Form
-            form={form}
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
+    <div className={" flex-1 flex flex-col gap-4  items-center w-full"}>
+      <section className={" w-full"}>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col gap-4 items-center w-full"
           >
-            <FormControl name={"password"}>
-              <Input
-                state={getInputStateByFormState(form.formState, "password")}
-                type={"password"}
-                placeholder={"Please enter password"}
-              />
-            </FormControl>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel> Passcode</FormLabel>
+                  <FormControl className="w-full">
+                    <InputOTP maxLength={6} {...field} className="w-full">
+                      <InputOTPGroup className="justify-between">
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button type={"submit"} state={"primary"} className={"mt-[24px]"}>
               Unlock
             </Button>
-            <BiometricAuth className={"mt-[16px]"} />
-          </Form>
-        </section>
-        <Typo.Normal
-          className={"mt-auto cursor-pointer"}
-          onClick={() => {
-            setStep(2);
-          }}
-        >
-          Forget Password?
-        </Typo.Normal>
-      </div>
-    </BrandLayout>
+          </form>
+        </Form>
+      </section>
+      <Typo.Normal
+        className={"mt-auto cursor-pointer"}
+        onClick={() => {
+          setStep(2);
+        }}
+      >
+        Forget Password?
+      </Typo.Normal>
+    </div>
   );
 };
 

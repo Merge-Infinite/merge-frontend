@@ -1,9 +1,13 @@
 "use client";
-import "./utils/setup-buffer-shim";
-import React from "react";
+
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.scss";
-
-export default function Wallet() {
-  return <App />;
+import "./utils/setup-buffer-shim";
+export default function WalletApp() {
+  return (
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  );
 }
