@@ -29,7 +29,7 @@ export default function Wallet() {
     backButton.show();
 
     backButton.on("click", () => {
-      router.back();
+      router.push("/");
     });
   }, []);
 

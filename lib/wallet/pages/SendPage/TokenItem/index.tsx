@@ -47,7 +47,6 @@ const TokenItem = (props: TokenItemProps) => {
     wrappedChain,
     bridge,
   } = props;
-
   let tokenIcon = TokenIconUrl[symbol] || TokenIconUrl.DEFAULT;
   if (iconURL) {
     tokenIcon = iconURL;
@@ -59,9 +58,11 @@ const TokenItem = (props: TokenItemProps) => {
       className={classnames(
         styles["token-item"],
         isSUI ? styles["token-item-sui"] : null,
-        selected && styles["selected"],
         onClick && styles["clickable"]
       )}
+      style={{
+        backgroundColor: selected ? "#fff" : "transparent",
+      }}
       onClick={() => {
         onClick?.(coinType);
       }}
@@ -83,6 +84,7 @@ const TokenItem = (props: TokenItemProps) => {
                 styles["token-name"],
                 isSUI ? styles["token-name-sui"] : null
               )}
+              style={{ color: selected ? "#000" : "#fff" }}
             >
               {symbol}
             </Typo.Normal>
@@ -106,6 +108,7 @@ const TokenItem = (props: TokenItemProps) => {
               styles["token-amount"],
               isSUI ? styles["token-amount-sui"] : null
             )}
+            style={{ color: selected ? "#000" : "#fff" }}
           >
             {`${formatCurrency(balance, { decimals })} ${symbol}`}
           </Typo.Small>

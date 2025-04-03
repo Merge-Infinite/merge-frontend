@@ -1,9 +1,9 @@
+import { Button } from "@/components/ui/button";
 import { useApolloClient } from "@apollo/client";
 import { useCallback, useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/Button";
 import message from "../../components/message";
 import Nav from "../../components/Nav";
 import Typo from "../../components/Typo";
@@ -64,6 +64,8 @@ const SendPage = () => {
     walletId,
     accountId,
   });
+
+  console.log("mode", mode);
 
   const submitTransaction = useCallback(async () => {
     if (!sendData.recipientAddress || !sendData.coinType) return;
@@ -156,7 +158,7 @@ const SendPage = () => {
               Select Token
             </Typo.Title>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 ">
             <div className={styles["token-list"]}>
               {coinsLoading && (
                 <Skeleton width="100%" height="73px" className="block" />
@@ -178,7 +180,7 @@ const SendPage = () => {
                       wrappedChain={coin.wrappedChain}
                       bridge={coin.bridge}
                       onClick={(coinType) => {
-                        console.log(coinType);
+                        console.log("sendData", sendData.coinType);
                         console.log(coin);
                         setSelectedCoin(coin);
                         setSendData((prev) => ({
@@ -192,12 +194,13 @@ const SendPage = () => {
             </div>
             <Button
               type={"submit"}
-              state={"primary"}
+              className="w-full"
               disabled={
                 !sendData.coinType ||
                 compareCoinAmount(selectedCoin.balance, 0) <= 0
               }
               onClick={() => {
+                console.log("sendData");
                 setMode(Mode.address);
               }}
             >

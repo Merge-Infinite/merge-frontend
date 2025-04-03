@@ -1,30 +1,26 @@
-import Button from '../../../components/Button';
-import styles from './index.module.scss';
-import commonStyles from '../common.module.scss';
-import Typo from '../../../components/Typo';
-import { useMemo, useState } from 'react';
-import { SendData } from '../types';
+import { Button } from "@/components/ui/button";
+import classNames from "classnames";
+import { useMemo, useState } from "react";
+import InputAmount from "../../../components/InputAmount";
+import Typo from "../../../components/Typo";
 import {
   addressEllipsis,
   formatCurrency,
   formatSUI,
   isCoinAmountValid,
   maxCoinAmountWithDecimal,
-} from '../../../core';
-import InputAmount from '../../../components/InputAmount';
-import classNames from 'classnames';
-import { CoinDto } from '../../../hooks/coin/useCoins';
-import {
-  compareCoinAmount,
-  isSafeConvertToNumber,
-  isSuiToken,
-} from '../../../utils/check';
+} from "../../../core";
+import { CoinDto } from "../../../hooks/coin/useCoins";
+import { isSuiToken } from "../../../utils/check";
+import commonStyles from "../common.module.scss";
+import { SendData } from "../types";
+import styles from "./index.module.scss";
 
 function SendConfirmItem({ name, value }: Record<string, string>) {
   return (
     <div className="flex justify-between my-[16px]">
-      <Typo.Title className={styles['send-confirm-name']}>{name}</Typo.Title>
-      <Typo.Title className={styles['send-confirm-value']}>{value}</Typo.Title>
+      <Typo.Title className={styles["send-confirm-name"]}>{name}</Typo.Title>
+      <Typo.Title className={styles["send-confirm-value"]}>{value}</Typo.Title>
     </div>
   );
 }
@@ -68,17 +64,17 @@ function SendConfirm({
 
   return (
     <div className="h-[436px]">
-      <div className={classNames('flex', 'flex-col', 'h-full')}>
+      <div className={classNames("flex", "flex-col", "h-full")}>
         <InputAmount
-          className={classNames('mx-[36px]', 'grow')}
+          className={classNames("mx-[36px]", "grow", "bg-black")}
           coinSymbol={selectedCoin.symbol}
           initCoinAmount={state.coinAmountWithDecimals}
           maxCoinAmount={maxAmount}
           decimals={selectedCoin.decimals}
-          isValid={state.coinAmountWithDecimals === '0' || isInputValid}
+          isValid={state.coinAmountWithDecimals === "0" || isInputValid}
           onInput={onInputCoinAmountWithDecimals}
         />
-        <div className={classNames('flex-none', styles['send-confirm-list'])}>
+        <div className={classNames("flex-none", styles["send-confirm-list"])}>
           <SendConfirmItem
             name="To"
             value={addressEllipsis(state.recipientAddress)}
@@ -100,10 +96,9 @@ function SendConfirm({
             value={`${formatSUI(gasBudget)} SUI`}
           />
         </div>
-        <div className={commonStyles['next-step']}>
+        <div className={commonStyles["next-step"]}>
           <Button
-            type={'submit'}
-            state={'primary'}
+            type={"submit"}
             disabled={!isInputValid}
             onClick={async () => {
               setSendLoading(true);
@@ -113,7 +108,7 @@ function SendConfirm({
                 setSendLoading(false);
               }
             }}
-            loading={sendLoading}
+            isLoading={sendLoading}
           >
             Confirm
           </Button>

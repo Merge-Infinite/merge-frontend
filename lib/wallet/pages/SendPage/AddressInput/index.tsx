@@ -1,24 +1,24 @@
+import { isValidSuiAddress } from "@mysten/sui.js";
+import { useDebounceEffect } from "ahooks";
+import classNames from "classnames";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import Skeleton from "react-loading-skeleton";
+import { useSelector } from "react-redux";
+import { resolveDomain } from "../../../api/suins";
+import ViewIcon from "../../../assets/icons/view.svg";
 import AddressInput from "../../../components/AddressInput";
 import Button from "../../../components/Button";
 import Form from "../../../components/form/Form";
 import Typo from "../../../components/Typo";
-import { getInputStateByFormState } from "../../../utils/form";
-import styles from "./index.module.scss";
-import commonStyles from "../common.module.scss";
-import { SendData } from "../types";
-import ViewIcon from "../../../assets/icons/view.svg";
-import classNames from "classnames";
-import useTransactionList from "../hooks/useTransactionList";
-import dayjs from "dayjs";
-import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
-import Skeleton from "react-loading-skeleton";
-import { resolveDomain } from "../../../api/suins";
-import { useDebounceEffect } from "ahooks";
 import { isValidDomain } from "../../../utils/address";
-import { isValidSuiAddress } from "@mysten/sui.js";
+import { getInputStateByFormState } from "../../../utils/form";
+import commonStyles from "../common.module.scss";
+import useTransactionList from "../hooks/useTransactionList";
+import { SendData } from "../types";
+import styles from "./index.module.scss";
 interface AddressInputValues {
   address: string;
 }
