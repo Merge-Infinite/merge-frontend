@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
-import { RootState } from "@/lib/wallet/store";
+import { AppDispatch, RootState } from "@/lib/wallet/store";
+import {
+  updateUserInventory,
+  updateUserProfile,
+} from "@/lib/wallet/store/user";
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import useApi from "./useApi";
 
 export function useUser(inventorySearch?: string) {
@@ -13,11 +17,12 @@ export function useUser(inventorySearch?: string) {
   const lp = useLaunchParams();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address } = useAccount(appContext.accountId);
-  const [user, setUser] = useState<any>(null);
+  const user = useSelector((state: RootState) => state.user);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const isLoggedInRef = useRef(false);
   const initializedRef = useRef(false);
+  const dispatch = useDispatch<AppDispatch>();
   // API endpoints
   const authApi = useApi({
     key: ["auth"],
@@ -70,9 +75,11 @@ export function useUser(inventorySearch?: string) {
   // User data management
   const getUser = useCallback(async () => {
     try {
+      setIsLoading(true);
       const response = await getMe?.refetch();
+      console.log("response", response);
       if (response?.data) {
-        setUser(response.data);
+        dispatch(updateUserProfile(response.data));
         setLocalStorage("user", response.data);
       }
       return response;
@@ -80,33 +87,43 @@ export function useUser(inventorySearch?: string) {
       console.error("Error fetching user:", error);
       setError(error instanceof Error ? error : new Error(String(error)));
       return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, [getMe, setLocalStorage]);
+  }, [getMe, setLocalStorage, user]);
 
   const getUserInventory = useCallback(async () => {
     try {
-      return await userInventory?.refetch();
+      setIsLoading(true);
+      const response = await userInventory?.refetch();
+      dispatch(updateUserInventory(response?.data as any[]));
     } catch (error) {
       console.error("Error fetching inventory:", error);
       return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, [userInventory]);
+  }, [userInventory?.data]);
 
   const saveAddress = useCallback(async () => {
     if (!address) return null;
 
     try {
+      setIsLoading(true);
       await saveAddressApi?.mutateAsync({ address });
       const response = await getMe?.refetch();
       if (response?.data) {
+        dispatch(updateUserProfile(response.data));
         setLocalStorage("user", response.data);
       }
       return response;
     } catch (error) {
       console.error("Error saving address:", error);
       return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, [address, getMe, saveAddressApi, setLocalStorage]);
+  }, [address, user]);
 
   const login = useCallback(async () => {
     if (!initDataRaw || isLoggedInRef.current || initializedRef.current) return;
@@ -122,7 +139,7 @@ export function useUser(inventorySearch?: string) {
         storedUser?.id &&
         Number(initData?.user?.id) === Number(storedUser?.telegramId);
       if (storedUser && telegramIdMatches) {
-        setUser(storedUser);
+        dispatch(updateUserProfile(storedUser));
       } else if (storedUser) {
         localStorage.clear();
       }
@@ -162,13 +179,12 @@ export function useUser(inventorySearch?: string) {
     if (address && getMe?.data && !getMe.data.walletAddress) {
       saveAddress();
     }
-  }, [address, getMe?.data, saveAddress]);
+  }, [address, getMe?.data]);
 
-  // Return values
   return {
-    user,
-    inventory: userInventory?.data,
-    refetchInventory: userInventory?.refetch,
+    user: user.profile,
+    inventory: user.inventory,
+    refetchInventory: getUserInventory,
     refetch: getUser,
     isLoading,
     error,

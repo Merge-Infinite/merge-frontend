@@ -1,9 +1,5 @@
 "use client";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import appContextReducer from "./app-context";
-import biometricContextReducer from "./biometric-context";
-import featureFlagReducer from "./feature-flag";
-import { ChromeStorage } from "./storage";
 import { persistReducer, persistStore } from "redux-persist";
 import {
   FLUSH,
@@ -13,18 +9,24 @@ import {
   REGISTER,
   REHYDRATE,
 } from "redux-persist/es/constants";
+import appContextReducer from "./app-context";
+import biometricContextReducer from "./biometric-context";
+import featureFlagReducer from "./feature-flag";
+import { ChromeStorage } from "./storage";
+import userReducer from "./user";
 const isClient = typeof window !== "undefined";
 
 const persistConfig = {
   key: "root",
   storage: new ChromeStorage(),
-  whitelist: ["appContext", "featureFlag"],
+  whitelist: ["appContext", "featureFlag", "user"],
 };
 
 const allReducers = combineReducers({
   appContext: appContextReducer,
   biometricContext: biometricContextReducer,
   featureFlag: featureFlagReducer,
+  user: userReducer,
 });
 
 function createStore() {

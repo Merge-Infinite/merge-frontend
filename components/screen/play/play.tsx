@@ -4,7 +4,7 @@
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import { SearchIcon } from "lucide-react";
+import { Loader2, SearchIcon } from "lucide-react";
 import { HTML5toTouch } from "rdndmb-html5-to-touch";
 import { useCallback, useEffect, useState } from "react";
 import { XYCoord } from "react-dnd";
@@ -28,7 +28,8 @@ export default function PlayGame({}: PlayGameProps) {
   const [targetBox, setTargetBox] = useState({});
   const [search, setSearch] = useState("");
   const [debouncedText] = useDebounce(search, 1000);
-  const { inventory, refetchInventory, refetch } = useUser(debouncedText);
+  const { inventory, refetchInventory, refetch, isLoading } =
+    useUser(debouncedText);
   const mergeApi = useApi({
     key: ["craft-word"],
     method: "POST",
@@ -242,10 +243,9 @@ export default function PlayGame({}: PlayGameProps) {
   }, []);
 
   return (
-    <DndProvider options={HTML5toTouch}>
-      <div className="w-full h-full bg-black">
-        <GamePlayInfo />
-
+    <div className="w-full h-full bg-black">
+      <GamePlayInfo />
+      <DndProvider options={HTML5toTouch}>
         <div className="h-[40%] mt-4">
           <MergingArea
             onDrop={handleDrop}
@@ -289,38 +289,44 @@ export default function PlayGame({}: PlayGameProps) {
               Crafted elements:
             </div>
             <div className="relative justify-start items-center gap-2 inline-flex flex-wrap  overflow-y-auto">
-              {(inventory as any[])
-                ?.filter(
-                  (element: any) => !element.isBasic && element.amount > 0
-                )
-                .map((element: any) => {
-                  // Count how many of this item are currently in use
-                  const usedCount = Object.values(mergingBoxes).filter(
-                    (box: any) =>
-                      !box.isHidden &&
-                      (box.originalId === element.itemId ||
-                        box.id === element.itemId)
-                  ).length;
+              {isLoading ? (
+                <div className="w-full h-full flex justify-center items-center">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+              ) : (
+                (!isLoading && (inventory as any[]))
+                  ?.filter(
+                    (element: any) => !element.isBasic && element.amount > 0
+                  )
+                  .map((element: any) => {
+                    // Count how many of this item are currently in use
+                    const usedCount = Object.values(mergingBoxes).filter(
+                      (box: any) =>
+                        !box.isHidden &&
+                        (box.originalId === element.itemId ||
+                          box.id === element.itemId)
+                    ).length;
 
-                  // Check if we've used all available items
-                  const isDisabled = usedCount >= element.amount;
+                    // Check if we've used all available items
+                    const isDisabled = usedCount >= element.amount;
 
-                  return (
-                    <DraggableBox
-                      key={element.id}
-                      id={element.itemId}
-                      title={element.handle}
-                      emoji={element.emoji}
-                      amount={element.amount}
-                      isFromInventory={true}
-                      isDisabled={isDisabled}
-                    />
-                  );
-                })}
+                    return (
+                      <DraggableBox
+                        key={element.id}
+                        id={element.itemId}
+                        title={element.handle}
+                        emoji={element.emoji}
+                        amount={element.amount}
+                        isFromInventory={true}
+                        isDisabled={isDisabled}
+                      />
+                    );
+                  })
+              )}
             </div>
           </div>
         </div>
-      </div>
-    </DndProvider>
+      </DndProvider>
+    </div>
   );
 }

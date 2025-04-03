@@ -8,7 +8,7 @@ import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { ArrowLeftIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { RecipeDetail } from "../screen/play/recipe-detail";
@@ -36,6 +36,10 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
     method: "POST",
     url: "user/claim-ad-reward",
   }).post;
+
+  useEffect(() => {
+    console.log("GamePlayInfo user", user);
+  }, [user]);
 
   const onReward = useCallback(async (sid: string, result: any) => {
     await claimAdRewardApi?.mutateAsync({
