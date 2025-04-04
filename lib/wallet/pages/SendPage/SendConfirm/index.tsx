@@ -16,11 +16,25 @@ import commonStyles from "../common.module.scss";
 import { SendData } from "../types";
 import styles from "./index.module.scss";
 
-function SendConfirmItem({ name, value }: Record<string, string>) {
+export function SendConfirmItem({ name, value }: Record<string, string>) {
   return (
     <div className="flex justify-between my-[16px]">
-      <Typo.Title className={styles["send-confirm-name"]}>{name}</Typo.Title>
-      <Typo.Title className={styles["send-confirm-value"]}>{value}</Typo.Title>
+      <Typo.Title
+        className={styles["send-confirm-name"]}
+        style={{
+          color: "#fff",
+        }}
+      >
+        {name}
+      </Typo.Title>
+      <Typo.Title
+        className={styles["send-confirm-value"]}
+        style={{
+          color: "#fff",
+        }}
+      >
+        {value}
+      </Typo.Title>
     </div>
   );
 }

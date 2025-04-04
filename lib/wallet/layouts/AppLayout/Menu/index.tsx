@@ -3,6 +3,7 @@ import { default as classnames, default as classNames } from "classnames";
 import { ReactNode } from "react";
 import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
 import IconHome from "../../../assets/icons/bag.svg";
+import IconExplore from "../../../assets/icons/explore.svg";
 import IconHistory from "../../../assets/icons/history.svg";
 import IconNFT from "../../../assets/icons/nft.svg";
 import IconSwap from "../../../assets/icons/swap.svg";
@@ -18,6 +19,7 @@ type MenuItemProps = StyleExtendable & {
   onClick?: () => void;
   to: string;
   redDot?: boolean;
+  title: string;
 };
 
 const MenuItem = (props: MenuItemProps) => {
@@ -27,9 +29,14 @@ const MenuItem = (props: MenuItemProps) => {
 
   return (
     <div
-      className={classnames(styles["menu-item"], "relative", {
-        [styles["menu-item--active"]]: match,
-      })}
+      className={classnames(
+        styles["menu-item"],
+        "relative",
+        {
+          [styles["menu-item--active"]]: match,
+        },
+        "flex flex-col items-center justify-center"
+      )}
       onClick={() => {
         navigate(props.to);
         props.onClick?.();
@@ -42,7 +49,25 @@ const MenuItem = (props: MenuItemProps) => {
           }
         />
       )}
-      <div className={styles["menu-icon"]}>{props.icon}</div>
+      <div
+        style={{
+          fill: match ? "hsl(var(--primary))" : "#fff",
+        }}
+      >
+        {props.icon}
+      </div>
+      <div
+        className={classnames(
+          "text-center justify-start text-white leading-3",
+          match && "text-primary-50"
+        )}
+        style={{
+          fontSize: 10,
+          color: match ? "hsl(var(--primary))" : "#fff",
+        }}
+      >
+        {props.title || ""}
+      </div>
     </div>
   );
 };
@@ -64,8 +89,13 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
         width: "70%",
       }}
     >
-      <MenuItem to="/home" icon={<IconHome />} alt="home" />
-      {/* <MenuItem to="/dapps" icon={<IconExplore />} alt="explore" /> */}
+      <MenuItem to="/home" icon={<IconHome />} alt="home" title="Wallet" />
+      <MenuItem
+        to="/dapps"
+        icon={<IconExplore />}
+        alt="explore"
+        title="Explore"
+      />
 
       <MenuItem
         redDot={!clickedSwap}
@@ -73,15 +103,22 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
         to="/swap"
         icon={<IconSwap />}
         alt="swap"
+        title="Swap"
       />
 
-      <MenuItem to="/transaction/flow" icon={<IconHistory />} alt="history" />
-      <MenuItem to="/wallet/nft" icon={<IconNFT />} alt="nft" />
+      <MenuItem
+        to="/transaction/flow"
+        icon={<IconHistory />}
+        alt="history"
+        title="History"
+      />
+      <MenuItem to="/wallet/nft" icon={<IconNFT />} alt="nft" title="NFT" />
 
       {/* <MenuItem
         to="/transaction/flow"
         icon={<IconHistory />}
         alt="transaction"
+        title="Transaction"
       /> */}
     </div>
   );

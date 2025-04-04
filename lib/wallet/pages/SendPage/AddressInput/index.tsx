@@ -129,7 +129,12 @@ function AddressInputPage({
             history &&
             isValidateInput &&
             (history.length > 0 ? (
-              <div className={styles["transaction-num"]}>
+              <div
+                className={classNames(styles["transaction-num"])}
+                style={{
+                  color: "#fff",
+                }}
+              >
                 {history?.length} transactions in a week
                 <div
                   onClick={() => {
@@ -149,6 +154,9 @@ function AddressInputPage({
                   styles["transaction-num"],
                   styles["warn"]
                 )}
+                style={{
+                  color: "#b54708",
+                }}
               >
                 <div className={styles["warn-btn"]}>Warn</div>
                 <div className={styles["warn-desc"]}>

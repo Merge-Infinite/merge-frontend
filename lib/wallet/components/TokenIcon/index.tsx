@@ -1,9 +1,9 @@
-import { Extendable } from "../../types";
-import React, { CSSProperties, ReactNode } from "react";
-import styles from "./index.module.scss";
 import classnames from "classnames";
 import Image from "next/image";
+import React, { CSSProperties } from "react";
 import IconWaterDrop from "../../assets/icons/waterdrop.svg";
+import { Extendable } from "../../types";
+import styles from "./index.module.scss";
 
 type Size = "normal" | "small" | "large" | "xlarge";
 
