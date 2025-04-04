@@ -1,26 +1,25 @@
+import classnames from "classnames";
+import dayjs from "dayjs";
+import { useMemo, useRef } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
+import Skeleton from "react-loading-skeleton";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
-  TxDateContainer,
   TxSummaryContainer,
   TxSummaryItem,
 } from "../../../components/tx-history";
-import AppLayout from "../../../layouts/AppLayout";
-import useTxnHistoryList from "./hooks/useTxnHistoryList";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
-import { useAccount } from "../../../hooks/useAccount";
-import { useMemo, useRef } from "react";
-import { aggregateTxByTime } from "./utils/aggregateTxByTime";
-import orderTimeList from "./utils/orderTimeList";
-import dayjs from "dayjs";
-import classnames from "classnames";
-import Skeleton from "react-loading-skeleton";
 import Typo from "../../../components/Typo";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { safe } from "../../../core";
+import { useAccount } from "../../../hooks/useAccount";
+import AppLayout from "../../../layouts/AppLayout";
+import { RootState } from "../../../store";
 import { Extendable } from "../../../types";
 import { isNonEmptyArray } from "../../../utils/check";
 import Empty from "./Empty";
-import { safe } from "../../../core";
-import { useNavigate } from "react-router-dom";
+import useTxnHistoryList from "./hooks/useTxnHistoryList";
+import { aggregateTxByTime } from "./utils/aggregateTxByTime";
+import orderTimeList from "./utils/orderTimeList";
 
 import RefreshIcon from "./assets/refresh-cw-05.svg";
 
@@ -115,8 +114,6 @@ const TxHistoryPage = (props: TxHistoryPageProps) => {
     navigate(`/transaction/detail/${encodeURIComponent(digest)}`);
   };
 
-  console.log("txByDateMap", txByDateMap);
-
   if (loading) {
     return (
       <AppLayout>
@@ -147,26 +144,44 @@ const TxHistoryPage = (props: TxHistoryPageProps) => {
             </Typo.Hints>
           }
         >
-          {/* <TxDateContainer title={'Test'}> */}
-          {/*  <TxSummaryContainer */}
-          {/*    category={safe(undefined, 'Category')} */}
-          {/*    categoryIcon={safe(undefined, 'Txn')} */}
-          {/*    categoryColor={safe(undefined, 'text-gray-400')} */}
-          {/*    timestamp={safe(undefined, 0)} */}
-          {/*  > */}
-          {/*    <TxSummaryItem */}
-          {/*      title={safe(undefined, 'Unknown')} */}
-          {/*      desc={safe(undefined, '')} */}
-          {/*      icon={safe(mapIconType('TxnError'), 'Txn')} */}
-          {/*      changeTitle={safe(undefined, '')} */}
-          {/*      changeTitleColor={safe(undefined, '')} */}
-          {/*      changeDesc={safe(undefined, '')} */}
-          {/*      changeDescType={safe(undefined, '') as any} */}
-          {/*    /> */}
-          {/*  </TxSummaryContainer> */}
-          {/* </TxDateContainer> */}
+          {txnHistoryList?.map((txn) => {
+            let { category, summary } = txn.display;
+            if (!summary) {
+              summary = [];
+            }
+            return (
+              <TxSummaryContainer
+                key={safe(txn?.digest)}
+                category={safe(category?.text, "Category")}
+                categoryIcon={safe(category?.icon, "")}
+                categoryColor={safe(category?.color, "")}
+                timestamp={safe(txn?.timestamp, 0)}
+                onClick={() => handleClickSummaryContainer(txn?.digest)}
+              >
+                {summary.map((item, i) => {
+                  console.log("item", item);
+                  const { assetChange, assetChangeDescription } = item;
+                  return (
+                    <TxSummaryItem
+                      key={item?.title + i}
+                      title={safe(item?.title, "Unknown")}
+                      desc={safe(item?.description, "")}
+                      icon={safe(item?.icon, "Txn")}
+                      changeTitle={safe(assetChange?.text, "")}
+                      changeTitleColor={safe(assetChange?.color, "")}
+                      changeDesc={safe(assetChangeDescription?.text, "")}
+                      changeDescColor={safe(assetChangeDescription?.color, "")}
+                      changeDescType={
+                        safe(assetChangeDescription?.icon, "") as any
+                      }
+                    />
+                  );
+                })}
+              </TxSummaryContainer>
+            );
+          })}
 
-          {days.map((day) => {
+          {/* {days.map((day) => {
             const txList = txByDateMap.get(day) ?? [];
             return (
               <TxDateContainer key={day} title={day}>
@@ -186,6 +201,7 @@ const TxHistoryPage = (props: TxHistoryPageProps) => {
                     >
                       {summary.map((item, i) => {
                         const { assetChange, assetChangeDescription } = item;
+                        console.log("item", item);
                         return (
                           <TxSummaryItem
                             key={item?.title + i}
@@ -210,7 +226,7 @@ const TxHistoryPage = (props: TxHistoryPageProps) => {
                 })}
               </TxDateContainer>
             );
-          })}
+          })} */}
         </InfiniteScroll>
         <button
           onClick={refetch}
