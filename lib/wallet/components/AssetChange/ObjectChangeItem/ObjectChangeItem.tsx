@@ -81,13 +81,13 @@ export const ObjectChangeItem = (props: ObjectChangeItemProps) => {
             ),
           }}
         />
-        <div className={"ml-4 flex flex-col"}>
+        <div className={"ml-4 flex flex-col gap-1"}>
           <Typo.Title
             className={
-              "justify-start text-white text-sm font-normal font-['Sora'] leading-normal"
+              "justify-start text-white text-sm font-normal font-['Sora'] leading-normal capitalize"
             }
           >
-            {props.title}
+            {props.title.toLowerCase()}
           </Typo.Title>
           {props.desc && (
             <TemplateText
@@ -103,7 +103,7 @@ export const ObjectChangeItem = (props: ObjectChangeItemProps) => {
           )}
         </div>
       </div>
-      <div className={classNames("flex flex-col items-end")}>
+      <div className={classNames("flex flex-col items-end gap-1")}>
         <Typo.Normal
           className={classNames(
             "justify-start text-sm font-normal font-['Sora'] leading-normal"

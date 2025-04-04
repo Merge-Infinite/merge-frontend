@@ -1,24 +1,23 @@
+import classNames from "classnames";
+import Image from "next/image";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 import { Icon, IconContainer } from "../../../components/icons";
+import Nav from "../../../components/Nav";
+import { TxSummaryItem } from "../../../components/tx-history";
+import TemplateText from "../../../components/tx-history/TemplateText";
 import Typo from "../../../components/Typo";
 import { isNonEmptyArray, safe } from "../../../core";
-import { TxSummaryItem, TemplateIcon } from "../../../components/tx-history";
-import Nav from "../../../components/Nav";
-import { useNavigate, useParams } from "react-router-dom";
-import { Extendable } from "../../../types";
-import classNames from "classnames";
-import IconExternal from "../../../assets/icons/external.svg";
-import { useSelector } from "react-redux";
+import { useAccount } from "../../../hooks/useAccount";
 import { RootState } from "../../../store";
+import { Extendable } from "../../../types";
+import { DisplayItemDto } from "../types";
 import useTxnDetail, {
   TxnDetailAssetChangeDto,
   TxnDetailMetadataDto,
   TxnDetailSubAssetChangesDto,
 } from "./hooks/useTxnDetail";
-import { useAccount } from "../../../hooks/useAccount";
-import { useEffect } from "react";
-import { DisplayItemDto } from "../types";
-import TemplateText from "../../../components/tx-history/TemplateText";
-import Skeleton from "react-loading-skeleton";
 export type TxDetailPageProps = {};
 
 const TxnMetric = (
@@ -31,15 +30,10 @@ const TxnMetric = (
 ) => {
   const { label, value, icon, valueType = "text" } = props;
   return (
-    <div className={"flex items-center px-[24px] py-[8px]"}>
-      <Icon
-        icon={icon}
-        stroke={"#7D89B0"}
-        className={"grow-0 w-[16px] h-[16px] ml-[10px]"}
-      />
+    <div className={"flex items-center justify-between w-full"}>
       <Typo.Small
         className={
-          "grow text-gray-400 text-small ml-[26px] max-w-[110px] ellipsis"
+          " text-white text-sm font-normal font-['Sora'] leading-normal "
         }
       >
         {label}
@@ -48,7 +42,7 @@ const TxnMetric = (
         type={valueType}
         value={value}
         className={
-          "grow-0 text-gray-800 text-small ml-auto ellipsis max-w-[160px]"
+          "text-[#858585] text-sm font-normal font-['Sora'] leading-normal"
         }
       />
     </div>
@@ -118,7 +112,7 @@ const ExternalLink = (
           "hover:text-zinc-600",
           "px-4",
           "py-2",
-          "rounded-xl",
+          "rounded-lg",
           "font-medium",
           "w-fit",
           "hover:bg-zinc-100",
@@ -127,12 +121,6 @@ const ExternalLink = (
         )}
       >
         {props.children}
-        <IconExternal
-          className={classNames(
-            "ml-2 inline w-[12px] h-[12px] stroke-gray-400",
-            "text-zinc-500"
-          )}
-        ></IconExternal>
       </div>
     </a>
   );
@@ -159,43 +147,39 @@ const TxDetailPage = (props: TxDetailPageProps) => {
     }
   }, []);
 
-  console.log("digest", digest);
   console.log("txnDetail", txnDetail);
-  console.log("assetChanges", assetChanges);
 
   return (
-    <div className={"w-full h-full overflow-y-auto no-scrollbar bg-white"}>
+    <div
+      className={
+        "w-full h-full overflow-y-auto no-scrollbar bg-black gap-4 flex flex-col"
+      }
+    >
       <Nav
         title={"Txn Detail"}
-        className={"sticky top-0 z-10 bg-white"}
+        className={"sticky top-0 z-10 "}
         onNavBack={() => navigate("/transaction/flow")}
       />
-      <header className={"flex flex-col items-center my-[16px]"}>
-        <TemplateIcon
-          icon={"TxnSuccess"}
-          containerProps={{
-            className: "w-[52px] h-[52px]",
-            shape: "circle",
-          }}
-          iconProps={{
-            width: "24px",
-            height: "24px",
-            strokeWidth: "1.5",
-            elStyle: { fontWeight: "bold" },
-          }}
-        />
-        <Typo.Title
-          className={"text-[28px] font-bold mt-[16px] max-w-[300px] ellipsis"}
-        >
-          {txnDetail?.title ? (
-            safe(txnDetail?.title, "Unknown Type")
-          ) : (
-            <Skeleton width={100} />
-          )}
-        </Typo.Title>
-        <Typo.Small className={"text-[14px] text-gray-500 max-w-[300px]"}>
-          {safe(txnDetail?.description, "")}
-        </Typo.Small>
+      <header className={"flex flex-col items-start gap-3"}>
+        <div className="justify-start text-white text-xl font-normal font-['Sora'] uppercase leading-7">
+          TXN detail
+        </div>
+        <div className={"flex items-center gap-2"}>
+          <Image
+            src={`/images/${txnDetail?.icon}.svg`}
+            alt={txnDetail?.title || ""}
+            width={20}
+            height={35}
+            className={classNames("mr-[3px]")}
+          />
+          <TemplateText
+            type={"text"}
+            value={txnDetail?.title}
+            className={classNames(
+              "justify-start text-white text-base font-normal font-['Sora'] leading-normal tracking-wide"
+            )}
+          />
+        </div>
       </header>
       <main>
         {isNonEmptyArray(assetChanges) && (
@@ -251,8 +235,7 @@ const TxDetailPage = (props: TxDetailPageProps) => {
       </main>
       <footer className={"pb-[32px]"}>
         {isNonEmptyArray(metadataList) && (
-          <>
-            <Divider className={"my-[16px] w-[314px] mx-auto"} />
+          <div className="self-stretch p-4 bg-neutral-950/60 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#1f1f1f] inline-flex flex-col justify-start items-start gap-2 w-full">
             {metadataList.map((metadata, index) => {
               return (
                 <TxnMetric
@@ -264,27 +247,29 @@ const TxDetailPage = (props: TxDetailPageProps) => {
                 />
               );
             })}
-          </>
+          </div>
         )}
-        <Divider className={"my-[16px] w-[314px] mx-auto"} />
-        <div className={"flex justify-center items-center"}>
-          <ExternalLink
-            href={
-              `https://explorer.sui.io/transactions/` +
-              encodeURIComponent(digest) +
-              `?network=${networkId}`
-            }
-          >
-            Sui Explorer
-          </ExternalLink>
+        <div className={"flex mt-4"}>
           <ExternalLink
             href={
               `https://${
                 networkId === "testnet" ? "testnet." : ""
               }suivision.xyz/txblock/` + encodeURIComponent(digest)
             }
+            className="rounded-3xl border border-white  items-center justify-center "
           >
-            SuiVision
+            <div className="flex items-center gap-2">
+              <div className="justify-start text-white text-xs font-normal font-['Sora'] uppercase leading-normal">
+                Suivision
+              </div>
+              <Image
+                src={`/images/explore.svg`}
+                alt={"external"}
+                width={20}
+                className="text-white"
+                height={20}
+              />
+            </div>
           </ExternalLink>
         </div>
       </footer>
