@@ -13,12 +13,7 @@ export const MergingArea = ({
   isMerging,
   inventory,
 }: {
-  onDrop: (
-    item: any,
-    delta: XYCoord,
-    clientOffset: XYCoord,
-    isFromInventory: boolean
-  ) => void;
+  onDrop: (item: any, delta: XYCoord, clientOffset: XYCoord) => void;
   onDropandMerge: (
     targetInstanceId: string,
     droppedItem: any,
@@ -39,13 +34,13 @@ export const MergingArea = ({
   }, [inventory]);
 
   const handleDrop = useCallback(
-    (droppedItem: any, monitor) => {
+    (droppedItem: any, monitor: any) => {
       const delta = monitor.getDifferenceFromInitialOffset() as XYCoord;
       const clientOffset = monitor.getClientOffset() as XYCoord;
 
       // Check if this is an inventory item and if we have enough amount
       if (droppedItem.isFromInventory) {
-        const originalId = droppedItem.originalId || droppedItem.id;
+        const originalId = droppedItem.originalId;
         const inventoryItem = inventory.find(
           (item) => item.itemId === originalId
         );
@@ -94,7 +89,7 @@ export const MergingArea = ({
       // When removing an item, we need to update our usedItems count
       const box = mergingBoxes[id];
       if (box) {
-        const originalId = box.originalId || box.id;
+        const originalId = box.originalId;
 
         // If this is a non-basic item from inventory, decrement the used count
         const inventoryItem = inventory.find(
@@ -116,9 +111,10 @@ export const MergingArea = ({
   // Update usedItems counter when items are merged
   const handleDropAndMerge = useCallback(
     (targetInstanceId: string, droppedItem: any) => {
+      console.log("merging area droppedItem", droppedItem);
       // First check if the item being dropped is from inventory and has limited amount
       if (droppedItem.isFromInventory) {
-        const originalId = droppedItem.originalId || droppedItem.id;
+        const originalId = droppedItem.originalId;
         const inventoryItem = inventory.find(
           (item) => item.itemId === originalId
         );
@@ -141,6 +137,7 @@ export const MergingArea = ({
       }
 
       // When two items are merged, we need to account for both items being "consumed"
+      console.log("merging area droppedItem", droppedItem);
       onDropandMerge(
         targetInstanceId,
         droppedItem,
@@ -175,7 +172,7 @@ export const MergingArea = ({
       let isDisabled = false;
 
       if (!box.isFromInventory) {
-        const originalId = box.originalId || box.id;
+        const originalId = box.originalId;
         const inventoryItem = inventory.find(
           (item) => item.itemId === originalId
         );
@@ -203,6 +200,7 @@ export const MergingArea = ({
           onRemove={handleRemove}
           isHidden={box.isHidden}
           isNew={box.isNew}
+          originalId={box.originalId}
           isMerging={isMerging}
           mergingTarget={mergingTarget}
           isDisabled={isDisabled}

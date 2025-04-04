@@ -28,6 +28,7 @@ const DraggableBox = ({
   onDrop,
   onRemove,
   isHidden,
+  originalId,
   isNew,
   isFromInventory,
   isMerging,
@@ -40,8 +41,9 @@ const DraggableBox = ({
   emoji: string;
   left?: number;
   top?: number;
+  originalId?: string;
   amount?: number;
-  onDrop?: (instanceId: string, item: any) => void;
+  onDrop?: (instanceId: string | undefined, item: any) => void;
   onRemove?: (id: string) => void;
   isFromInventory: boolean;
   isHidden?: boolean;
@@ -58,11 +60,21 @@ const DraggableBox = ({
       emoji,
       left,
       top,
-      originalId: id,
+      originalId: originalId || id,
       isFromInventory,
       amount,
     }),
-    [id, instanceId, title, emoji, left, top, isFromInventory, amount]
+    [
+      id,
+      instanceId,
+      title,
+      emoji,
+      left,
+      top,
+      isFromInventory,
+      amount,
+      originalId,
+    ]
   );
 
   const [{ isDragging }, drag] = useDrag(
@@ -82,11 +94,12 @@ const DraggableBox = ({
   // Memoize the drop callback
   const handleDrop = useCallback(
     (dropItem: any) => {
+      console.log("handleDrop dropItem", dropItem);
       if (dropItem.instanceId !== instanceId) {
-        onDrop?.(instanceId, dropItem);
+        onDrop?.(instanceId, { ...dropItem, originalId });
       }
     },
-    [id, onDrop, instanceId]
+    [id, onDrop, instanceId, originalId]
   );
 
   const [, drop] = useDrop(
@@ -182,10 +195,11 @@ const DraggableBox = ({
   );
 
   // Memoize the remove handler
-  const handleRemove = useCallback(
-    () => onRemove?.(instanceId),
-    [onRemove, instanceId]
-  );
+  const handleRemove = useCallback(() => {
+    if (instanceId) {
+      onRemove?.(instanceId);
+    }
+  }, [onRemove, instanceId]);
 
   return (
     <div
@@ -239,5 +253,6 @@ export default React.memo(
     prevProps.isMerging === nextProps.isMerging &&
     prevProps.mergingTarget === nextProps.mergingTarget &&
     prevProps.isHidden === nextProps.isHidden &&
-    prevProps.isDisabled === nextProps.isDisabled
+    prevProps.isDisabled === nextProps.isDisabled &&
+    prevProps.originalId === nextProps.originalId
 );

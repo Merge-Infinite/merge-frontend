@@ -52,7 +52,7 @@ export default function PlayGame({}: PlayGameProps) {
 
       // Check if either item is from inventory and has limited amount
       const checkItemAvailability = (item: any) => {
-        const originalId = item.originalId || item.id;
+        const originalId = item.originalId;
         const inventoryItem = (inventory as any[])?.find(
           (element: any) => element.itemId === originalId
         );
@@ -80,6 +80,8 @@ export default function PlayGame({}: PlayGameProps) {
       }
 
       setTargetBox(targetBox);
+      console.log("targetBox", targetBox);
+      console.log("droppedItem", droppedItem);
       const targetItemId = targetBox.originalId || targetBox.id;
       const droppedItemId = droppedItem.originalId || droppedItem.id;
 
@@ -102,7 +104,7 @@ export default function PlayGame({}: PlayGameProps) {
           item1: targetItemId,
           item2: droppedItemId,
         });
-
+        console.log("response", response);
         const newInstanceId = `${response.id}_${Date.now()}`;
         const newElement = {
           id: newInstanceId,
@@ -163,11 +165,16 @@ export default function PlayGame({}: PlayGameProps) {
     [mergingBoxes, inventory]
   );
 
+  useEffect(() => {
+    console.log("mergingBoxes", mergingBoxes);
+  }, [mergingBoxes]);
+
   const handleDrop = useCallback(
     (droppedItem: any, delta: XYCoord, clientOffset: XYCoord) => {
+      console.log("handleDrop droppedItem", droppedItem);
       // Check if this is a non-basic inventory item that has a limited amount
       if (!droppedItem.isFromInventory) {
-        const originalId = droppedItem.originalId || droppedItem.id;
+        const originalId = droppedItem.originalId;
         const inventoryItem = (inventory as any[])?.find(
           (element: any) => element.itemId === originalId && !element.isBasic
         );
