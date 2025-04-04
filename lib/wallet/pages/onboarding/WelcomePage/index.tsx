@@ -84,9 +84,9 @@ const WelcomePage = () => {
     );
   }
 
-  async function handleSetNewPassword() {
+  async function handleSetNewPassword(password: string) {
     try {
-      await apiClient.callFunc("auth", "initPassword", null);
+      await apiClient.callFunc("auth", "initPassword", password);
       if (!nextRoute.current) {
         throw new Error("nextRoute is not set");
       }

@@ -9,6 +9,9 @@ import { Extendable } from "../types";
 
 const Session = (props: Extendable) => {
   const authed = useSelector((state: RootState) => state.appContext.authed);
+  const initialized = useSelector(
+    (state: RootState) => state.appContext.initialized
+  );
   const dispatch = useDispatch();
   const apiClient = useApiClient();
   const { isSetuped, authenticate } = useBiometricAuth();
@@ -40,7 +43,6 @@ const Session = (props: Extendable) => {
     };
   }, []);
   if (!authed) return <LockPage />;
-  console.log("props.children", props.children);
   return <>{props.children}</>;
 };
 

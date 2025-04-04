@@ -32,8 +32,10 @@ export class AuthApi implements IAuthApi {
     this.session = new Session();
   }
 
-  public async initPassword(): Promise<void> {
-    const password = "123456";
+  public async initPassword(password: string): Promise<void> {
+    if (password.length != 6) {
+      throw new Error("Password must be 6 characters");
+    }
     const meta = await this.storage.loadMeta();
     const wallets = await this.storage.getWallets();
     // NOTE: prevent calling when already has wallets

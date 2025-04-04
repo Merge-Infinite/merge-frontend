@@ -48,8 +48,6 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // After authentication, redirect to home if at root path
-    console.log("location", location.pathname);
     if (
       appContext.authed &&
       (location.pathname === "/wallet" || location.pathname === "/")

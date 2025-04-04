@@ -2,7 +2,12 @@
 
 import { useUser } from "@/hooks/useUser";
 import { AppDispatch } from "@/lib/wallet/store";
-import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
+import {
+  TabMode,
+  updateAuthed,
+  updateInitialized,
+  updateTabMode,
+} from "@/lib/wallet/store/app-context";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -35,7 +40,8 @@ export default function UserInfo({}: GamePlayInfoProps) {
           }
         });
 
-        // Reload the page to apply changes
+        dispatch(updateInitialized(false));
+        dispatch(updateAuthed(false));
         window.location.reload();
       })
       .catch((error) => {
