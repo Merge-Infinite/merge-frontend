@@ -1,14 +1,15 @@
-import { Extendable, OmitToken } from "../../../types";
-import styles from "./index.module.scss";
+import classNames from "classnames";
 import copy from "copy-to-clipboard";
-import message from "../../message";
-import SecretModal from "../SecretModal";
 import { useState } from "react";
-import PasswordConfirmModal from "../PasswordConfirmModal";
+import { useSelector } from "react-redux";
 import { RevealMnemonicParams } from "../../../core";
 import { useApiClient } from "../../../hooks/useApiClient";
-import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
+import { Extendable, OmitToken } from "../../../types";
+import message from "../../message";
+import PasswordConfirmModal from "../PasswordConfirmModal";
+import SecretModal from "../SecretModal";
+import styles from "./index.module.scss";
 
 export type PhraseModalProps = Extendable & {
   trigger: JSX.Element;
@@ -63,13 +64,13 @@ const PhraseModal = (props: PhraseModalProps) => {
         message.success("Copied");
       }}
     >
-      <div className={styles["container"]}>
+      <div className={classNames(styles["container"], "w-full bg-black")}>
         {phrases.map((text, index) => (
-          <div key={text}>
-            <span className="inline-block text-gray-300 text-right select-none">
+          <div key={text} className="flex flex-row items-center gap-2">
+            <div className="inline-block text-gray-300 text-right select-none">
               {index + 1}
-            </span>
-            <span className="ml-2">{text}</span>
+            </div>
+            <div className="ml-2 text-white">{text}</div>
           </div>
         ))}
       </div>

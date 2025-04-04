@@ -43,17 +43,17 @@ interface RootApi {
 
 export class WebApiClient {
   private readonly events: Emitter<ApiClientEventsMap>;
-  private storage: IStorage;
+  private storage: IStorage | undefined;
 
   // Service instances
   private serviceInstances: Record<string, any> = {};
-  private root: RootApi;
-  private wallet: WalletApi;
-  private account: AccountApi;
-  private auth: AuthApi;
-  private txn: TransactionApi;
-  private network: NetworkApi;
-  private dapp: DappBgApi;
+  private root: RootApi | undefined;
+  private wallet: WalletApi | undefined;
+  private account: AccountApi | undefined;
+  private auth: AuthApi | undefined;
+  private txn: TransactionApi | undefined;
+  private network: NetworkApi | undefined;
+  private dapp: DappBgApi | undefined;
 
   constructor() {
     this.events = mitt();
@@ -83,17 +83,17 @@ export class WebApiClient {
     // Initialize root service
     this.root = {
       clearToken: async () => {
-        const meta = await this.storage.loadMeta();
+        const meta = await this.storage?.loadMeta();
         if (!meta) return;
         try {
-          await this.storage.clearMeta();
+          await this.storage?.clearMeta();
         } catch (e) {
           console.error(e);
           throw new Error("Clear meta failed");
         }
       },
       resetAppData: async () => {
-        await this.storage.reset();
+        await this.storage?.reset();
         this.initServices();
       },
       validateToken: async (token: string) => {
@@ -141,6 +141,7 @@ export class WebApiClient {
 
     // Check if function exists in service
     const serviceInstance = this.serviceInstances[service];
+    console.log("serviceInstance", serviceInstance);
     if (typeof serviceInstance[funcName] !== "function") {
       const error = new Error(
         `Method "${funcName}" does not exist in service "${service}"`
@@ -154,7 +155,7 @@ export class WebApiClient {
     // Inject token if withAuth is true
     if (options?.withAuth === true) {
       try {
-        const token = this.auth.getToken();
+        const token = this.auth?.getToken();
         Object.assign(params, { token });
         // For context objects, add token there too
         if (

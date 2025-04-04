@@ -1,9 +1,10 @@
 import { useQuery } from "@apollo/client";
 import classnames from "classnames";
+import Image from "next/image";
 import QRCodeSVG from "qrcode.react";
 import { useEffect, useState } from "react";
 import Skeleton from "react-loading-skeleton";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SuiIcon from "../../../assets/icons/sui.svg";
 import Address from "../../../components/Address";
 import message from "../../../components/message";
@@ -80,6 +81,7 @@ function MainPage({ address, networkId }: DashboardProps) {
   const [airdropTime, setAirdropTime] = useState(t.setTime(t.getTime() - 5000));
   const [airdropLoading, setAirdropLoading] = useState(false);
   const featureFlags = useFeatureFlagsWithNetwork();
+  const navigate = useNavigate();
   const faucetApi =
     featureFlags?.faucet_api ?? `https://faucet.${networkId}.sui.io/gas`;
   // preload swap data
@@ -109,28 +111,40 @@ function MainPage({ address, networkId }: DashboardProps) {
         "rounded-2xl border border-[#1f1f1f] p-4 gap-4 flex flex-col"
       )}
     >
+      <div className="flex gap-2 justify-center items-center border border-white rounded-3xl px-3 py-1 w-fit">
+        <div
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor: networkId.includes("testnet")
+              ? "#FFD700"
+              : "#00FF00",
+          }}
+        ></div>
+        <div className="text-white text-xs font-normal font-['Sora'] capitalize leading-normal">
+          {networkId.includes("testnet") ? "Testnet" : "Mainnet"}
+        </div>
+      </div>
       <div className="flex items-center justify-between gap-2">
         <Address
           value={address}
           className={classnames(
             "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 w-fit"
           )}
+          style={{ color: "#000" }}
         />
-        <div className="flex gap-2 justify-center items-center border border-white rounded-3xl px-3 py-1">
-          <div
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: networkId.includes("testnet")
-                ? "#FFD700"
-                : "#00FF00",
-            }}
-          ></div>
-          <div className="text-white text-xs font-normal font-['Sora'] capitalize leading-normal">
-            {networkId.includes("testnet") ? "Testnet" : "Mainnet"}
-          </div>
-        </div>
+
+        <Image
+          src={"/images/setting.svg"}
+          alt="Sui Icon"
+          width={24}
+          height={24}
+          className="cursor-pointer text-white"
+          onClick={() => {
+            navigate("/settings");
+          }}
+        />
       </div>
       <div className={"flex gap-2 items-center"}>
         <SuiIcon width={24} height={24} />

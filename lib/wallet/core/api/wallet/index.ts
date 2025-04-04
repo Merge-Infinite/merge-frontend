@@ -1,18 +1,18 @@
-import { validateToken } from '../../utils/token';
-import * as crypto from '../../crypto';
-import { Vault } from '../../vault/Vault';
-import { IStorage } from '../../storage';
-import { toAccountIdString, toAccountNameString } from '../account';
-import { Buffer } from 'buffer';
-import { whichAvatar } from './utils';
-import { prepareVault } from '../../utils/vault';
+import { Buffer } from "buffer";
+import elliptic from "elliptic";
+import * as crypto from "../../crypto";
+import { IStorage } from "../../storage";
 import {
   IsImportedWallet,
   WALLET_TYPE_HDWALLET,
   WALLET_TYPE_IMPORTED,
   isImportedAccount,
-} from '../../storage/types';
-import elliptic from 'elliptic';
+} from "../../storage/types";
+import { validateToken } from "../../utils/token";
+import { prepareVault } from "../../utils/vault";
+import { Vault } from "../../vault/Vault";
+import { toAccountIdString, toAccountNameString } from "../account";
+import { whichAvatar } from "./utils";
 
 export type CreateWalletParams = {
   token: string;
@@ -72,7 +72,7 @@ export type Wallet = {
 export interface IWalletApi {
   validateMnemonic: (mnemonic: string) => boolean;
   revealMnemonic: (params: RevealMnemonicParams) => Promise<string>;
-  revealPrivate: (params: RevealPrivateKeyParams) => Promise<string>;
+  revealPrivateKey: (params: RevealPrivateKeyParams) => Promise<string>;
 
   createWallet: (params: CreateWalletParams) => Promise<Wallet>;
   getWallets: (opts?: { withMnemonic?: boolean }) => Promise<Wallet[]>;
@@ -104,30 +104,30 @@ export class WalletApi implements IWalletApi {
     await validateToken(this.storage, token);
     const wallet = await this.storage.getWallet(walletId);
     if (!wallet) {
-      throw new Error('Wallet not exist');
+      throw new Error("Wallet not exist");
     }
     if (IsImportedWallet(wallet)) {
-      throw new Error('Wallet is not HD wallet');
+      throw new Error("Wallet is not HD wallet");
     }
     return crypto.decryptMnemonic(
-      Buffer.from(token, 'hex'),
+      Buffer.from(token, "hex"),
       wallet.encryptedMnemonic!
     );
   }
 
-  async revealPrivate(params: RevealPrivateKeyParams): Promise<string> {
+  async revealPrivateKey(params: RevealPrivateKeyParams): Promise<string> {
     const { walletId, token } = params;
     await validateToken(this.storage, token);
     const wallet = await this.storage.getWallet(walletId);
     if (!wallet) {
-      throw new Error('Wallet not exist');
+      throw new Error("Wallet not exist");
     }
     const account = await this.storage.getAccount(wallet.accounts[0].id);
     if (!account) {
-      throw new Error('Account not exist');
+      throw new Error("Account not exist");
     }
     const vault = await prepareVault(wallet, account, token);
-    return vault.key.getPrivateKey().toString('hex');
+    return vault.key.getPrivateKey().toString("hex");
   }
 
   async createWallet(params: CreateWalletParams): Promise<Wallet> {
@@ -138,14 +138,14 @@ export class WalletApi implements IWalletApi {
     } else {
       mnemonic = crypto.generateMnemonic();
     }
-    const token = Buffer.from(params.token, 'hex');
+    const token = Buffer.from(params.token, "hex");
     if (await this.checkMnemonicDuplicated(mnemonic, token)) {
-      throw new Error('Wallet already exist');
+      throw new Error("Wallet already exist");
     }
     const encryptedMnemonic = crypto.encryptMnemonic(token, mnemonic);
     const meta = await this.storage.loadMeta();
     if (!meta) {
-      throw new Error('Password not initialized');
+      throw new Error("Password not initialized");
     }
     const walletId = meta.nextWalletId;
     meta.nextWalletId += 1;
@@ -156,7 +156,7 @@ export class WalletApi implements IWalletApi {
       name: params.name ? params.name : toWalletNameString(walletId),
       accounts: [],
       nextAccountId: 2,
-      encryptedMnemonic: encryptedMnemonic.toString('hex'),
+      encryptedMnemonic: encryptedMnemonic.toString("hex"),
       avatar: params.avatar ? params.avatar : whichAvatar(walletId),
       isImported: false,
       type: WALLET_TYPE_HDWALLET,
@@ -168,7 +168,7 @@ export class WalletApi implements IWalletApi {
       token,
       wallet.encryptedMnemonic
     );
-    console.log('vault create time', Date.now() - t);
+    console.log("vault create time", Date.now() - t);
     // TODO: cache vaults
     const account = {
       id: accountIdStr,
@@ -200,7 +200,7 @@ export class WalletApi implements IWalletApi {
         ...w,
       };
       if (!withMnemonic) {
-        Reflect.deleteProperty(wallet, 'encryptedMnemonic');
+        Reflect.deleteProperty(wallet, "encryptedMnemonic");
       }
       wallets.push(wallet);
     }
@@ -224,7 +224,7 @@ export class WalletApi implements IWalletApi {
     };
     // TODO: we don't need to reveal the decrypt mnemonic here.
     if (!withMnemonic && walletData.encryptedMnemonic) {
-      Reflect.deleteProperty(wallet, 'encryptedMnemonic');
+      Reflect.deleteProperty(wallet, "encryptedMnemonic");
     }
     return wallet;
   }
@@ -234,21 +234,21 @@ export class WalletApi implements IWalletApi {
     await validateToken(this.storage, token);
     const wallet = await this.storage.getWallet(walletId);
     if (!wallet) {
-      throw new Error('Wallet not exist');
+      throw new Error("Wallet not exist");
     }
     if (meta.name && meta.name !== wallet.name) {
       wallet.name = meta.name;
       const wallets = await this.storage.getWallets();
       for (const w of wallets) {
         if (w.name === wallet.name) {
-          throw new Error('duplicate wallet name');
+          throw new Error("duplicate wallet name");
         }
       }
     }
     if (meta.avatar && meta.avatar !== wallet.avatar) {
       wallet.avatar = meta.avatar;
     }
-    if (typeof meta.avatarPfp === 'object') {
+    if (typeof meta.avatarPfp === "object") {
       wallet.avatarPfp = {
         name: meta.avatarPfp.name,
         mime: meta.avatarPfp.mime,
@@ -265,7 +265,7 @@ export class WalletApi implements IWalletApi {
     // delete all belonging accounts
     const wallet = await this.storage.getWallet(params.walletId);
     if (!wallet) {
-      throw new Error('Wallet not exist');
+      throw new Error("Wallet not exist");
     }
     for (const account of wallet.accounts) {
       await this.storage.deleteAccount(wallet.id, account.id);
@@ -295,22 +295,22 @@ export class WalletApi implements IWalletApi {
 
   async importWallet(params: ImportWalletParams): Promise<Wallet> {
     await validateToken(this.storage, params.token);
-    const token = Buffer.from(params.token, 'hex');
-    const privateKeyArrayBuffer = Buffer.from(params.private, 'hex');
+    const token = Buffer.from(params.token, "hex");
+    const privateKeyArrayBuffer = Buffer.from(params.private, "hex");
     let privateKeyPair;
     try {
-      privateKeyPair = new elliptic.eddsa('ed25519').keyFromSecret(
+      privateKeyPair = new elliptic.eddsa("ed25519").keyFromSecret(
         Buffer.from(privateKeyArrayBuffer)
       );
     } catch (e) {
-      throw new Error('Imported private key not valid');
+      throw new Error("Imported private key not valid");
     }
     if (await this.checkPrivateDuplicated(privateKeyPair, token)) {
-      throw new Error('Private key already exsist');
+      throw new Error("Private key already exsist");
     }
     const meta = await this.storage.loadMeta();
     if (!meta) {
-      throw new Error('Password not initialized');
+      throw new Error("Password not initialized");
     }
     const walletId = meta.nextWalletId;
     meta.nextWalletId += 1;
@@ -328,12 +328,12 @@ export class WalletApi implements IWalletApi {
     const t = Date.now();
     const encryptedPrivateKey = crypto
       .encryptPrivate(token, privateKeyArrayBuffer)
-      .toString('hex');
+      .toString("hex");
     const vault = await Vault.fromEncryptedPrivateKey(
       token,
       encryptedPrivateKey
     );
-    console.log('vault create time', Date.now() - t);
+    console.log("vault create time", Date.now() - t);
     // TODO: cache vaults
     const account = {
       id: accountIdStr,
@@ -379,7 +379,7 @@ export class WalletApi implements IWalletApi {
             accountData.encryptedPrivateKey!
           );
           if (
-            decryptedPrivateKey.getSecret('hex') === privateKey.getSecret('hex')
+            decryptedPrivateKey.getSecret("hex") === privateKey.getSecret("hex")
           ) {
             return true;
           }
@@ -403,8 +403,8 @@ export class WalletApi implements IWalletApi {
             wallet.encryptedMnemonic!
           );
           if (
-            vault.getPrivateKey().toString('hex') ===
-            privateKey.getSecret('hex')
+            vault.getPrivateKey().toString("hex") ===
+            privateKey.getSecret("hex")
           ) {
             return true;
           }

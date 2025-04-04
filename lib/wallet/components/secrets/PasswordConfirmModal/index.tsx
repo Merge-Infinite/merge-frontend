@@ -1,23 +1,18 @@
-import { Extendable } from "../../../types";
-import { Modal } from "../../modals";
-import Button from "../../Button";
-import FormControl from "../../form/FormControl";
-import { getInputStateByFormState } from "../../../utils/form";
-import Input from "../../Input";
-import Form from "../../form/Form";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
-import { useApiClient } from "../../../hooks/useApiClient";
-import styles from "./index.module.scss";
-import SettingTwoLayout from "../../../layouts/SettingTwoLayout";
 import IconError from "../../../assets/icons/error.svg";
 import IconKey from "../../../assets/icons/key.svg";
-import IconShareError from "../../../assets/icons/share-error.svg";
 import IconQuestionError from "../../../assets/icons/question-error.svg";
-import { Icon } from "../../icons";
+import IconShareError from "../../../assets/icons/share-error.svg";
+import { useApiClient } from "../../../hooks/useApiClient";
+import { Extendable } from "../../../types";
+import { getInputStateByFormState } from "../../../utils/form";
+import Form from "../../form/Form";
+import FormControl from "../../form/FormControl";
+import Input from "../../Input";
+import { Modal } from "../../modals";
 import Typo from "../../Typo";
-import classnames from "classnames";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import classNames from "classnames";
+import styles from "./index.module.scss";
 export type PasswordConfirmModalProps = Extendable & {
   trigger: React.ReactNode;
   actionDesc: string;
@@ -39,9 +34,12 @@ type FormData = {
 const WarningDescription = (props: WarningDescriptionProps) => {
   return (
     <div className={styles["warning-description"]}>
-      <div className="flex gap-[8px] items-center">
+      <div className="flex gap-2 items-center">
         <div className={styles["warning-description__icon"]}>{props.icon}</div>
-        <div className={styles["warning-description__title"]}>
+        <div
+          className={styles["warning-description__title"]}
+          style={{ color: "#fff" }}
+        >
           {props.title}
         </div>
       </div>
@@ -81,84 +79,80 @@ const PasswordConfirmModal = (props: PasswordConfirmModalProps) => {
 
   return (
     <Modal
-      title={""}
+      title={"Warning"}
       trigger={props.trigger}
-      contentProps={{
-        className: classNames(
-          styles["modal"],
-          " overflow-scroll h-[100vh] no-scrollbar"
-        ),
-      }}
       onOpenChange={props.onOpenChange}
     >
-      <SettingTwoLayout className={classnames(styles["container"])}>
-        <div className="flex flex-col items-center gap-[8px]">
-          <IconError />
-          <Typo.Title className={styles["title"]}>Warning</Typo.Title>
-        </div>
-        <div className="mt-[24px] mb-60px">
-          <WarningDescription
-            icon={<IconKey />}
-            title={"Full control of your wallet"}
-            description={
-              "Anyone with the private key or recovery phrases can have full control of your wallet funds and assets."
-            }
-          />
-          <WarningDescription
-            icon={<IconShareError />}
-            title={"Never share with anyone"}
-            description={
-              "You should not share your private key or  recovery phrases with anyone, or type in any applications."
-            }
-          />
-          <WarningDescription
-            icon={<IconQuestionError />}
-            title={"Suiet will never ask for it"}
-            description={
-              "Suiet will never ask for your private key or recovery phrases."
-            }
-          />
-        </div>
+      <div className="flex flex-col items-center gap-[8px]">
+        <IconError />
+        <Typo.Title className={styles["title"]} style={{ color: "#FF4500" }}>
+          Warning
+        </Typo.Title>
+      </div>
+      <div className="mt-[24px] mb-60px">
+        <WarningDescription
+          icon={<IconKey />}
+          title={"Full control of your wallet"}
+          description={
+            "Anyone with the private key or recovery phrases can have full control of your wallet funds and assets."
+          }
+        />
+        <WarningDescription
+          icon={<IconShareError />}
+          title={"Never share with anyone"}
+          description={
+            "You should not share your private key or  recovery phrases with anyone, or type in any applications."
+          }
+        />
+        <WarningDescription
+          icon={<IconQuestionError />}
+          title={"Suiet will never ask for it"}
+          description={
+            "Suiet will never ask for your private key or recovery phrases."
+          }
+        />
+      </div>
 
-        <div
-          className={classnames(
-            styles["password-confirm"],
-            "fixed",
-            "bottom-0",
-            "left-0",
-            "w-screen"
-          )}
+      <div
+      // className={classnames(
+      //   styles["password-confirm"],
+      //   "fixed",
+      //   "bottom-0",
+      //   "left-0",
+      //   "w-screen"
+      // )}
+      >
+        <Form
+          form={form}
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
         >
-          <Form form={form} onSubmit={handleSubmit}>
-            <FormControl name={"password"}>
-              <Input
-                state={getInputStateByFormState(form.formState, "password")}
-                type={"password"}
-                placeholder={"Please enter password"}
-                onKeyDownCapture={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleSubmit(form.getValues());
-                    console.log("onKeyDown", e.key);
-                  }
-                }}
-              />
-            </FormControl>
+          <FormControl name={"password"}>
+            <Input
+              state={getInputStateByFormState(form.formState, "password")}
+              type={"password"}
+              placeholder={"Please enter password"}
+              onKeyDownCapture={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSubmit(form.getValues());
+                  console.log("onKeyDown", e.key);
+                }
+              }}
+            />
+          </FormControl>
 
-            <div className={"flex items-center mt-[16px] gap-[8px]"}>
-              <DialogPrimitive.Close className="w-full" aria-label="Close">
-                <Button type={"button"} solidBackground={true}>
-                  Cancel
-                </Button>
-              </DialogPrimitive.Close>
+          <div className={"flex items-center mt-[16px] gap-2"}>
+            <Button type={"button"} className="w-full">
+              Cancel
+            </Button>
 
-              <Button type={"submit"} state={"danger"} solidBackground={true}>
-                Confirm
-              </Button>
-            </div>
-          </Form>
-        </div>
-      </SettingTwoLayout>
+            <Button type={"submit"} className="w-full" variant={"error"}>
+              Confirm
+            </Button>
+          </div>
+        </Form>
+      </div>
     </Modal>
   );
 };

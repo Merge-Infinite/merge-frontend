@@ -1,13 +1,13 @@
-import React, { CSSProperties } from "react";
-import CopyIcon from "../CopyIcon";
-import copy from "copy-to-clipboard";
-import message from "../message";
-import { Extendable } from "../../types";
 import classnames from "classnames";
+import copy from "copy-to-clipboard";
+import { CSSProperties } from "react";
+import { useSelector } from "react-redux";
 import { addressEllipsis } from "../../core";
 import { useSuinsName } from "../../hooks/useSuinsName";
-import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import { Extendable } from "../../types";
+import CopyIcon from "../CopyIcon";
+import message from "../message";
 
 export type AddressProps = Extendable & {
   value: string;
@@ -39,6 +39,7 @@ const Address = (props: AddressProps) => {
         "flex items-center",
         { "cursor-pointer": !disableCopy },
         "flex gap-2",
+        "text-white",
         props.className
       )}
       style={props.style}
@@ -50,9 +51,7 @@ const Address = (props: AddressProps) => {
       }}
     >
       <p
-        className={
-          "text-black text-xs font-normal font-['Sora'] uppercase leading-normal"
-        }
+        className={"text-xs font-normal font-['Sora'] uppercase leading-normal"}
       >
         {suins ? (
           <SuinsName address={props.value} ellipsis={ellipsis} />
