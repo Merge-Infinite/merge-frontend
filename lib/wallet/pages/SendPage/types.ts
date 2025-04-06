@@ -1,5 +1,6 @@
 export interface SendData {
-  recipientAddress: string;
+  
+  : string;
   coinType: string;
   coinAmountWithDecimals: string;
 }

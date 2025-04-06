@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useApolloClient } from "@apollo/client";
-import { isValidSuiAddress } from "@mysten/sui.js";
+import { formatAddress, isValidSuiAddress } from "@mysten/sui.js";
 import { useDebounceEffect } from "ahooks";
 import classNames from "classnames";
 import dayjs from "dayjs";
@@ -597,7 +597,7 @@ const SendPage = () => {
   );
 };
 
-const TokenSelector = ({
+export const TokenSelector = ({
   isOpen,
   setIsOpen,
   coinList,
@@ -606,7 +606,7 @@ const TokenSelector = ({
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   coinList: CoinDto[];
-  onSelectCoin: (coin: CoinDto) => void;
+  onSelectCoin: (coin: CoinDto | string) => void;
 }) => {
   console.log("coinList", coinList);
 
@@ -638,10 +638,9 @@ const TokenSelector = ({
             <span className="text-sm text-white">Balance</span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2  overflow-y-auto">
             {coinList.map((coin) => {
               const isSUI = isSuiToken(coin.type);
-              console.log(isSUI);
               return (
                 <div
                   className="flex justify-between items-center p-2 hover:bg-accent hover:bg-opacity-20 rounded-lg cursor-pointer"
@@ -669,13 +668,12 @@ const TokenSelector = ({
                         height={24}
                       />
                     ) : (
-                      <TokenIcon
-                        icon={IconToken}
+                      <Image
+                        src={"/images/sui.svg"}
                         alt="water-drop"
-                        className={classNames(
-                          [isSUI ? "" : styles["icon-wrap-default"]],
-                          "grow-0"
-                        )}
+                        className="w-6 h-6 rounded-sm"
+                        width={24}
+                        height={24}
                       />
                     )}
                     <div className="flex flex-col gap-1">
@@ -704,7 +702,9 @@ const TokenSelector = ({
                         )}
                       </div>
                       <div className="justify-start text-white text-xs font-normal font-['Sora'] leading-none">
-                        {coin.type}
+                        {coin.type.length > 15
+                          ? formatAddress(coin.type)
+                          : coin.type}
                       </div>
                     </div>
                   </div>

@@ -13,7 +13,6 @@ import { debounce } from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Alert from "../../components/Alert";
-import Button from "../../components/Button";
 import Message from "../../components/message";
 import { TokenInfo } from "../../components/TokenItem";
 import {
@@ -35,18 +34,15 @@ import { CoinType } from "../../types/coin";
 import { GET_SUPPORT_SWAP_COINS } from "../../utils/graphql/query";
 import SwapItem from "./swapItem";
 // import { ExchageIcon}
-import IconExchange from "../../assets/icons/exchange.svg";
 
-import { Separator } from "@/components/ui/separator";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
+import { Button } from "@/components/ui/button";
 import Big from "big.js";
-import classNames from "classnames";
+import Image from "next/image";
 import { useNavigate } from "react-router-dom";
 import Tooltip from "../../components/Tooltip";
 import { useFeatureFlagsWithNetwork } from "../../hooks/useFeatureFlags";
 import { isSuiToken } from "../../utils/check";
 import AssetChangeConfirmPage from "../AssetChangeConfirmPage";
-import Slider from "./slider";
 export default function SwapPage() {
   const { accountId, walletId, networkId } = useSelector(
     (state: RootState) => state.appContext
@@ -154,7 +150,7 @@ export default function SwapPage() {
   useEffect(() => {
     if (!address) return;
     cetusSwapClient.current = null;
-
+    console.log(networkId);
     const client = new CetusSwapClient(
       address,
       networkId === "mainnet"
@@ -496,13 +492,21 @@ export default function SwapPage() {
   }
 
   return (
-    <AppLayout layoutMode={LayoutMode.WITHOUT_HEADER} className="relative">
+    <AppLayout
+      layoutMode={LayoutMode.WITHOUT_HEADER}
+      className="flex flex-col gap-4"
+    >
+      <div className="justify-start text-white text-xl font-normal font-['Sora'] uppercase leading-7">
+        Swap
+      </div>
+
       <div className=" text-white flex flex-col gap-6">
         <SwapItem
           type="From"
           data={filteredData}
           defaultValue={fromCoinType}
           value={fromCoinType}
+          address={address}
           onChange={(coinType) => {
             setFromCoinType(coinType);
             setFromCoinAmount("");
@@ -553,48 +557,14 @@ export default function SwapPage() {
           maxAmount={getMaxAmount().toString()}
           trigger={<TokenInfo coin={fromCoinInfo}></TokenInfo>}
         ></SwapItem>
-        <div className="h-[32px] relative">
-          <Separator
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
-              position: "absolute",
-              top: 16,
-              bottom: 0,
-              left: 0,
-              right: 0,
-            }}
-          />
-          <button
-            className="absolute top-0 bottom-0 left-[28px] my-auto"
-            // onClick={switchFromAndTo}
-          >
-            <IconExchange className="w-[32px] h-[32px]" />
-          </button>
-          <div className="pl-[100px] pr-[24px] w-full h-8">
-            {getMaxAmount() > 0 && (
-              <Slider
-                className={classNames("w-full", "h-8")}
-                value={Number(fromCoinAmount)}
-                onChange={(value) => {
-                  setFromCoinAmount(value.toString());
-                  setToCoinAmount("");
-                  updateInfoForSwap(
-                    value.toString(),
-                    fromCoinType,
-                    toCoinType,
-                    slippagePercentage
-                  );
-                }}
-                max={getMaxAmount()}
-              ></Slider>
-            )}
-          </div>
-        </div>
+        <Image src="/images/swap.svg" alt="swap-arrow" width={20} height={20} />
+
         <SwapItem
           type="To"
           data={supportedToCoins}
           defaultValue={toCoinType}
           value={toCoinType}
+          address={address}
           coinInfo={toCoinInfo}
           onChange={(coinType) => {
             setToCoinType(coinType);
@@ -613,7 +583,7 @@ export default function SwapPage() {
         </SwapItem>
       </div>
 
-      <div className="min-h-[28px] mx-[24px] flex flex-col gap-2 mb-[8px]">
+      <div className="min-h-[28px] mx-[24px] flex flex-col gap-2">
         {warningMessage && (
           <Alert type="warn" className="break-words">
             {" "}
@@ -629,10 +599,8 @@ export default function SwapPage() {
       </div>
 
       <div className="mx-[24px] mt-4 mb-8 flex flex-col gap-4">
-        <div className="w-full flex text-white justify-between font-medium">
-          <Tooltip message="The expected change in a token's price due to the size of a trade">
-            <p>Price Impact</p>
-          </Tooltip>
+        {/* <div className="w-full flex text-white justify-between font-medium">
+          <p>Price Impact</p>
 
           <p
             className={classNames(
@@ -648,19 +616,19 @@ export default function SwapPage() {
           >
             {priceImpact && (priceImpact * 100).toFixed(2) + "%"}
           </p>
-        </div>
+        </div> */}
 
-        <div className="w-full flex text-white justify-between font-medium">
+        <div className="w-full flex text-white justify-between  text-white text-sm ">
           <Tooltip message="The expected change in a token's price due to the size of a trade">
             <p>Router</p>
           </Tooltip>
           <p className="text-white">Cetus</p>
         </div>
-        <div className="w-full flex text-white justify-between font-medium">
+        <div className="w-full flex text-white justify-between  text-white text-sm ">
           <p>Estmate Gas Fee</p>
           <p className="text-white"> {formatSUI(estimatedGasFee)} SUI</p>
         </div>
-        <div className="relative">
+        {/* <div className="relative">
           <div
             className="absolute inset-0 flex items-center"
             aria-hidden="true"
@@ -683,46 +651,31 @@ export default function SwapPage() {
               <span className="px-2 text-sm text-white">Expand</span>
             </div>
           </div>
+        </div> */}
+        {/* {isExpanded && (
+          <> */}
+        <div className="w-full flex text-white justify-between">
+          <Tooltip message="The maximum difference between the expected and actual execution price of a trade">
+            <p>Slippage</p>
+          </Tooltip>
+          <p className="text-white">{formatSlippage(slippageValue)}</p>
         </div>
-        {isExpanded && (
-          <>
-            <div className="w-full flex text-white justify-between font-medium">
-              <Tooltip message="The maximum difference between the expected and actual execution price of a trade">
-                <p>Slippage</p>
-              </Tooltip>
-              <p className="text-white">{formatSlippage(slippageValue)}</p>
-            </div>
 
-            <div className="w-full flex text-white justify-between font-medium">
-              <Tooltip message="Fee charged by Suiet Wallet">
-                <p>Suiet Fee</p>
-              </Tooltip>
-              <div className="flex items-center gap-1">
-                <Tooltip message="During the campaign, Suiet will not charge any separate fees">
-                  <p className="text-green-500 bg-green-100 px-2 py-[1px] rounded-lg">
-                    limited
-                  </p>
-                </Tooltip>
-                <p className="text-green-400">0%</p>
-              </div>
-            </div>
-          </>
-        )}
+        {/* </>
+        )} */}
       </div>
 
-      <div className="w-full px-[24px] py-[12px] border-t border-t-gray-100 mt-4">
-        <Button
-          className=""
-          state="primary"
-          onClick={() => {
-            setShowConfirm(true);
-          }}
-          loading={swapLoading || swapSubmitting}
-          disabled={!isSwapAvailable || !cetusSwapClient.current}
-        >
+      <Button
+        onClick={() => {
+          setShowConfirm(true);
+        }}
+        isLoading={swapLoading || swapSubmitting}
+        disabled={!isSwapAvailable || !cetusSwapClient.current}
+      >
+        <div className=" text-neutral-950 text-sm font-normal font-['Sora'] uppercase leading-normal">
           {swapLoading ? "Loading" : swapSubmitting ? "Submitting" : "Swap"}
-        </Button>
-      </div>
+        </div>
+      </Button>
 
       <AssetChangeConfirmPage
         open={showConfirm}

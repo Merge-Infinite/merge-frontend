@@ -1,34 +1,28 @@
-import type { Extendable } from "../../types";
+import { SUI_TYPE_ARG } from "@mysten/sui.js";
 import classNames from "classnames";
+import IconToken from "../../assets/icons/token.svg";
+import IconWaterDrop from "../../assets/icons/waterdrop.svg";
 import { formatCurrency } from "../../core";
+import type { Extendable } from "../../types";
+import { isSuiToken } from "../../utils/check";
 import TokenIcon from "../TokenIcon";
 import Typo from "../Typo";
-import IconWaterDrop from "../../assets/icons/waterdrop.svg";
-import IconToken from "../../assets/icons/token.svg";
 import styles from "./index.module.scss";
-import { useState } from "react";
-import {
-  compareCoinAmount,
-  isSafeConvertToNumber,
-  isSuiToken,
-} from "../../utils/check";
-import { SUI_TYPE_ARG } from "@mysten/sui.js";
 
 import { useNavigate } from "react-router-dom";
 
+import { useQuery } from "@apollo/client";
+import Image from "next/image";
+import Skeleton from "react-loading-skeleton";
 import { useSelector } from "react-redux";
-import { RootState } from "../../store";
+import UnverifiedIcon from "../../assets/icons/unverified.svg";
+import VerifiedIcon from "../../assets/icons/verified.svg";
 import { useAccount } from "../../hooks/useAccount";
 import { useNetwork } from "../../hooks/useNetwork";
-import { Img } from "../Img";
-import { useQuery } from "@apollo/client";
-import { GET_DELEGATED_STAKES } from "../../utils/graphql/query";
-import VerifiedIcon from "../../assets/icons/verified.svg";
-import UnverifiedIcon from "../../assets/icons/unverified.svg";
-import Tooltip from "../Tooltip";
+import { RootState } from "../../store";
 import { CoinType } from "../../types/coin";
-import Skeleton from "react-loading-skeleton";
-import Image from "next/image";
+import { GET_DELEGATED_STAKES } from "../../utils/graphql/query";
+import Tooltip from "../Tooltip";
 type TokenItemProps = Extendable & {
   onClick?: (symbol: string) => void;
   selected?: boolean;
@@ -289,20 +283,21 @@ export function TokenLogo(props: TokenProps) {
       {props.coin.iconURL ? (
         <Image
           src={props.coin.iconURL}
-          className={classNames("w-[40px]", "h-[40px]", "rounded-full")}
+          className={classNames("w-[24px]", "h-[24px]", "rounded-full")}
           alt={props.coin.symbol}
-          width={40}
-          height={40}
+          width={24}
+          height={24}
+        />
+      ) : isSUI ? (
+        <Image
+          src={"/images/sui.svg"}
+          alt="water-drop"
+          className={classNames("w-[24px]", "h-[24px]", "rounded-full")}
+          width={24}
+          height={24}
         />
       ) : (
-        <TokenIcon
-          icon={isSUI ? IconWaterDrop : IconToken}
-          alt="water-drop"
-          className={classNames(
-            [isSUI ? "" : styles["icon-wrap-default"]],
-            "grow-0"
-          )}
-        />
+        <TokenIcon icon={IconToken} alt="water-drop" className={""} />
       )}
       {props.coin.metadata?.wrappedChain && (
         <div
