@@ -15,11 +15,17 @@ export const Shop = () => {
     >
       <Tabs defaultValue="star" className="w-full h-full">
         <TabsList className="flex justify-center gap-6 bg-transparent">
-          <TabsTrigger value="star" className=" data-[state=active]:border-b-2">
+          <TabsTrigger
+            value="star"
+            className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2"
+          >
             <Image src="/images/star.svg" alt="star" width={24} height={24} />
             Star
           </TabsTrigger>
-          <TabsTrigger value="sui" className=" data-[state=active]:border-b-2">
+          <TabsTrigger
+            value="sui"
+            className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2"
+          >
             <Image src="/images/sui.svg" alt="sui" width={24} height={24} />
             SUI
           </TabsTrigger>

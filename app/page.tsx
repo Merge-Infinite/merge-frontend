@@ -3,6 +3,7 @@
 import SplashScreen from "@/components/common/Spash";
 import { BagScreen } from "@/components/screen/bag/bag";
 import { HomeScreen } from "@/components/screen/home/home";
+import { Leaderboard } from "@/components/screen/leaderboard/leaderboard";
 import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +21,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "./context/AuthContext";
-
 export default function Home() {
   const [backButton] = initBackButton();
   const { isAuthenticated } = useAuth();
@@ -70,7 +70,7 @@ export default function Home() {
         onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
       >
         <TabsList
-          className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black ${
+          className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black z-10 ${
             appMode !== AppMode.GAMES ? "hidden" : ""
           }`}
           style={{
@@ -86,6 +86,9 @@ export default function Home() {
 
           <TabsTrigger value="task">
             <Image src="/images/task.svg" alt="logo" width={24} height={24} />
+          </TabsTrigger>
+          <TabsTrigger value="leaderboard">
+            <Image src="/images/rank.svg" alt="logo" width={24} height={24} />
           </TabsTrigger>
           <TabsTrigger value="bag">
             <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
@@ -109,6 +112,9 @@ export default function Home() {
         </TabsContent>
         <TabsContent value="shop" className="h-full">
           <Shop />
+        </TabsContent>
+        <TabsContent value="leaderboard" className="h-full">
+          <Leaderboard />
         </TabsContent>
       </Tabs>
     </div>

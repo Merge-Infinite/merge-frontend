@@ -21,20 +21,24 @@ import { AuthProvider } from "@/app/context/AuthContext";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { ApiClientContext } from "@/lib/wallet/hooks/useApiClient";
+import { useCustomApolloClient } from "@/lib/wallet/hooks/useCustomApolloClient";
 import { WebApiClient } from "@/lib/wallet/scripts/shared/ui-api-client";
-import { persistorStore, store } from "@/lib/wallet/store";
+import { persistorStore, RootState, store } from "@/lib/wallet/store";
+import { ChromeStorage } from "@/lib/wallet/store/storage";
+import { ApolloProvider } from "@apollo/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   QueryClient as ReactQueryClient,
   QueryClientProvider as ReactQueryClientProvider,
 } from "react-query";
-import { Provider } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 function App(props: PropsWithChildren) {
   const lp = useLaunchParams();
   const miniApp = useMiniApp();
   const themeParams = useThemeParams();
   const viewport = useViewport();
+  const appContext = useSelector((state: RootState) => state.appContext);
 
   useEffect(() => {
     miniApp.setHeaderColor("#000000");
@@ -52,18 +56,31 @@ function App(props: PropsWithChildren) {
     return undefined; // Always return something consistent
   }, [viewport]);
 
+  const apolloClient = useCustomApolloClient(
+    appContext.networkId,
+    "suiet-desktop-extension",
+    "1.0.0",
+    new ChromeStorage()
+  );
+
+  if (!apolloClient) {
+    return <h2>Initializing app...</h2>;
+  }
+
   return (
-    <AuthProvider>
-      <AppRoot
-        appearance={themeParams.isDark ? "dark" : "light"}
-        platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
-        className=" w-full h-full"
-      >
-        {props.children}
-      </AppRoot>
-      <Toaster />
-      <SonnerToaster />
-    </AuthProvider>
+    <ApolloProvider client={apolloClient}>
+      <AuthProvider>
+        <AppRoot
+          appearance={themeParams.isDark ? "dark" : "light"}
+          platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
+          className=" w-full h-full"
+        >
+          {props.children}
+        </AppRoot>
+        <Toaster />
+        <SonnerToaster />
+      </AuthProvider>
+    </ApolloProvider>
   );
 }
 
