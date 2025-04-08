@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +28,6 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MarketItem } from "./market-item";
-
 // Card Item component with hover effects and improved visuals
 
 // Empty state component
@@ -97,7 +97,7 @@ export const NFTMarket = () => {
   const { data: network } = useNetwork(appContext.networkId);
   const { data: balance } = useSuiBalance(address);
   const [isOwned, setIsOwned] = useState(false);
-  const [isSell, setIsSell] = useState(false);
+  const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
   const {
     items: marketplaceListings,
@@ -182,13 +182,17 @@ export const NFTMarket = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating kiosk:", error);
-      toast({
-        title: "Error creating kiosk",
-        description: "Please try again later",
-        variant: "destructive",
-      });
+      if (error.message === "Authentication required") {
+        setOpenAuthDialog(true);
+      } else {
+        toast({
+          title: "Error creating kiosk",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -314,6 +318,11 @@ export const NFTMarket = () => {
           </div>
         )}
       </div>
+      <PasscodeAuthDialog
+        open={openAuthDialog}
+        setOpen={(open) => setOpenAuthDialog(open)}
+        onSuccess={handleCreateKiosk}
+      />
     </div>
   );
 };

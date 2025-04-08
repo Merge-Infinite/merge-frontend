@@ -1,3 +1,4 @@
+import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import Image from "next/image";
 import React, { Fragment, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+
 export const CardItem = React.memo(
   ({
     element,
@@ -64,6 +66,7 @@ export const CardItem = React.memo(
       null
     );
     const [priceError, setPriceError] = useState<string>("");
+    const [openAuthDialog, setOpenAuthDialog] = useState(false);
 
     // Reset states when dialog closes
     useEffect(() => {
@@ -192,12 +195,16 @@ export const CardItem = React.memo(
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Transaction error:", error);
-        setTransactionStatus("error");
-        toast.error(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
+        if (error.message === "Authentication required") {
+          setOpenAuthDialog(true);
+        } else {
+          setTransactionStatus("error");
+          toast.error(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
+        }
       } finally {
       }
     }
@@ -396,6 +403,11 @@ export const CardItem = React.memo(
             )}
           </DialogContent>
         </Dialog>
+        <PasscodeAuthDialog
+          open={openAuthDialog}
+          setOpen={(open) => setOpenAuthDialog(open)}
+          onSuccess={listNFTOnKiosk}
+        />
       </Fragment>
     );
   }

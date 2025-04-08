@@ -1,6 +1,7 @@
 "use client";
 
 import ElementItem from "@/components/common/ElementItem";
+import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,7 +30,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
@@ -43,6 +44,7 @@ export function OffchainBagScreen() {
   const [mintQuantity, setMintQuantity] = useState(1);
   const [isMinting, setIsMinting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [openAuthDialog, setOpenAuthDialog] = useState(false);
 
   const getUserBagApi = useApi({
     key: ["getUserBag"],
@@ -96,7 +98,7 @@ export function OffchainBagScreen() {
     }
   };
 
-  async function mintNFTs() {
+  const mintNFTs = useCallback(async () => {
     if (!selectedItem || !mintQuantity || mintQuantity <= 0) {
       toast.error("Please select an item and enter a valid quantity");
       return null;
@@ -125,7 +127,8 @@ export function OffchainBagScreen() {
           paymentCoin,
         ],
       });
-
+      console.log("appContext", appContext.walletId);
+      console.log("appContext", appContext.accountId);
       const response = await apiClient.callFunc<
         SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
         undefined
@@ -159,14 +162,23 @@ export function OffchainBagScreen() {
       }
 
       return null;
-    } catch (error) {
-      console.error("Error minting NFTs:", error);
-      toast.error(error.message || "Please try again later");
-      return null;
+    } catch (error: any) {
+      console.log("error", error);
+      if (error.message === "Authentication required") {
+        setOpenAuthDialog(true);
+      } else if (
+        error.message !== "Authentication required" &&
+        error.code !== "AUTH_REQUIRED" &&
+        error.status !== 401
+      ) {
+        console.error("Error minting NFTs:", error);
+        toast.error(error.message || "Please try again later");
+      }
+      throw error;
     } finally {
       setIsMinting(false);
     }
-  }
+  }, [selectedItem, mintQuantity, network, appContext, syncUserBag]);
 
   // Filter items based on search query
   const filteredItems = getUserBagApi?.data?.filter((item) =>
@@ -262,7 +274,11 @@ export function OffchainBagScreen() {
           </div>
         )}
       </div>
-
+      <PasscodeAuthDialog
+        open={openAuthDialog}
+        setOpen={(open) => setOpenAuthDialog(open)}
+        onSuccess={mintNFTs}
+      />
       <Dialog
         open={!!selectedItem}
         onOpenChange={(open) => !open && handleCloseModal()}

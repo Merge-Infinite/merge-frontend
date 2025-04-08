@@ -1,3 +1,4 @@
+import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import useApi from "@/hooks/useApi";
@@ -60,6 +61,7 @@ export const MarketItem = React.memo(
     const { data: network } = useNetwork(appContext.networkId);
     const [loading, setLoading] = useState(initialLoading || false);
     const [copied, setCopied] = useState(false);
+    const [openAuthDialog, setOpenAuthDialog] = useState(false);
     const jsonContent = `{
         "p": "sui-20",
         "element": "${element}", 
@@ -173,7 +175,13 @@ export const MarketItem = React.memo(
         }
       } catch (error) {
         console.error("Purchase error:", error);
-        toast.error(error.message || "Something went wrong. Please try again.");
+        if (error.message === "Authentication required") {
+          setOpenAuthDialog(true);
+        } else {
+          toast.error(
+            error.message || "Something went wrong. Please try again."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -230,10 +238,14 @@ export const MarketItem = React.memo(
         } else {
           toast.error("Failed to delist NFT. Please try again.");
         }
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
+      } catch (error: any) {
+        if (error.message === "Authentication required") {
+          setOpenAuthDialog(true);
+        } else {
+          toast.error(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -300,6 +312,11 @@ export const MarketItem = React.memo(
             )}
           </div>
         </div>
+        <PasscodeAuthDialog
+          open={openAuthDialog}
+          setOpen={(open) => setOpenAuthDialog(open)}
+          onSuccess={deListNFT}
+        />
       </Card>
     );
   }

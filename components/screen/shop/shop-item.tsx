@@ -1,5 +1,6 @@
 "use client";
 
+import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -24,7 +25,6 @@ import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
-
 export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const apiClient = useApiClient();
   const { user } = useUser();
@@ -34,6 +34,8 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const { address } = useAccount(appContext.accountId);
   const { data: balance } = useSuiBalance(address);
   const [isLoading, setIsLoading] = useState(false);
+  const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const [product, setProduct] = useState<any>(null);
   const fetchProducts = useApi({
     key: ["products"],
     method: "GET",
@@ -114,7 +116,10 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           console.error("Backend sync error:", error);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "Authentication required") {
+        setOpenAuthDialog(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +234,10 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                     size={"sm"}
                     disabled={createPurchase?.isPending || isLoading}
                     isLoading={createPurchase?.isPending || isLoading}
-                    onClick={() => onBuy(product)}
+                    onClick={async () => {
+                      setProduct(product);
+                      await onBuy(product);
+                    }}
                   >
                     <div className="text-black text-xs font-normal uppercase leading-normal">
                       Buy
@@ -322,6 +330,11 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           )}
         </CardContent>
       </Card>
+      <PasscodeAuthDialog
+        open={openAuthDialog}
+        setOpen={(open) => setOpenAuthDialog(open)}
+        onSuccess={() => onBuy(product)}
+      />
     </div>
   );
 };

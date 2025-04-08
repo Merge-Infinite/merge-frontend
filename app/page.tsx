@@ -7,7 +7,6 @@ import { Leaderboard } from "@/components/screen/leaderboard/leaderboard";
 import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
@@ -24,7 +23,6 @@ import { useAuth } from "./context/AuthContext";
 export default function Home() {
   const [backButton] = initBackButton();
   const { isAuthenticated } = useAuth();
-  const apiClient = useApiClient();
 
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
