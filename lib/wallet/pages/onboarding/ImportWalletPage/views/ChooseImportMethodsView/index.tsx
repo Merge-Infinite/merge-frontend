@@ -1,6 +1,6 @@
-import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
-import ImportRecoveryPhrase from "../../../../../assets/pages/ImportWallet/ImportRecoveryPhrase.svg";
 import ImportPrivateKey from "../../../../../assets/pages/ImportWallet/ImportPrivateKey.svg";
+import ImportRecoveryPhrase from "../../../../../assets/pages/ImportWallet/ImportRecoveryPhrase.svg";
+import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
 import { Extendable } from "../../../../../types";
 
 export type ImportMethod = "mnemonics" | "privateKey" | "onekey" | "keystone";
@@ -12,10 +12,7 @@ export default function ChooseImportMethodsView(
   props: ChooseImportMethodsProps
 ) {
   return (
-    <SettingOneLayout
-      titles={["Import", "Wallet"]}
-      desc={"Choose import method below."}
-    >
+    <SettingOneLayout titles={[]} desc={"Choose import method below."}>
       <div className="flex flex-col mt-8 gap-4">
         <ImageContainer
           onClick={() => {

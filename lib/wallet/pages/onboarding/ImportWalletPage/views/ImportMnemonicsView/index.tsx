@@ -1,30 +1,29 @@
-import Typo from "../../../../../components/Typo";
+import classNames from "classnames";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 import Button from "../../../../../components/Button";
 import Form from "../../../../../components/form/Form";
-import { useForm } from "react-hook-form";
-import { getInputStateByFormState } from "../../../../../utils/form";
+import Input from "../../../../../components/Input";
+import message from "../../../../../components/message";
+import { Select, SelectItem } from "../../../../../components/Select";
+import Typo from "../../../../../components/Typo";
+import {
+  BIP32_EN_WORDLIST,
+  CreateWalletParams,
+  validateWord,
+  Wallet,
+} from "../../../../../core";
 import { useApiClient } from "../../../../../hooks/useApiClient";
 import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
-import Input from "../../../../../components/Input";
-import { useState } from "react";
-import classNames from "classnames";
-import {
-  validateWord,
-  BIP32_EN_WORDLIST,
-  Wallet,
-  CreateWalletParams,
-  Account,
-} from "../../../../../core";
-import message from "../../../../../components/message";
-import { OmitToken } from "../../../../../types";
-import { isNonEmptyArray } from "../../../../../utils/check";
+import { AppDispatch } from "../../../../../store";
 import {
   updateAccountId,
   updateWalletId,
 } from "../../../../../store/app-context";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../../../../store";
-import { Select, SelectItem } from "../../../../../components/Select";
+import { OmitToken } from "../../../../../types";
+import { isNonEmptyArray } from "../../../../../utils/check";
+import { getInputStateByFormState } from "../../../../../utils/form";
 
 type FormData = {
   secrets: string[];
@@ -115,7 +114,7 @@ const ImportMnemonicsView = (props: ImportMnemonicsViewProps) => {
             ))}
           </datalist>
           <div
-            className={classNames("grid", "grid-cols-3", "gap-2", "gap-x-4")}
+            className={classNames("grid", "grid-cols-2", "gap-2", "gap-x-4")}
           >
             {[...Array(phraseLength).keys()].map((i) => (
               <div key={i} className={classNames("flex", "items-center")}>
@@ -213,11 +212,11 @@ const ImportMnemonicsView = (props: ImportMnemonicsViewProps) => {
               </div>
             ))}
           </div>
-          <Typo.Hints className={"mt-[6px]"}>
+          <Typo.Hints className={"mt-2"}>
             Displayed when you first created your wallet.
           </Typo.Hints>
 
-          <Button type={"submit"} state={"primary"} className={"mt-[24px]"}>
+          <Button type={"submit"} state={"primary"} className={"mt-6"}>
             Confirm and Import
           </Button>
         </Form>

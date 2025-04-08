@@ -1,11 +1,10 @@
-import React, { CSSProperties, InputHTMLAttributes, ReactNode } from "react";
-import styles from "./index.module.scss";
-import { Extendable } from "../../types";
+import { Input as InputComponent } from "@/components/ui/input";
 import classnames from "classnames";
-import IconInputSuccess from "../../assets/icons/input-success.svg";
+import React, { CSSProperties, InputHTMLAttributes, ReactNode } from "react";
 import IconInputFail from "../../assets/icons/input-fail.svg";
-import Image from "next/image";
-
+import IconInputSuccess from "../../assets/icons/input-success.svg";
+import { Extendable } from "../../types";
+import styles from "./index.module.scss";
 export type InputState = "success" | "error" | "default";
 
 export type InputProps = Extendable &
@@ -95,27 +94,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       className={classnames(styles["input-wrapper"], className)}
       style={style}
     >
-      <input
+      <InputComponent
         {...inputProps}
         ref={ref}
-        className={classnames(
-          styles["input"],
-          showInputState(state, props.disabled)
-            ? [styles["input-state"], styles[`input-state--${state}`]]
-            : "",
-          elClassName
-        )}
-        style={elStyle}
-      ></input>
+        className={classnames("bg-white h-12")}
+        style={{
+          borderRadius: "16px",
+        }}
+      ></InputComponent>
       {showInputState(state) && (
-        <div className={styles["icon"]}>
-          <Image
-            src={stateMetrics.icon}
-            alt={stateMetrics.alt}
-            width={18}
-            height={18}
-          />
-        </div>
+        <div className={styles["icon"]}>{stateMetrics.icon}</div>
       )}
     </div>
   );

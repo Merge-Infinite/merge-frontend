@@ -39,8 +39,10 @@ const WelcomePage = () => {
   }
 
   function handleImportWallet() {
+    console.log("handleImportWallet");
     nextRoute.current = "/onboard/import-wallet";
     setOnboardType(OnboardType.IMPORT_WALLET);
+    setStep(Step.SET_PASSWORD);
   }
 
   function handleNavBack() {
@@ -107,6 +109,7 @@ const WelcomePage = () => {
       }, 0);
       return null;
     }
+    console.log("step", step);
     if (step === Step.SET_PASSWORD) {
       return (
         <div className={"flex-1 bg-white"}>
