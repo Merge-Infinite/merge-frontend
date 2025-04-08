@@ -176,7 +176,7 @@ export function useUser(inventorySearch?: string) {
   }, [initDataRaw, login]);
 
   useEffect(() => {
-    if (address && getMe?.data && !getMe.data.walletAddress) {
+    if (address && getMe?.data) {
       saveAddress();
     }
   }, [address, getMe?.data]);
