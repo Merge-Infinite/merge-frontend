@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 interface GamePlayInfoProps {
   explore?: number;
@@ -24,29 +25,22 @@ export default function UserInfo({}: GamePlayInfoProps) {
   const router = useRouter();
   const { user } = useUser();
   const dispatch = useDispatch<AppDispatch>();
-  const clearData = () => {
+  const clearData = async () => {
     // Clear localStorage
-    localStorage.clear();
 
     // Clear IndexedDB
-    const databases = indexedDB.databases
-      ? indexedDB.databases()
-      : Promise.resolve([]);
-    databases
-      .then((dbs) => {
-        dbs.forEach((db) => {
-          if (db.name) {
-            indexedDB.deleteDatabase(db.name);
-          }
-        });
-
+    const databases = await indexedDB.databases();
+    for (const db of databases) {
+      console.log("db", db);
+      if (db.name) {
+        indexedDB.deleteDatabase(db.name);
+        localStorage.clear();
         dispatch(updateInitialized(false));
         dispatch(updateAuthed(false));
         window.location.reload();
-      })
-      .catch((error) => {
-        console.error("Error clearing IndexedDB:", error);
-      });
+      }
+    }
+    toast.success("Data cleared");
   };
 
   return (
