@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import TagSkeleton from "@/components/common/ElementSkeleton";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import { Loader2, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { HTML5toTouch } from "rdndmb-html5-to-touch";
 import { useCallback, useEffect, useState } from "react";
 import { XYCoord } from "react-dnd";
@@ -297,9 +298,7 @@ export default function PlayGame({}: PlayGameProps) {
             </div>
             <div className="relative justify-start items-center gap-2 inline-flex flex-wrap  overflow-y-auto">
               {isLoading ? (
-                <div className="w-full h-full flex justify-center items-center">
-                  <Loader2 className="w-5 h-5 text-white animate-spin" />
-                </div>
+                <TagSkeleton />
               ) : (
                 (!isLoading && (inventory as any[]))
                   ?.filter(

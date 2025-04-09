@@ -1,7 +1,7 @@
 "use client";
 
-import TagSkeleton from "@/components/common/ElementSkeleton";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useNFTList } from "@/hooks/useNFTList";
@@ -133,6 +133,16 @@ export function OnchainBagScreen() {
     }
   }, [user]);
 
+  if (user && !user.kiosk) {
+    return (
+      <div className="flex flex-col gap-4 w-full h-full">
+        <div className="text-white text-2xl font-bold">
+          Creating your kiosk...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4 w-full h-full">
       {/* Search Bar */}
@@ -149,7 +159,7 @@ export function OnchainBagScreen() {
       </div>
       <div className="grid grid-cols-2 gap-4">
         {loading ? (
-          <TagSkeleton />
+          <SkeletonCard />
         ) : (
           nfts.map((card, index) => (
             <CardItem
