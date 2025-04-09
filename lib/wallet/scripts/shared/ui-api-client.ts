@@ -130,18 +130,17 @@ export class WebApiClient {
     options?: CallFuncOption
   ): Promise<Res> {
     // Debug logging to trace function call
-    log(`Calling ${service}.${funcName}`, { payload });
+    console.log(`Calling ${service}.${funcName}`, { payload });
 
     // Check if service exists
     if (!this.serviceInstances[service]) {
       const error = new Error(`Service "${service}" does not exist`);
-      log("Error in callFunc", { error, service, funcName }, false);
+      console.log("Error in callFunc", { error, service, funcName }, false);
       throw error;
     }
 
     // Check if function exists in service
     const serviceInstance = this.serviceInstances[service];
-    console.log("serviceInstance", serviceInstance);
     if (typeof serviceInstance[funcName] !== "function") {
       const error = new Error(
         `Method "${funcName}" does not exist in service "${service}"`

@@ -7,6 +7,8 @@ import { Leaderboard } from "@/components/screen/leaderboard/leaderboard";
 import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUser } from "@/hooks/useUser";
+import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
@@ -27,6 +29,11 @@ export default function Home() {
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
   const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
+  const accountId = useSelector(
+    (state: RootState) => state.appContext.accountId
+  );
+  const { saveAddress } = useUser();
+  const { address } = useAccount(accountId);
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
   );
@@ -37,6 +44,12 @@ export default function Home() {
     dispatch(updateAppMode(AppMode.GAMES));
     backButton.hide();
   }, []);
+
+  useEffect(() => {
+    if (address) {
+      saveAddress();
+    }
+  }, [address]);
 
   // useEffect(() => {
   //   if (!authed && initialized) {

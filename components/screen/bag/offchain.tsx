@@ -1,6 +1,7 @@
 "use client";
 
 import ElementItem from "@/components/common/ElementItem";
+import TagSkeleton from "@/components/common/ElementSkeleton";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import {
@@ -127,8 +128,7 @@ export function OffchainBagScreen() {
           paymentCoin,
         ],
       });
-      console.log("appContext", appContext.walletId);
-      console.log("appContext", appContext.accountId);
+
       const response = await apiClient.callFunc<
         SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
         undefined
@@ -237,10 +237,7 @@ export function OffchainBagScreen() {
         </div>
 
         {initialLoading ? (
-          <div className="flex flex-col items-center justify-center w-full h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#68ffd1] mb-2" />
-            <p className="text-gray-400">Loading inventory...</p>
-          </div>
+          <TagSkeleton />
         ) : filteredItems && filteredItems.length > 0 ? (
           <div className="flex flex-wrap gap-2 w-full">
             {filteredItems.map((item, index) => (

@@ -106,6 +106,7 @@ export function useUser(inventorySearch?: string) {
   }, [userInventory?.data]);
 
   const saveAddress = useCallback(async () => {
+    console.log("saveAddress", address);
     if (!address) return null;
 
     try {
@@ -175,17 +176,12 @@ export function useUser(inventorySearch?: string) {
     }
   }, [initDataRaw, login]);
 
-  useEffect(() => {
-    if (address && getMe?.data) {
-      saveAddress();
-    }
-  }, [address, getMe?.data]);
-
   return {
     user: user.profile,
     inventory: user.inventory,
     refetchInventory: getUserInventory,
     refetch: getUser,
+    saveAddress,
     isLoading,
     error,
   };

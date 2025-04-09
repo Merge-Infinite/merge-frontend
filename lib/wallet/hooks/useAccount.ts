@@ -129,6 +129,7 @@ export function useAccount(accountId: string) {
     address,
     error,
     loading: rest.isLoading,
+    fetchAddressByAccountId,
     ...rest,
   };
 }

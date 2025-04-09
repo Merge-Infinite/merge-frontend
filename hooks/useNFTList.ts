@@ -1,6 +1,7 @@
 // hooks/useNFTList.ts
 import { NFT_MODULE_NAME, NFT_PACKAGE_ID, suiClient } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // Initialize SUI client
 
@@ -29,6 +30,7 @@ export function useNFTList(options?: UseNFTListOptions) {
 
   // Fetch NFTs owned by the connected wallet
   const fetchNFTs = useCallback(async () => {
+    console.log("fetchNFTs", walletAddress);
     if (!walletAddress) {
       setError(new Error("No wallet address available"));
       return;
@@ -68,6 +70,7 @@ export function useNFTList(options?: UseNFTListOptions) {
       }
     } catch (err) {
       console.error("Error fetching NFTs:", err);
+      toast.error("Error fetching NFTs");
       setError(
         err instanceof Error ? err : new Error("Unknown error occurred")
       );

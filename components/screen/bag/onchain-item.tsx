@@ -67,7 +67,6 @@ export const CardItem = React.memo(
     );
     const [priceError, setPriceError] = useState<string>("");
     const [openAuthDialog, setOpenAuthDialog] = useState(false);
-
     // Reset states when dialog closes
     useEffect(() => {
       if (!dialogOpen) {
@@ -105,12 +104,12 @@ export const CardItem = React.memo(
 
     async function listNFTOnKiosk(): Promise<void> {
       if (!validatePrice(listingPrice)) {
+        toast.error("Please enter a valid price");
         return;
       }
 
       try {
         setTransactionStatus("submitting");
-        console.log(id);
         // Ensure user has kiosk data
         if (!user?.kiosk?.objectId || !user?.kiosk?.ownerCapId) {
           toast.error(
