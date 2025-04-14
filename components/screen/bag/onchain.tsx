@@ -17,7 +17,7 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { CardItem } from "./onchain-item";
@@ -38,12 +38,19 @@ export function OnchainBagScreen() {
   });
 
   useEffect(() => {
+    console.log("authed setOpenAuthDialog", authed);
     if (!authed) {
       setOpenAuthDialog(true);
-    } else if (appContext.accountId) {
-      fetchAddressByAccountId(appContext.accountId);
     }
   }, [authed, appContext.accountId]);
+
+  useEffect(() => {
+    console.log("address", address);
+    if (!address && authed) {
+      console.log("fetching address");
+      fetchAddressByAccountId(appContext.accountId);
+    }
+  }, [address, authed]);
 
   const createKioskApi = useApi({
     key: ["create-kiosk"],
@@ -51,9 +58,10 @@ export function OnchainBagScreen() {
     url: "marketplace/kiosk/create",
   }).post;
 
-  const handleCreateKiosk = async () => {
+  const handleCreateKiosk = useCallback(async () => {
     try {
-      if (!address || !network) {
+      if (!address && authed) {
+        toast.error("No address found");
         return;
       }
 
@@ -124,55 +132,58 @@ export function OnchainBagScreen() {
         toast.error(error.message || "Error creating kiosk");
       }
     }
-  };
+  }, [address, authed]);
 
   useEffect(() => {
-    console.log("user", user);
-    if (user && !user.kiosk && authed) {
+    if (user && !user.kiosk && authed && address) {
       handleCreateKiosk();
     }
-  }, [user]);
-
-  if (user && !user.kiosk) {
-    return (
-      <div className="flex flex-col gap-4 w-full h-full">
-        <div className="text-white text-2xl font-bold">
-          Creating your kiosk...
-        </div>
-      </div>
-    );
-  }
+  }, [user, authed, address]);
 
   return (
     <div className="flex flex-col gap-4 w-full h-full">
-      {/* Search Bar */}
-      <div className="self-stretch h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
-        <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">
-          <Image src="/images/search.svg" alt="search" width={24} height={24} />
-          <Input
-            className="grow shrink basis-0 h-full text-white text-sm font-normal leading-normal focus:outline-none border-transparent"
-            placeholder="Search items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {user && !user.kiosk ? (
+        <div className="flex flex-col gap-4 w-full h-full">
+          <div className="text-white text-2xl font-bold">
+            Creating your kiosk...
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        {loading ? (
-          <SkeletonCard />
-        ) : (
-          nfts.map((card, index) => (
-            <CardItem
-              key={index}
-              element={card.name}
-              amount={card.amount}
-              emoji={card.emoji}
-              itemId={card.itemId}
-              id={card.id}
-            />
-          ))
-        )}
-      </div>
+      ) : (
+        <div className="flex flex-col gap-4 w-full h-full">
+          <div className="self-stretch h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
+            <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">
+              <Image
+                src="/images/search.svg"
+                alt="search"
+                width={24}
+                height={24}
+              />
+              <Input
+                className="grow shrink basis-0 h-full text-white text-sm font-normal leading-normal focus:outline-none border-transparent"
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {loading ? (
+              <SkeletonCard />
+            ) : (
+              nfts.map((card, index) => (
+                <CardItem
+                  key={index}
+                  element={card.name}
+                  amount={card.amount}
+                  emoji={card.emoji}
+                  itemId={card.itemId}
+                  id={card.id}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      )}
       <PasscodeAuthDialog
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}
