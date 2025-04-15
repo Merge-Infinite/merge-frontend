@@ -25,7 +25,7 @@ export default function Challenge() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-[var(--tg-viewport-height)] ">
+    <div className="flex flex-col items-center justify-center w-full h-full p-4">
       <div className="justify-start text-white text-sm font-bold font-['Sora'] leading-normal w-full">
         {type === "daily" ? "Daily" : "Web3"}
       </div>
