@@ -16,7 +16,7 @@ import {
   updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
-import { initBackButton } from "@telegram-apps/sdk";
+import { initBackButton, retrieveLaunchParams } from "@telegram-apps/sdk";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from "react-redux";
 export default function Home() {
   const [backButton] = initBackButton();
   const user = useSelector((state: RootState) => state.user);
+  const { initDataRaw } = retrieveLaunchParams();
 
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
@@ -31,7 +32,7 @@ export default function Home() {
   const accountId = useSelector(
     (state: RootState) => state.appContext.accountId
   );
-  const { saveAddress } = useUser();
+  const { saveAddress, login } = useUser();
   const { address } = useAccount(accountId);
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
@@ -43,6 +44,12 @@ export default function Home() {
     dispatch(updateAppMode(AppMode.GAMES));
     backButton.hide();
   }, []);
+
+  useEffect(() => {
+    if (initDataRaw) {
+      login();
+    }
+  }, [initDataRaw]);
 
   useEffect(() => {
     if (address) {

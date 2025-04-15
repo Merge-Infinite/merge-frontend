@@ -7,7 +7,7 @@ import {
 } from "@/lib/wallet/store/user";
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
 import { useLaunchParams } from "@telegram-apps/sdk-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useApi from "./useApi";
 
@@ -169,18 +169,12 @@ export function useUser(inventorySearch?: string) {
     }
   }, [lp.startParam]);
 
-  // Effects
-  useEffect(() => {
-    if (initDataRaw) {
-      login();
-    }
-  }, [initDataRaw, login]);
-
   return {
     user: user.profile,
     inventory: user.inventory,
     refetchInventory: getUserInventory,
     refetch: getUser,
+    login,
     saveAddress,
     isLoading,
     error,
