@@ -77,7 +77,6 @@ export function useUser(inventorySearch?: string) {
     try {
       setIsLoading(true);
       const response = await getMe?.refetch();
-      console.log("response", response);
       if (response?.data) {
         dispatch(updateUserProfile(response.data));
         setLocalStorage("user", response.data);
@@ -106,7 +105,6 @@ export function useUser(inventorySearch?: string) {
   }, [userInventory?.data]);
 
   const saveAddress = useCallback(async () => {
-    console.log("saveAddress", address);
     if (!address) return null;
 
     try {
@@ -136,12 +134,15 @@ export function useUser(inventorySearch?: string) {
 
     try {
       const storedUser = getLocalStorage("user");
+      alert(`storedUser: ${JSON.stringify(storedUser)}`);
       const telegramIdMatches =
         storedUser?.id &&
         Number(initData?.user?.id) === Number(storedUser?.telegramId);
       if (storedUser && telegramIdMatches) {
+        alert("telegramIdMatches");
         dispatch(updateUserProfile(storedUser));
       } else if (storedUser) {
+        alert("storedUser && !telegramIdMatches");
         localStorage.clear();
       }
       // Handle authentication token only if not already authenticated
@@ -153,7 +154,6 @@ export function useUser(inventorySearch?: string) {
         });
         if (response?.accessToken) {
           localStorage.setItem("token", response.accessToken);
-          // Get user data after initial authentication
           await Promise.all([getUser(), getUserInventory()]);
           return;
         }
@@ -175,6 +175,10 @@ export function useUser(inventorySearch?: string) {
       login();
     }
   }, [initDataRaw, login]);
+
+  useEffect(() => {
+    alert(`user.profile: ${JSON.stringify(user.profile)}`);
+  }, [user.profile]);
 
   return {
     user: user.profile,
