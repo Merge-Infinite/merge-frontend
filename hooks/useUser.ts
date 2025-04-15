@@ -77,6 +77,7 @@ export function useUser(inventorySearch?: string) {
     try {
       setIsLoading(true);
       const response = await getMe?.refetch();
+      alert(`getUser response: ${JSON.stringify(response)}`);
       if (response?.data) {
         dispatch(updateUserProfile(response.data));
         setLocalStorage("user", response.data);
@@ -135,15 +136,16 @@ export function useUser(inventorySearch?: string) {
     try {
       const storedUser = getLocalStorage("user");
       alert(`storedUser: ${JSON.stringify(storedUser)}`);
-      const telegramIdMatches =
-        storedUser?.id &&
-        Number(initData?.user?.id) === Number(storedUser?.telegramId);
-      if (storedUser && telegramIdMatches) {
-        alert("telegramIdMatches");
-        dispatch(updateUserProfile(storedUser));
-      } else if (storedUser) {
-        alert("storedUser && !telegramIdMatches");
-        localStorage.clear();
+
+      if (storedUser) {
+        const telegramIdMatches =
+          storedUser?.id &&
+          Number(initData?.user?.id) === Number(storedUser?.telegramId);
+        if (telegramIdMatches) {
+          dispatch(updateUserProfile(storedUser));
+        } else {
+          localStorage.clear();
+        }
       }
       // Handle authentication token only if not already authenticated
       const token = localStorage.getItem("token");
@@ -152,6 +154,7 @@ export function useUser(inventorySearch?: string) {
           initData: initDataRaw,
           referralCode: lp.startParam,
         });
+        alert(`response: ${JSON.stringify(response)}`);
         if (response?.accessToken) {
           localStorage.setItem("token", response.accessToken);
           await Promise.all([getUser(), getUserInventory()]);

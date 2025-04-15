@@ -90,19 +90,19 @@ function RootInner({ children }: PropsWithChildren) {
   );
 
   return (
-    <SDKProvider acceptCustomStyles>
-      <QueryClientProvider client={client}>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistorStore}>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistorStore}>
+        <SDKProvider acceptCustomStyles>
+          <QueryClientProvider client={client}>
             <ReactQueryClientProvider client={new ReactQueryClient()}>
               <ApiClientContext.Provider value={new WebApiClient()}>
                 <App>{children}</App>
               </ApiClientContext.Provider>
             </ReactQueryClientProvider>
-          </PersistGate>
-        </Provider>
-      </QueryClientProvider>
-    </SDKProvider>
+          </QueryClientProvider>
+        </SDKProvider>
+      </PersistGate>
+    </Provider>
   );
 }
 
