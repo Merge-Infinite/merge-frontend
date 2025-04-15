@@ -74,66 +74,72 @@ export default function Home() {
   // }, [authed, initialized]);
 
   console.log(user.profile, initialized, authed);
-  if (!user.profile) {
-    return <SplashScreen />;
-  }
 
   return (
     <div className="flex flex-col items-center h-full w-full p-4">
-      <Tabs
-        defaultValue={tabMode || "home"}
-        value={tabMode}
-        className="w-full"
-        onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
-      >
-        <TabsList
-          className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black z-10 ${
-            appMode !== AppMode.GAMES ? "hidden" : ""
-          }`}
-          style={{
-            bottom: 8,
-          }}
+      {!user.profile ? (
+        <SplashScreen />
+      ) : (
+        <Tabs
+          defaultValue={tabMode || "home"}
+          value={tabMode}
+          className="w-full"
+          onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
         >
-          <TabsTrigger value="home">
-            <Image src="/images/home.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
-          <TabsTrigger value="play" onClick={() => router.push("/play")}>
-            <Image src="/images/play.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
+          <TabsList
+            className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black z-10 ${
+              appMode !== AppMode.GAMES ? "hidden" : ""
+            }`}
+            style={{
+              bottom: 8,
+            }}
+          >
+            <TabsTrigger value="home">
+              <Image src="/images/home.svg" alt="logo" width={24} height={24} />
+            </TabsTrigger>
+            <TabsTrigger value="play" onClick={() => router.push("/play")}>
+              <Image src="/images/play.svg" alt="logo" width={24} height={24} />
+            </TabsTrigger>
 
-          <TabsTrigger value="task">
-            <Image src="/images/task.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
-          <TabsTrigger value="leaderboard">
-            <Image src="/images/rank.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
-          <TabsTrigger value="bag">
-            <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
-          <TabsTrigger value="market">
-            <Image src="/images/market.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
-          <TabsTrigger value="shop">
-            <Image src="/images/shop.svg" alt="logo" width={24} height={24} />
-          </TabsTrigger>
-        </TabsList>
+            <TabsTrigger value="task">
+              <Image src="/images/task.svg" alt="logo" width={24} height={24} />
+            </TabsTrigger>
+            <TabsTrigger value="leaderboard">
+              <Image src="/images/rank.svg" alt="logo" width={24} height={24} />
+            </TabsTrigger>
+            <TabsTrigger value="bag">
+              <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
+            </TabsTrigger>
+            <TabsTrigger value="market">
+              <Image
+                src="/images/market.svg"
+                alt="logo"
+                width={24}
+                height={24}
+              />
+            </TabsTrigger>
+            <TabsTrigger value="shop">
+              <Image src="/images/shop.svg" alt="logo" width={24} height={24} />
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="home" className="h-full">
-          <HomeScreen />
-        </TabsContent>
-        <TabsContent value="market" className="h-full">
-          <NFTMarket />
-        </TabsContent>
-        <TabsContent value="bag" className="h-full">
-          <BagScreen />
-        </TabsContent>
-        <TabsContent value="shop" className="h-full">
-          <Shop />
-        </TabsContent>
-        <TabsContent value="leaderboard" className="h-full">
-          <Leaderboard />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="home" className="h-full">
+            <HomeScreen />
+          </TabsContent>
+          <TabsContent value="market" className="h-full">
+            <NFTMarket />
+          </TabsContent>
+          <TabsContent value="bag" className="h-full">
+            <BagScreen />
+          </TabsContent>
+          <TabsContent value="shop" className="h-full">
+            <Shop />
+          </TabsContent>
+          <TabsContent value="leaderboard" className="h-full">
+            <Leaderboard />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }
