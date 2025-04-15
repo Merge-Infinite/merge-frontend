@@ -21,10 +21,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "./context/AuthContext";
 export default function Home() {
   const [backButton] = initBackButton();
-  const { isAuthenticated } = useAuth();
+  const user = useSelector((state: RootState) => state.user);
 
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
@@ -67,8 +66,8 @@ export default function Home() {
   //   }
   // }, [authed, initialized]);
 
-  console.log(isAuthenticated, initialized, authed);
-  if (!isAuthenticated) {
+  console.log(user.profile, initialized, authed);
+  if (!user.profile) {
     return <SplashScreen />;
   }
 

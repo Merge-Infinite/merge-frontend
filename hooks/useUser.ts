@@ -77,7 +77,6 @@ export function useUser(inventorySearch?: string) {
     try {
       setIsLoading(true);
       const response = await getMe?.refetch();
-      alert(`getUser response: ${JSON.stringify(response)}`);
       if (response?.data) {
         dispatch(updateUserProfile(response.data));
         setLocalStorage("user", response.data);
@@ -135,7 +134,6 @@ export function useUser(inventorySearch?: string) {
 
     try {
       const storedUser = getLocalStorage("user");
-      alert(`storedUser: ${JSON.stringify(storedUser)}`);
 
       if (storedUser) {
         const telegramIdMatches =
@@ -154,7 +152,6 @@ export function useUser(inventorySearch?: string) {
           initData: initDataRaw,
           referralCode: lp.startParam,
         });
-        alert(`response: ${JSON.stringify(response)}`);
         if (response?.accessToken) {
           localStorage.setItem("token", response.accessToken);
           await Promise.all([getUser(), getUserInventory()]);
@@ -178,10 +175,6 @@ export function useUser(inventorySearch?: string) {
       login();
     }
   }, [initDataRaw, login]);
-
-  useEffect(() => {
-    alert(`user.profile: ${JSON.stringify(user.profile)}`);
-  }, [user.profile]);
 
   return {
     user: user.profile,
