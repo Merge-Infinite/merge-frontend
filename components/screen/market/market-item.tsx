@@ -21,7 +21,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
-import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
+import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -103,9 +103,7 @@ export const MarketItem = React.memo(
         toast.info("Transaction in progress...");
 
         const txb = new Transaction();
-        const paymentCoin = txb.splitCoins(txb.gas, [
-          Number(price) * Number(MIST_PER_SUI),
-        ]);
+        const paymentCoin = txb.splitCoins(txb.gas, [Number(price)]);
 
         // Use txb.object instead of txb.pure.id for better compatibility
         const [nft, request] = txb.moveCall({
@@ -126,9 +124,7 @@ export const MarketItem = React.memo(
         const platformOwnerAddress = SELLER_ADDRESS;
         if (feeAmount <= 0) return;
 
-        const feeCoin = txb.splitCoins(txb.gas, [
-          feeAmount * Number(MIST_PER_SUI),
-        ]);
+        const feeCoin = txb.splitCoins(txb.gas, [feeAmount]);
 
         txb.transferObjects([feeCoin], txb.pure.address(platformOwnerAddress));
 
