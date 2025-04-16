@@ -23,7 +23,7 @@ import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 export const MarketItem = React.memo(
@@ -53,11 +53,13 @@ export const MarketItem = React.memo(
     isOwned?: boolean;
   }) => {
     const featureFlags = useFeatureFlags();
-
     const apiClient = useApiClient();
     const { user } = useUser();
     const appContext = useSelector((state: RootState) => state.appContext);
-    const { address } = useAccount(appContext.accountId);
+    const authed = useSelector((state: RootState) => state.appContext.authed);
+    const { address, fetchAddressByAccountId } = useAccount(
+      appContext.accountId
+    );
     const { data: network } = useNetwork(appContext.networkId);
     const [loading, setLoading] = useState(initialLoading || false);
     const [copied, setCopied] = useState(false);
@@ -186,6 +188,12 @@ export const MarketItem = React.memo(
         setLoading(false);
       }
     }
+
+    useEffect(() => {
+      if (!address && authed) {
+        fetchAddressByAccountId(appContext.accountId);
+      }
+    }, [address, authed]);
 
     async function deListNFT(): Promise<void> {
       try {
