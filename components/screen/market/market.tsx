@@ -68,7 +68,7 @@ const MarketplaceSkeleton = () => (
 
 // Wallet Connect Banner
 const WalletBanner = ({ onConnect }: { onConnect: () => void }) => (
-  <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2a1a3a] p-4 rounded-lg mb-4 flex flex-col sm:flex-row items-center justify-between">
+  <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2a1a3a] p-4 rounded-lg mt-4 flex flex-col sm:flex-row items-center justify-between">
     <div className="mb-4 sm:mb-0">
       <h3 className="text-white text-lg font-['Sora'] mb-2">
         Connect Your Wallet
