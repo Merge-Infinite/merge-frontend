@@ -1,5 +1,6 @@
 "use client";
 
+import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,9 @@ export function OnchainBagScreen() {
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const [searchQuery, setSearchQuery] = useState("");
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
-
+  const initialized = useSelector(
+    (state: RootState) => state.appContext.initialized
+  );
   const { nfts, loading, error, refresh } = useNFTList({
     walletAddress: address,
     refreshInterval: undefined,
@@ -140,7 +143,9 @@ export function OnchainBagScreen() {
 
   return (
     <div className="flex flex-col gap-4 w-full h-full">
-      {user && !user.kiosk ? (
+      {!initialized ? (
+        <CreateWallet />
+      ) : user && !user.kiosk ? (
         <div className="flex flex-col gap-4 w-full h-full">
           <div className="text-white text-2xl font-bold">
             Creating your kiosk...
