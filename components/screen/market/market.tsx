@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,7 +67,7 @@ const MarketplaceSkeleton = () => (
 );
 
 // Wallet Connect Banner
-const WalletBanner = ({ onConnect }) => (
+const WalletBanner = ({ onConnect }: { onConnect: () => void }) => (
   <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2a1a3a] p-4 rounded-lg mb-4 flex flex-col sm:flex-row items-center justify-between">
     <div className="mb-4 sm:mb-0">
       <h3 className="text-white text-lg font-['Sora'] mb-2">
@@ -87,7 +88,7 @@ const WalletBanner = ({ onConnect }) => (
 
 // Main NFT Marketplace Component
 export const NFTMarket = () => {
-  const { user } = useUser();
+  const { user, refetch: refetchUser } = useUser();
   const apiClient = useApiClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
@@ -96,7 +97,9 @@ export const NFTMarket = () => {
   const { data: network } = useNetwork(appContext.networkId);
   const { data: balance } = useSuiBalance(address);
   const authed = useSelector((state: RootState) => state.appContext.authed);
-
+  const initialized = useSelector(
+    (state: RootState) => state.appContext.initialized
+  );
   const [isOwned, setIsOwned] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
@@ -107,6 +110,12 @@ export const NFTMarket = () => {
   } = useMarketPlace(isOwned ? user?.kiosk?.objectId : undefined, {
     pollingInterval: undefined,
   });
+
+  useEffect(() => {
+    if (user) {
+      refetchUser();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!authed) {
@@ -257,7 +266,9 @@ export const NFTMarket = () => {
         </div>
       </div>
       <div className="flex flex-1 h-full">
-        {user && !user.kiosk ? (
+        {!initialized ? (
+          <CreateWallet />
+        ) : user && !user.kiosk ? (
           <WalletBanner onConnect={handleCreateKiosk} />
         ) : (
           <div className="w-full h-full">
