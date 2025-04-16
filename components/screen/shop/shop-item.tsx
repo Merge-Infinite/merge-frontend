@@ -27,7 +27,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const apiClient = useApiClient();
-  const { user } = useUser();
+  const { user, refetch } = useUser();
   const invoice = initInvoice();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { data: network } = useNetwork(appContext.networkId);
@@ -69,6 +69,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
         if (resp?.invoiceLink) {
           invoice.open(resp?.invoiceLink, "url").then(async (status) => {
             if (status === "paid") {
+              refetch();
               toast.success("Energy purchased successfully");
             }
           });
@@ -112,6 +113,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           await processSuiPayment?.mutateAsync({
             txHash: response.digest,
           });
+          refetch();
         } catch (error) {
           console.error("Backend sync error:", error);
         }
