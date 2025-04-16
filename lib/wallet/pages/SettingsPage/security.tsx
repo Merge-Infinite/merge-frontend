@@ -179,13 +179,13 @@ export default function Security() {
         element={
           <div className={classNames(styles["page"], "no-scrollbar")}>
             <Nav
-              title={"Reset Suiet"}
+              title={"Reset Merge Wallet"}
               onNavBack={() => {
                 navigate("..");
               }}
             />
             <ForgetPassword
-              titles={["Reset", "Suiet"]}
+              titles={["Reset", "Merge Wallet"]}
               desc={"Be careful! You may reset your app here."}
             />
           </div>
