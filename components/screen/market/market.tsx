@@ -282,8 +282,8 @@ export const NFTMarket = () => {
               <Button
                 size="sm"
                 className={cn(
-                  "rounded-3xl w-fit  px-4 py-1 bg-transparent border border-[#333333]",
-                  isOwned && "bg-[#fff] text-black"
+                  "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
+                  isOwned ? "bg-primary text-black" : "bg-[#141414] text-white"
                 )}
                 onClick={() => setIsOwned((prev) => !prev)}
               >
