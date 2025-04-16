@@ -38,14 +38,12 @@ export function OnchainBagScreen() {
   });
 
   useEffect(() => {
-    console.log("authed setOpenAuthDialog", authed);
     if (!authed) {
       setOpenAuthDialog(true);
     }
   }, [authed, appContext.accountId]);
 
   useEffect(() => {
-    console.log("address", address);
     if (!address && authed) {
       console.log("fetching address");
       fetchAddressByAccountId(appContext.accountId);

@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
 import { useMarketPlace } from "@/hooks/useMarketPlace";
 import { useUser } from "@/hooks/useUser";
@@ -23,12 +22,13 @@ import { RootState } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
+import { formatAddress } from "@mysten/sui/utils";
 import { SearchIcon, ShoppingCart, Wallet } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 import { MarketItem } from "./market-item";
-// Card Item component with hover effects and improved visuals
 
 // Empty state component
 const EmptyState = ({ message }: { message: string }) => (
@@ -91,11 +91,12 @@ export const NFTMarket = () => {
   const apiClient = useApiClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const { toast } = useToast();
   const appContext = useSelector((state: RootState) => state.appContext);
-  const { address } = useAccount(appContext.accountId);
+  const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const { data: network } = useNetwork(appContext.networkId);
   const { data: balance } = useSuiBalance(address);
+  const authed = useSelector((state: RootState) => state.appContext.authed);
+
   const [isOwned, setIsOwned] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
@@ -103,9 +104,21 @@ export const NFTMarket = () => {
     items: marketplaceListings,
     loading,
     refetch,
-  } = useMarketPlace(isOwned ? user.kiosk.objectId : undefined, {
+  } = useMarketPlace(isOwned ? user?.kiosk?.objectId : undefined, {
     pollingInterval: undefined,
   });
+
+  useEffect(() => {
+    if (!authed) {
+      setOpenAuthDialog(true);
+    }
+  }, [authed, appContext.accountId]);
+
+  useEffect(() => {
+    if (!address && authed) {
+      fetchAddressByAccountId(appContext.accountId);
+    }
+  }, [address, authed]);
 
   const createKioskApi = useApi({
     key: ["create-kiosk"],
@@ -113,13 +126,8 @@ export const NFTMarket = () => {
     url: "marketplace/kiosk/create",
   }).post;
 
-  const handleCreateKiosk = async () => {
+  const handleCreateKiosk = useCallback(async () => {
     try {
-      toast({
-        title: "Creating your kiosk...",
-        description: "Please wait while we set up your marketplace kiosk",
-      });
-
       let tx = new Transaction();
       let [kiosk, kioskOwnerCap] = tx.moveCall({
         target: "0x2::kiosk::new",
@@ -175,26 +183,18 @@ export const NFTMarket = () => {
             ownerCapId: kioskCapObject.objectId,
           });
 
-          toast({
-            title: "Kiosk created successfully!",
-            description: "You can now buy and sell NFTs in the marketplace",
-            variant: "success",
-          });
+          toast.success("Kiosk created successfully!");
         }
       }
     } catch (error: any) {
-      console.error("Error creating kiosk:", error);
+      console.log("Error creating kiosk:", error);
+
       if (error.message === "Authentication required") {
         setOpenAuthDialog(true);
       } else {
-        toast({
-          title: "Error creating kiosk",
-          description: "Please try again later",
-          variant: "destructive",
-        });
       }
     }
-  };
+  }, [address, authed]);
 
   const filteredListings = React.useMemo(() => {
     return marketplaceListings
@@ -216,15 +216,16 @@ export const NFTMarket = () => {
   }, [marketplaceListings, searchTerm]);
 
   useEffect(() => {
-    if (user && !user.kiosk) {
+    if (user && !user.kiosk && authed && address) {
       handleCreateKiosk();
     }
-  }, [user]);
+  }, [user, authed, address]);
 
-  // Truncate address for display
-  const displayAddress = address
-    ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
-    : "0xfda4...3368";
+  useEffect(() => {
+    if (user && user.kiosk) {
+      refetch();
+    }
+  }, [isOwned]);
 
   return (
     <div className="w-full h-full flex flex-col gap-4">
@@ -236,7 +237,7 @@ export const NFTMarket = () => {
               className="px-3 py-1 bg-white text-black rounded-3xl"
             >
               <span className="text-xs font-normal font-['Sora'] uppercase">
-                {displayAddress}
+                {formatAddress(address)}
               </span>
             </Badge>
 
@@ -256,7 +257,7 @@ export const NFTMarket = () => {
         </div>
       </div>
       <div className="flex flex-1 h-full">
-        {!user ? (
+        {user && !user.kiosk ? (
           <WalletBanner onConnect={handleCreateKiosk} />
         ) : (
           <div className="w-full h-full">
