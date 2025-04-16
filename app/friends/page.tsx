@@ -55,7 +55,7 @@ export default function SubmitItem() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4 ">
+    <div className="flex flex-col h-full gap-4 p-4">
       <div className="self-stretch justify-center items-center gap-2 inline-flex">
         <div className="grow shrink basis-0 text-white text-base font-bold font-['Sora'] leading-normal">
           Friends
