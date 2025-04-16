@@ -12,7 +12,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { Button } from "../ui/button";
 interface GamePlayInfoProps {
   explore?: number;
   reward?: number;
@@ -49,13 +48,13 @@ export default function UserInfo({}: GamePlayInfoProps) {
         <div className="grow shrink basis-0 text-white text-base font-bold font-['Sora'] leading-normal capitalize">
           Hi {user?.username}!!!
         </div>
-        <Button
+        {/* <Button
           className="w-fit px-2 py-1 rounded-full"
           size="sm"
           onClick={clearData}
         >
           Clear data
-        </Button>
+        </Button> */}
       </div>
       <div className="self-stretch justify-start items-center gap-6 inline-flex">
         <div
