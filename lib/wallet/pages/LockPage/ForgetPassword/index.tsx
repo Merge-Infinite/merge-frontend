@@ -34,7 +34,7 @@ const ForgetPassword = (props: ForgetPasswordProps) => {
   });
   const {
     titles = ["Forget", "Password"],
-    desc = "You need to reset the Suiet app.",
+    desc = "You need to reset the Merge Wallet app.",
   } = props;
 
   return (
@@ -53,13 +53,13 @@ const ForgetPassword = (props: ForgetPasswordProps) => {
         >
           <div className="flex flex-col gap-2">
             <Typo.Normal className={styles["reset-title"]}>
-              Reset Suiet App
+              Reset Merge Wallet
             </Typo.Normal>
             <Typo.Hints
               className={classNames("mt-[8px]", styles["reset-desc"])}
             >
-              Suiet will clear all the data and you need to re-import wallets.
-              Input “RESET” to confirm and reset.
+              Merge Wallet will clear all the data and you need to re-import
+              wallets. Input “RESET” to confirm and reset.
             </Typo.Hints>
             <FormControl
               name={"reset"}
@@ -73,14 +73,14 @@ const ForgetPassword = (props: ForgetPasswordProps) => {
             >
               <Input
                 state={getInputStateByFormState(form.formState, "reset")}
-                className={"mt-[16px]"}
+                className={"mt-4"}
                 placeholder={"Please enter RESET to confirm"}
               />
             </FormControl>
           </div>
 
           <Button type={"submit"} className={"mt-6"}>
-            Reset Suiet
+            Reset Merge Wallet
           </Button>
         </Form>
       </section>

@@ -106,9 +106,9 @@ const PasswordConfirmModal = (props: PasswordConfirmModalProps) => {
         />
         <WarningDescription
           icon={<IconQuestionError />}
-          title={"Suiet will never ask for it"}
+          title={"Merge Wallet will never ask for it"}
           description={
-            "Suiet will never ask for your private key or recovery phrases."
+            "Merge Wallet will never ask for your private key or recovery phrases."
           }
         />
       </div>

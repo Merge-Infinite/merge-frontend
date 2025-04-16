@@ -1,4 +1,4 @@
-import { TransactionBlock } from '@mysten/sui.js';
+import { TransactionBlock } from "@mysten/sui.js";
 
 export default function getMintExampleNftTxBlock(
   objectPackageId: string
@@ -7,10 +7,10 @@ export default function getMintExampleNftTxBlock(
   tx.moveCall({
     target: `${objectPackageId}::nft::mint`,
     arguments: [
-      tx.pure('Suiet NFT'),
-      tx.pure('Suiet Sample NFT'),
+      tx.pure("Merge Wallet NFT"),
+      tx.pure("Merge Wallet Sample NFT"),
       tx.pure(
-        'https://xc6fbqjny4wfkgukliockypoutzhcqwjmlw2gigombpp2ynufaxa.arweave.net/uLxQwS3HLFUailocJWHupPJxQsli7aMgzmBe_WG0KC4'
+        "https://xc6fbqjny4wfkgukliockypoutzhcqwjmlw2gigombpp2ynufaxa.arweave.net/uLxQwS3HLFUailocJWHupPJxQsli7aMgzmBe_WG0KC4"
       ),
     ],
   });
