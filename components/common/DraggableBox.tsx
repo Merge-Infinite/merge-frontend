@@ -9,6 +9,7 @@ import React, {
   useState,
 } from "react";
 import { useDrag, useDragDropManager, useDrop } from "react-dnd";
+import Emoji from "./Emoji";
 import MergeLoadingAnimation from "./MergeLoadingAnimation";
 
 // ItemTypes for drag and drop
@@ -219,7 +220,8 @@ const DraggableBox = ({
           isDisabled && "text-gray-500"
         )}
       >
-        <span className="mr-1">{emoji}</span> {title}
+        <Emoji emoji={emoji} size={18} />
+        {title}
         {amount && amount > 0 ? `(${amount})` : ""}
       </div>
       {!isFromInventory && !isMerging && (

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Emoji from "./Emoji";
 
 interface ElementItemProps {
   id: string;
@@ -19,7 +20,8 @@ const ElementItem: React.FC<ElementItemProps> = ({
 }) => {
   return (
     <div className="px-3 py-1  rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white text-white text-xs uppercase">
-      <span className="">{emoji}</span> {handle}
+      <Emoji emoji={emoji} size={18} />
+      {handle}
       {amount && amount > 0 ? `(${amount})` : ""}
       {customIcon && customIcon}
     </div>

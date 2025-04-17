@@ -1,3 +1,4 @@
+import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +27,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+
 export const MarketItem = React.memo(
   ({
     element,
@@ -69,7 +71,7 @@ export const MarketItem = React.memo(
         "element": "${element}", 
         "amt": "${amount}",
         "itemId": "${itemId}",
-        "emoji": "${emoji}"
+        "emoji": "${(<Emoji emoji={emoji} size={18} />)}"
     }`;
 
     const purchasesApi = useApi({
