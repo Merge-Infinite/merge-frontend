@@ -6,6 +6,7 @@ import { HomeScreen } from "@/components/screen/home/home";
 import { Leaderboard } from "@/components/screen/leaderboard/leaderboard";
 import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
+import TaskScreen from "@/components/screen/task/Task";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUser";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
@@ -131,6 +132,9 @@ export default function Home() {
           </TabsContent>
           <TabsContent value="bag" className="h-full">
             <BagScreen />
+          </TabsContent>
+          <TabsContent value="task" className="h-full">
+            <TaskScreen />
           </TabsContent>
           <TabsContent value="shop" className="h-full">
             <Shop />
