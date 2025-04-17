@@ -83,8 +83,14 @@ export default function PlayGame({}: PlayGameProps) {
       setTargetBox(targetBox);
       console.log("targetBox", targetBox);
       console.log("droppedItem", droppedItem);
-      const targetItemId = targetBox.originalId || targetBox.id;
-      const droppedItemId = droppedItem.originalId || droppedItem.id;
+      const targetItemId =
+        typeof targetBox.id === "string"
+          ? Number(targetBox.id.split("_")[0])
+          : targetBox.id;
+      const droppedItemId =
+        typeof droppedItem.id === "string"
+          ? Number(droppedItem.id.split("_")[0])
+          : droppedItem.id;
 
       setMergingBoxes((prev: any) => {
         const newBoxes = { ...prev };
@@ -100,6 +106,7 @@ export default function PlayGame({}: PlayGameProps) {
       });
       if (isFromInventory) return;
       try {
+        console.log("mergingBoxes", mergingBoxes);
         // Call the API to merge items
         const response: any = await mergeApi?.mutateAsync({
           item1: targetItemId,
@@ -172,8 +179,6 @@ export default function PlayGame({}: PlayGameProps) {
 
   const handleDrop = useCallback(
     (droppedItem: any, delta: XYCoord, clientOffset: XYCoord) => {
-      console.log("handleDrop droppedItem", droppedItem);
-      // Check if this is a non-basic inventory item that has a limited amount
       if (!droppedItem.isFromInventory) {
         const originalId = droppedItem.originalId;
         const inventoryItem = (inventory as any[])?.find(
