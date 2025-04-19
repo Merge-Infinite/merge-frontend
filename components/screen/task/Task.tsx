@@ -57,13 +57,13 @@ export const TaskScreen = () => {
           value="mi"
           className="overflow-y-auto h-[var(--tg-viewport-height) - 100px]"
         >
-          <MiTask tasks={miTask} />
+          <MiTask type="mi" />
         </TabsContent>
         <TabsContent
           value="sui"
           className="overflow-y-auto h-[var(--tg-viewport-height) - 100px]"
         >
-          <MiTask tasks={suiTask} />
+          <MiTask type="sui" />
         </TabsContent>
       </Tabs>
     </div>

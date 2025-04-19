@@ -67,12 +67,17 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           productId: item.id,
         });
         if (resp?.invoiceLink) {
-          invoice.open(resp?.invoiceLink, "url").then(async (status) => {
-            if (status === "paid") {
-              refetch();
-              toast.success("Energy purchased successfully");
-            }
-          });
+          invoice
+            .open(resp?.invoiceLink, "url")
+            .then(async (status) => {
+              if (status === "paid") {
+                refetch();
+                toast.success("Energy purchased successfully");
+              }
+            })
+            .catch((error) => {
+              console.error("Error opening invoice:", error);
+            });
         }
       }
     },

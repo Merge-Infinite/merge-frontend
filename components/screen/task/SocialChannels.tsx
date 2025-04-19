@@ -7,16 +7,24 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import useApi from "@/hooks/useApi";
+import { useUtils } from "@telegram-apps/sdk-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const SocialChannelItem = ({
+  reward,
   title,
-  points = "+50",
+  status,
+  isLoading,
+  onClick,
 }: {
   title: string;
-  points?: string;
+  reward?: string;
+  status?: string;
+  isLoading?: boolean;
+  onClick?: () => void;
 }) => {
   return (
     <div className="flex justify-between items-center py-2 px-1 w-full">
@@ -29,25 +37,90 @@ const SocialChannelItem = ({
             width={16}
             height={16}
           />
-          <span className="text-sm text-white">{points}</span>
+          <span className="text-sm text-white">{reward}</span>
         </div>
       </div>
       <Button
         variant="default"
         size="sm"
         className="bg-primary hover:bg-purple-600 rounded-full px-4 h-8 w-fit"
+        disabled={status === "verified"}
+        isLoading={isLoading}
+        onClick={onClick}
       >
         <span className="text-xs text-black font-normal uppercase underline">
-          GO
+          {status === "verified"
+            ? "Completed"
+            : status === "pending"
+            ? "Verify"
+            : "Go"}
         </span>
       </Button>
     </div>
   );
 };
 
-const MiTask = ({ tasks }: { tasks: string[] }) => {
+const MiTask = ({ type }: { type: string }) => {
   const [socialChannelsOpen, setSocialChannelsOpen] = useState(true);
   const [contributorsOpen, setContributorsOpen] = useState(false);
+  const utils = useUtils();
+
+  const taskList = useApi({
+    key: ["taskList"],
+    url: `/social-tasks/list?type=${type}`,
+    method: "GET",
+  }).get;
+
+  const userTaskList = useApi({
+    key: ["userTaskList"],
+    url: `/social-tasks/user-tasks`,
+    method: "GET",
+  }).get;
+
+  const startTask = useApi({
+    key: ["startTask"],
+    url: `/social-tasks/start-task`,
+    method: "POST",
+  }).post;
+
+  const verifyTask = useApi({
+    key: ["verifyTask"],
+    url: `/social-tasks/verify`,
+    method: "POST",
+  }).post;
+
+  useEffect(() => {
+    taskList?.refetch();
+    userTaskList?.refetch();
+  }, []);
+
+  const onVerifyTask = useCallback(
+    async (taskId: number) => {
+      await verifyTask?.mutateAsync({ socialTaskId: taskId });
+      userTaskList?.refetch();
+    },
+    [verifyTask, userTaskList]
+  );
+
+  const onStartTask = useCallback(
+    async (taskId: number, link: string) => {
+      const userTask = userTaskList?.data?.find(
+        (userTask: any) => userTask.socialTaskId === taskId
+      );
+      if (!userTask) {
+        await startTask?.mutateAsync({ socialTaskId: taskId });
+        if (link?.includes("https://t.me/")) {
+          utils.openTelegramLink(link);
+        } else {
+          utils.openLink(link);
+        }
+      } else if (userTask?.status === "PENDING") {
+        await onVerifyTask(taskId);
+      }
+      await userTaskList?.refetch();
+    },
+    [startTask, userTaskList, onVerifyTask]
+  );
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -79,8 +152,19 @@ const MiTask = ({ tasks }: { tasks: string[] }) => {
         <CollapsibleContent>
           <CardContent className="p-0">
             <div className="px-4 space-y-1">
-              {tasks.map((task, index) => (
-                <SocialChannelItem key={index} title={task} />
+              {taskList?.data?.map((task: any, index: number) => (
+                <SocialChannelItem
+                  key={index}
+                  reward={task.reward}
+                  title={task.description}
+                  onClick={() => {
+                    onStartTask(task.id, task.link);
+                  }}
+                  isLoading={startTask?.isPending || verifyTask?.isPending}
+                  status={userTaskList?.data
+                    ?.find((userTask: any) => userTask.socialTaskId === task.id)
+                    ?.status.toLowerCase()}
+                />
               ))}
             </div>
           </CardContent>
@@ -114,7 +198,6 @@ const MiTask = ({ tasks }: { tasks: string[] }) => {
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="px-4 py-2">
-            {/* Contributors content would go here */}
             <p className="text-sm text-muted-foreground">No contributors yet</p>
           </CardContent>
         </CollapsibleContent>
