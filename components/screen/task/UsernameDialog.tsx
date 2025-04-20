@@ -36,7 +36,7 @@ export function UsernameDialog({
   };
 
   const logo = useMemo(() => {
-    switch (task.platform) {
+    switch (task?.platform) {
       case "telegram":
         return "/images/telegram.svg";
       case "reddit":
@@ -46,7 +46,7 @@ export function UsernameDialog({
       default:
         return "/images/m3r8_symbol.svg";
     }
-  }, [task.platform]);
+  }, [task?.platform]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,7 +76,7 @@ export function UsernameDialog({
                   className="w-6 h-6"
                 />
                 <span className="text-white font-normal">
-                  {task.description}
+                  {task?.description || "Task"}
                 </span>
                 <Button
                   variant="outline"

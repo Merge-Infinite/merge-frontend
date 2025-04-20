@@ -121,7 +121,7 @@ const MiTask = ({ type }: { type: string }) => {
           utils.openLink(link);
         }
       } else if (userTask?.status === "PENDING") {
-        if (task.type !== "telegram") {
+        if (task.platform !== "telegram") {
           setOpen(true);
         } else {
           await onVerifyTask(task.id, "");
