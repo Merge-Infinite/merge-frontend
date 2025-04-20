@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDrag, useDragDropManager, useDrop } from "react-dnd";
 import Emoji from "./Emoji";
 import MergeLoadingAnimation from "./MergeLoadingAnimation";
@@ -115,29 +109,20 @@ const DraggableBox = ({
   );
 
   const dragDropManager = useDragDropManager();
-  const [position, setPosition] = useState({ x: left || 0, y: top || 0 });
-  const initialPosition = useRef({ x: left || 0, y: top || 0 });
-  const elementRef = useRef<HTMLDivElement | null>(null);
+  const monitor = dragDropManager.getMonitor();
+  const offset = monitor.getSourceClientOffset();
+  const [position, setPosition] = useState({
+    x: offset?.x || 0,
+    y: offset?.y || 0,
+  });
 
-  // Update position when left/top props change
-  useEffect(() => {
-    if (!isDragging) {
-      setPosition({ x: left || 0, y: top || 0 });
-      initialPosition.current = { x: left || 0, y: top || 0 };
-    }
-  }, [isDragging, left, top]);
-
-  // Handle dragging with debounced updates
   useEffect(() => {
     if (!isDragging) return;
 
-    let animationFrame: number;
-    const monitor = dragDropManager.getMonitor();
-
     const updatePosition = () => {
       const offset = monitor.getSourceClientOffset();
-      if (offset && elementRef.current) {
-        // Position the element so that its center is at the cursor position
+      console.log("offset", offset);
+      if (offset) {
         setPosition({
           x: offset.x,
           y: offset.y,
@@ -145,24 +130,16 @@ const DraggableBox = ({
       }
     };
 
-    const handleOffsetChange = () => {
-      // Use requestAnimationFrame to debounce updates
-      cancelAnimationFrame(animationFrame);
-      animationFrame = requestAnimationFrame(updatePosition);
-    };
-
-    const unsubscribe = monitor.subscribeToOffsetChange(handleOffsetChange);
+    const unsubscribe = monitor.subscribeToOffsetChange(updatePosition);
 
     return () => {
       unsubscribe();
-      cancelAnimationFrame(animationFrame);
     };
-  }, [isDragging, dragDropManager]);
+  }, [isDragging]);
 
   // Combine drag and drop refs
   const ref = useCallback(
     (element: any) => {
-      elementRef.current = element;
       drag(element);
       drop(element);
     },
@@ -176,8 +153,8 @@ const DraggableBox = ({
         ? {
             opacity: 0.9,
             position: "fixed" as const,
-            left: position.x,
-            top: position.y,
+            left: position.x || 0,
+            top: position.y || 0,
             pointerEvents: "none" as const,
             zIndex: 1000,
             willChange: "transform",
@@ -192,7 +169,7 @@ const DraggableBox = ({
             top,
             cursor: isDisabled ? "not-allowed" : "grab",
           },
-    [isDragging, position.x, position.y, isFromInventory, left, top, isDisabled]
+    [isDragging, isFromInventory, isDisabled, position, left, top]
   );
 
   // Memoize the remove handler

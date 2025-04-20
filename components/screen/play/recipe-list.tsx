@@ -147,7 +147,7 @@ export const RecipeList = ({
               <div
                 key={index}
                 onClick={() => handleItemClick(item)}
-                className={`cursor-pointer transition-transform hover:scale-105 ${
+                className={`h-fit cursor-pointer transition-transform hover:scale-105 ${
                   selectedItem?.id === item?.id && isLoading
                     ? "opacity-50 px-10 py-1 rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white text-white "
                     : ""

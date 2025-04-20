@@ -46,7 +46,6 @@ export function useAdsgram({
 
   const createAdSession = useCallback(async () => {
     try {
-      setIsLoading(true);
       const response = await requestAdChallengeApi?.mutateAsync({});
 
       if (response?.sessionId) {
@@ -58,7 +57,6 @@ export function useAdsgram({
       console.error("Failed to create ad session:", error);
       return null;
     } finally {
-      setIsLoading(false);
     }
   }, [requestAdChallengeApi]);
 
@@ -77,6 +75,7 @@ export function useAdsgram({
 
   const showAd = useCallback(async () => {
     if (isLoading) return;
+    setIsLoading(true);
 
     try {
       // Step 1: Create ad session
@@ -108,6 +107,9 @@ export function useAdsgram({
     } catch (error) {
       console.error("Error in showAd flow:", error);
       toast.error("Something went wrong");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   }, [isLoading, createAdSession, recordAdStart, onReward, onError]);
 

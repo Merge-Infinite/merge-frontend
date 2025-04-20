@@ -81,8 +81,7 @@ export default function PlayGame({}: PlayGameProps) {
       }
 
       setTargetBox(targetBox);
-      console.log("targetBox", targetBox);
-      console.log("droppedItem", droppedItem);
+
       const targetItemId =
         typeof targetBox.id === "string"
           ? Number(targetBox.id.split("_")[0])
@@ -106,14 +105,13 @@ export default function PlayGame({}: PlayGameProps) {
       });
       if (isFromInventory) return;
       try {
-        console.log("mergingBoxes", mergingBoxes);
         // Call the API to merge items
         const response: any = await mergeApi?.mutateAsync({
           item1: targetItemId,
           item2: droppedItemId,
         });
-        console.log("response", response);
-        const newInstanceId = `${response.id}_${Date.now()}`;
+        const newInstanceId = `${response.id}_${Date.now()}_${instanceCounter}`;
+        setInstanceCounter((prev) => prev + 1);
         const newElement = {
           id: newInstanceId,
           originalId: response.id,
@@ -170,21 +168,18 @@ export default function PlayGame({}: PlayGameProps) {
         });
       }
     },
-    [mergingBoxes, inventory]
+    [mergingBoxes, inventory, instanceCounter]
   );
-
-  useEffect(() => {
-    console.log("mergingBoxes", mergingBoxes);
-  }, [mergingBoxes]);
 
   const handleDrop = useCallback(
     (droppedItem: any, delta: XYCoord, clientOffset: XYCoord) => {
+      console.log("handleDrop", droppedItem);
       if (!droppedItem.isFromInventory) {
         const originalId = droppedItem.originalId;
         const inventoryItem = (inventory as any[])?.find(
           (element: any) => element.itemId === originalId && !element.isBasic
         );
-
+        console.log("inventoryItem", inventoryItem);
         if (inventoryItem) {
           // Count how many of this item are currently in use
           const usedCount = Object.values(mergingBoxes).filter(
@@ -193,17 +188,18 @@ export default function PlayGame({}: PlayGameProps) {
               (box.originalId === originalId || box.id === originalId)
           ).length;
 
+          console.log("usedCount", usedCount);
           // If we've already used all available items, prevent dropping
-          if (usedCount >= inventoryItem.amount) {
+          if (usedCount > inventoryItem.amount) {
             return;
           }
         }
       }
 
-      const instanceId = `${droppedItem.id}_${Date.now()}_${instanceCounter}`;
-      setInstanceCounter((prev) => prev + 1);
+      const instanceId = `${droppedItem.id}_${Date.now()}}`;
       if (
-        droppedItem.id &&
+        droppedItem.id !== undefined &&
+        droppedItem.id !== null &&
         droppedItem.left !== undefined &&
         droppedItem.top !== undefined
       ) {
@@ -244,7 +240,7 @@ export default function PlayGame({}: PlayGameProps) {
         }
       }
     },
-    [mergingBoxes, instanceCounter, inventory]
+    [mergingBoxes, inventory]
   );
 
   const handleRemove = useCallback((instanceId: string) => {

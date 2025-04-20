@@ -65,11 +65,13 @@ export const MergingArea = ({
           }));
         }
       }
-
+      console.log("dropItem when dragging", droppedItem);
+      console.log("delta", delta);
+      console.log("clientOffset", clientOffset);
       onDrop(droppedItem, delta, clientOffset);
       return undefined;
     },
-    [onDrop, inventory, usedItems]
+    [inventory, usedItems]
   );
 
   const [, drop] = useDrop(
@@ -207,14 +209,7 @@ export const MergingArea = ({
         />
       );
     });
-  }, [
-    visibleBoxes,
-    handleDropAndMerge,
-    handleRemove,
-    inventory,
-    isMerging,
-    mergingTarget,
-  ]);
+  }, [visibleBoxes, inventory, isMerging, mergingTarget]);
 
   return (
     <div ref={drop} className="relative h-full will-change-contents">
