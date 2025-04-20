@@ -227,6 +227,7 @@ const MiTask = ({ type }: { type: string }) => {
         open={open}
         onOpenChange={setOpen}
         onSubmit={handleSubmit}
+        task={task}
       />
     </div>
   );
