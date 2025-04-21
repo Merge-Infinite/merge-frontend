@@ -89,6 +89,12 @@ function RootInner({ children }: PropsWithChildren) {
     new QueryClient({ defaultOptions: { queries: { staleTime: 1000 } } })
   );
 
+  useEffect(() => {
+    persistorStore.purge().then(() => {
+      console.log("Persisted state has been cleared.");
+    });
+  }, []);
+
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistorStore}>
