@@ -90,7 +90,7 @@ function RootInner({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
-    persistorStore.purge().then(() => {
+    persistorStore.flush().then(() => {
       console.log("Persisted state has been cleared.");
     });
   }, []);
