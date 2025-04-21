@@ -12,6 +12,8 @@ function MainPage() {
   const { accountId, networkId, walletId } = useSelector(
     (state: RootState) => state.appContext
   );
+  const appContext = useSelector((state: RootState) => state.appContext);
+  console.log("appContext", appContext);
   const { address } = useAccount(accountId);
   // prefetch other tabs' data
   useNftList(address);

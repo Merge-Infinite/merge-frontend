@@ -72,6 +72,7 @@ function MainPage({ address, networkId }: DashboardProps) {
   //   loading: isBalanceLoading,
   //   error: balanceError,
   // } = useSuiBalance(address);
+  console.log("networkId", networkId);
   const {
     data: coins,
     loading: isLoading,

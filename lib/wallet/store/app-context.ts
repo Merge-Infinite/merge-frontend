@@ -31,7 +31,7 @@ const initialState: AppContextState = {
   authed: false,
   walletId: "",
   accountId: "",
-  networkId: "",
+  networkId: "mainnet",
   appMode: AppMode.GAMES,
   tabMode: TabMode.HOME,
   biometricDismissed: false,
@@ -71,7 +71,8 @@ export const appContextSlice = createSlice({
       state.accountId = action.payload;
     },
     updateNetworkId(state, action: PayloadAction<string>) {
-      state.networkId = action.payload;
+      console.log("updateNetworkId", action.payload);
+      // state.networkId = action.payload;
     },
     updateBiometricDismissed(state, action: PayloadAction<boolean>) {
       state.biometricDismissed = action.payload;
