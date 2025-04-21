@@ -43,7 +43,7 @@ export const RewardTab = () => {
   useEffect(() => {
     fetchTotalElements?.refetch();
     fetchRewards?.refetch();
-  }, [fetchTotalElements, fetchRewards]);
+  }, []);
 
   // Generate range of numbers for element values
   const fiveHundredElements = Array.from(
@@ -81,6 +81,7 @@ export const RewardTab = () => {
           <ScrollArea className="h-64">
             <div className="flex flex-wrap gap-2">
               {fiveHundredElements.map((value) => {
+                console.log("fetchRewards", fetchRewards);
                 const found = fetchRewards?.data?.rewards.find(
                   (reward) => reward.submissionCount === value
                 );
