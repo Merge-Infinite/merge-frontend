@@ -71,8 +71,7 @@ export const appContextSlice = createSlice({
       state.accountId = action.payload;
     },
     updateNetworkId(state, action: PayloadAction<string>) {
-      console.log("updateNetworkId", action.payload);
-      // state.networkId = action.payload;
+      state.networkId = action.payload;
     },
     updateBiometricDismissed(state, action: PayloadAction<boolean>) {
       state.biometricDismissed = action.payload;
