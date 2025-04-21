@@ -15,7 +15,7 @@ export function useFeatureFlagsWithNetwork(): FeatureFlagNetwork {
   const featureFlags = useFeatureFlags();
   return (
     featureFlags?.networks[appContext.networkId] ||
-    defaultFeatureFlags.networks["testnet"]
+    defaultFeatureFlags.networks["mainnet"]
   );
 }
 

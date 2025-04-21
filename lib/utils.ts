@@ -45,16 +45,20 @@ export const emojiToString = (emoji: string): string => {
 };
 
 export const NFT_PACKAGE_ID =
-  "0xd193c1d711383f22b026faec8905bfde145f16ed0030e102f65591dea431d245";
+  "0x68b908a526f3114d0f74f54deb86832ff9d8764800c724f1e49fe7047116407e";
 export const POLICY_ID =
-  "0xc7131ef9b5294036856acedbe80b409997754d4c98ab464977b04ae0fe073021";
+  "0x7df619fa1d3681dcbea68af6d5fb4bb24a724861ccc128255e434347b0e51389";
 export const NFT_MODULE_NAME = "element_nft";
 export const MINT_NFT_FEE = 0.05;
 export const suiClient = new SuiClient({
   url: getFullnodeUrl(process.env.NEXT_PUBLIC_SUI_NETWORK as any),
 });
 export const SELLER_ADDRESS =
-  "0xace56ece58a618dd661794d254430d9c60384c2bccf66d2151391135d6f2e722";
+  "0x9a1057730e9062b2819c52acc40cd06d7c990d6152a6754a231f1ca1b849521a";
+export const MARKET_MINT_FEE =
+  "0x5a628d7f62f9d14304239fea905c64399aad30b1244f965b60fc8f1a55f086e4";
+export const MARKET_FEE =
+  "0x3c6540da727b07eee28b7da498930ad1cc337775079e3424cc6266333179b080";
 export const kioskClient = new KioskClient({
   client: suiClient,
   network: process.env.NEXT_PUBLIC_SUI_NETWORK as Network,

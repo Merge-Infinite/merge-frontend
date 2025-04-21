@@ -85,18 +85,22 @@ export const RewardTab = () => {
                   (reward) => reward.submissionCount === value
                 );
 
+                console.log(found);
+
                 const isActive = !!found;
                 const isClaimed = !!found?.claimed;
+
+                console.log(isActive, isClaimed);
                 return (
                   <Button
                     key={value}
-                    variant={activeValue === value ? "default" : "outline"}
+                    variant={"outline"}
                     className={
                       isActive
                         ? isClaimed
                           ? "bg-[#333333] hover:bg-[#333333] text-white rounded-3xl px-3 py-1 h-auto w-fit"
-                          : "bg-[#a668ff] hover:bg-[#9150e9] text-neutral-950 rounded-3xl px-3 py-1 h-auto w-fit"
-                        : "border-[#333333] text-[#333333] hover:text-white hover:border-white rounded-3xl px-3 py-1 h-auto w-fit"
+                          : "bg-primary hover:bg-[#9150e9] text-neutral-950 rounded-3xl px-3 py-1 h-auto w-fit"
+                        : "border-[#333333] bg-transparent text-[#333333] hover:text-white hover:border-white rounded-3xl px-3 py-1 h-auto w-fit"
                     }
                     onClick={() => {
                       if (

@@ -71,7 +71,7 @@ const CreateNewWallet = () => {
 
     await dispatch(updateWalletId(wallet.id));
     await dispatch(updateAccountId(defaultAccount.id));
-    await dispatch(updateNetworkId(featureFlags?.default_network ?? "testnet"));
+    await dispatch(updateNetworkId(featureFlags?.default_network ?? "mainnet"));
     await dispatch(updateInitialized(true));
   }
 

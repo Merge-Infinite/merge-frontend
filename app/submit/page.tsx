@@ -72,7 +72,7 @@ export default function SubmitItem() {
   });
 
   return (
-    <div className="flex flex-col h-full gap-4 ">
+    <div className="flex flex-col h-full gap-4 p-4">
       <div className="self-stretch justify-start items-center gap-2 inline-flex">
         <div className="px-3 py-1 rounded-3xl border border-white justify-center items-center gap-2 flex">
           {fetchItemChallenge?.data?.item?.emoji}

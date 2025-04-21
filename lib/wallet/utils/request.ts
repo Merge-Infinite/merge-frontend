@@ -30,7 +30,7 @@ export function envUrl(url: string, networkId: string) {
   }
   let _networkId = networkId;
   if (!["mainnet", "testnet", "devnet"].includes(networkId)) {
-    _networkId = "testnet";
+    _networkId = "mainnet";
   }
   return `/${_networkId}/${_url}`;
 }
