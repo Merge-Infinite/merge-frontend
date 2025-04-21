@@ -63,6 +63,5 @@ export function getStore() {
 }
 
 export const { store, persistorStore } = getStore();
-window.persistorStore = persistorStore;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
