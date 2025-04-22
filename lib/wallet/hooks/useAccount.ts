@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
-import { Account, GetAddressParams } from "../../../core";
-import { BackgroundApiClient } from "../scripts/shared/ui-api-client";
+import { Account, GetAddressParams } from "../core/api/account";
+import { WebApiClient } from "../scripts/shared/ui-api-client";
 import { OmitToken } from "../types";
 import { isNonEmptyArray } from "../utils/check";
 import { useApiClient } from "./useApiClient";
@@ -14,7 +14,7 @@ export function clearAddressMemoryCache() {
 }
 
 export async function getAddress(
-  apiClient: BackgroundApiClient,
+  apiClient: WebApiClient,
   params: OmitToken<GetAddressParams>
 ): Promise<string | string[]> {
   if (isNonEmptyArray(params.batchAccountIds)) {
