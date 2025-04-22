@@ -21,7 +21,6 @@ export function useUser(inventorySearch?: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const isLoggedInRef = useRef(false);
-  const initializedRef = useRef(false);
   const dispatch = useDispatch<AppDispatch>();
   // API endpoints
   const authApi = useApi({
@@ -125,10 +124,9 @@ export function useUser(inventorySearch?: string) {
   }, [address, user]);
 
   const login = useCallback(async () => {
-    if (!initDataRaw || isLoggedInRef.current || initializedRef.current) return;
+    if (!initDataRaw || isLoggedInRef.current) return;
 
     isLoggedInRef.current = true;
-    initializedRef.current = true;
     setIsLoading(true);
     setError(null);
 
