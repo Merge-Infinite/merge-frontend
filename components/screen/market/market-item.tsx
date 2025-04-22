@@ -1,4 +1,3 @@
-import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,8 +69,6 @@ export const MarketItem = React.memo(
         "p": "sui-20",
         "element": "${element}", 
         "amt": "${amount}",
-        "itemId": "${itemId}",
-        "emoji": "${(<Emoji emoji={emoji} size={18} />)}"
     }`;
 
     const purchasesApi = useApi({

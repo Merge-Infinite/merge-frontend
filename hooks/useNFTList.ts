@@ -9,8 +9,6 @@ export interface NFT {
   id: string;
   name: string;
   amount: number | string;
-  itemId: string;
-  emoji: string;
   owner?: string;
 }
 
@@ -58,8 +56,6 @@ export function useNFTList(options?: UseNFTListOptions) {
           return {
             id: data!.objectId,
             name: display!.name || "Element NFT",
-            itemId: display!.itemId,
-            emoji: display!.emoji,
             amount: display!.amount || 0,
           };
         });
