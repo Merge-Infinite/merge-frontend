@@ -303,7 +303,7 @@ export const CardItem = React.memo(
                     className="text-[#68ffd1] underline"
                     onClick={() =>
                       window.open(
-                        `https://explorer.sui.io/txblock/${transactionDigest}`,
+                        `https://suiscan.xyz/mainnet/tx/${transactionDigest}`,
                         "_blank"
                       )
                     }

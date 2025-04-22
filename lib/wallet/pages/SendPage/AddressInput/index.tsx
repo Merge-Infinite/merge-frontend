@@ -139,7 +139,7 @@ function AddressInputPage({
                 <div
                   onClick={() => {
                     window.open(
-                      `https://explorer.sui.io/address/${resolvedAddress}?network=${networkId}`,
+                      `https://suiscan.xyz/mainnet/account/${resolvedAddress}}`,
                       "_blank"
                     );
                   }}
