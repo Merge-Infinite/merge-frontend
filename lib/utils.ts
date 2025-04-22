@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const convertEmojiCode = (emojiString: string) => {
-  if (emojiString.includes("U+")) {
+  if (emojiString && emojiString.includes("U+")) {
     return emojiString
       .split("_")
       .map((codePoint) => {

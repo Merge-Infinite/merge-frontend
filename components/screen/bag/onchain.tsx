@@ -48,7 +48,6 @@ export function OnchainBagScreen() {
 
   useEffect(() => {
     if (!address && authed) {
-      console.log("fetching address");
       fetchAddressByAccountId(appContext.accountId);
     }
   }, [address, authed]);

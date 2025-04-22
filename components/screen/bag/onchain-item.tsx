@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import { convertEmojiCode, NFT_MODULE_NAME, NFT_PACKAGE_ID } from "@/lib/utils";
+import { NFT_MODULE_NAME, NFT_PACKAGE_ID } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -212,8 +212,6 @@ export const CardItem = React.memo(
         "p": "sui-20",
         "element": "${element}", 
         "amt": "${amount}",
-        "itemId": "${itemId}",
-        "emoji": "${convertEmojiCode(emoji)}"
     }`;
 
     const getStatusMessage = () => {
