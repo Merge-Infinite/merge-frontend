@@ -108,15 +108,18 @@ const LockPage = () => {
             </Button>
           </form>
         </Form>
+        <Typo.Normal
+          className={"mt-auto cursor-pointer mt-4 text-center"}
+          style={{
+            marginTop: "16px",
+          }}
+          onClick={() => {
+            setStep(2);
+          }}
+        >
+          Forget Password?
+        </Typo.Normal>
       </section>
-      <Typo.Normal
-        className={"mt-auto cursor-pointer"}
-        onClick={() => {
-          setStep(2);
-        }}
-      >
-        Forget Password?
-      </Typo.Normal>
     </div>
   );
 };

@@ -52,7 +52,7 @@ const ForgetPassword = (props: ForgetPasswordProps) => {
           }}
         >
           <div className="flex flex-col gap-2">
-            <Typo.Normal className={styles["reset-title"]}>
+            <Typo.Normal className={styles["reset-title text-white"]}>
               Reset Merge Wallet
             </Typo.Normal>
             <Typo.Hints

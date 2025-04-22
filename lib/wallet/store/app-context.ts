@@ -46,7 +46,7 @@ export const resetAppContext = createAsyncThunk(
     await thunkApi.dispatch(updateAuthed(false));
     await thunkApi.dispatch(updateAccountId(""));
     await thunkApi.dispatch(updateWalletId(""));
-    await thunkApi.dispatch(updateNetworkId(""));
+    await thunkApi.dispatch(updateNetworkId("mainnet"));
     await thunkApi.dispatch(updateAppMode(AppMode.GAMES));
     await thunkApi.dispatch(updateTabMode(TabMode.HOME));
     await storage.clear();
