@@ -13,16 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
-import {
-  emojiToString,
-  MINT_NFT_FEE,
-  NFT_MODULE_NAME,
-  NFT_PACKAGE_ID,
-} from "@/lib/utils";
+import { ADMIN_ADDRESS, MARKET_MINT_FEE, MINT_NFT_FEE } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
+import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
@@ -34,12 +30,12 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
-
 export function OffchainBagScreen() {
   const apiClient = useApiClient();
 
   const appContext = useSelector((state: RootState) => state.appContext);
   const { data: network } = useNetwork(appContext.networkId);
+  const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [mintQuantity, setMintQuantity] = useState(1);
@@ -53,11 +49,23 @@ export function OffchainBagScreen() {
     url: "user/mybags",
   }).get;
 
-  const syncUserBag = useApi({
-    key: ["syncUserBag"],
+  const mintNFTsApi = useApi({
+    key: ["mintNFTs"],
     method: "POST",
     url: "marketplace/mint",
   }).post;
+
+  const minGasFee = useApi({
+    key: ["minGasFee"],
+    method: "POST",
+    url: "marketplace/mint-gas-fee",
+  }).post;
+
+  useEffect(() => {
+    if (!address && appContext.authed) {
+      fetchAddressByAccountId(appContext.accountId);
+    }
+  }, [address, appContext.accountId, appContext.authed]);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -71,6 +79,12 @@ export function OffchainBagScreen() {
 
     fetchItems();
   }, []);
+
+  useEffect(() => {
+    if (!appContext.authed) {
+      setOpenAuthDialog(true);
+    }
+  }, [appContext.authed]);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
@@ -105,38 +119,47 @@ export function OffchainBagScreen() {
       return null;
     }
 
+    if (!address) {
+      toast.error("Please connect your wallet");
+      return null;
+    }
+
     if (mintQuantity > selectedItem.amount) {
       toast.error("You don't have enough items to mint");
       return null;
     }
     setIsMinting(true);
     try {
-      let tx = new Transaction();
+      const minGasFeeResponse = await minGasFee?.mutateAsync({
+        itemId: selectedItem.itemId,
+        amount: mintQuantity,
+        walletAddress: address,
+      });
+      const gasEstimationInMist = Math.abs(minGasFeeResponse);
+      const paymentTx = new Transaction();
 
-      // Split Sui coin for payment
-      const paymentCoin = tx.splitCoins(tx.gas, [
-        MINT_NFT_FEE * Number(MIST_PER_SUI),
+      const [mintFeeAmount] = paymentTx.splitCoins(
+        paymentTx.gas,
+        [MINT_NFT_FEE * Number(MIST_PER_SUI)] // Convert to MIST (smallest SUI unit)
+      );
+
+      const [gasFeeAmount] = paymentTx.splitCoins(paymentTx.gas, [
+        gasEstimationInMist,
       ]);
 
-      tx.moveCall({
-        target: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"mint"}`,
-        arguments: [
-          tx.pure.string(selectedItem?.handle),
-          tx.pure.u64(mintQuantity),
-          tx.pure.string(emojiToString(selectedItem?.emoji)),
-          tx.pure.string(String(selectedItem?.itemId)),
-          paymentCoin,
-        ],
-      });
+      // Transfer the combined fee to the fee collection address
+      paymentTx.transferObjects([gasFeeAmount], ADMIN_ADDRESS);
+
+      paymentTx.transferObjects([mintFeeAmount], MARKET_MINT_FEE);
 
       const response = await apiClient.callFunc<
         SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
         undefined
       >(
         "txn",
-        "signAndExecuteTransactionBlock",
+        "signTransactionBlock",
         {
-          transactionBlock: tx.serialize(),
+          transactionBlock: paymentTx.serialize(),
           context: {
             network,
             walletId: appContext.walletId,
@@ -146,9 +169,12 @@ export function OffchainBagScreen() {
         { withAuth: true }
       );
 
-      if (response && response.digest) {
-        await syncUserBag?.mutateAsync({
-          transactionDigest: response.digest,
+      // console.log("response", response);
+
+      if (response && (response as any).signature) {
+        const result = await mintNFTsApi?.mutateAsync({
+          transactionBlockBytes: (response as any).transactionBlockBytes,
+          signature: (response as any).signature,
           itemId: selectedItem.itemId,
           amount: mintQuantity,
         });
@@ -158,7 +184,7 @@ export function OffchainBagScreen() {
 
         getUserBagApi?.refetch();
         handleCloseModal();
-        return response.digest;
+        return result;
       }
 
       return null;
@@ -178,7 +204,7 @@ export function OffchainBagScreen() {
     } finally {
       setIsMinting(false);
     }
-  }, [selectedItem, mintQuantity, network, appContext, syncUserBag]);
+  }, [selectedItem, mintQuantity, network, appContext]);
 
   // Filter items based on search query
   const filteredItems = getUserBagApi?.data?.filter((item) =>
@@ -191,7 +217,6 @@ export function OffchainBagScreen() {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {/* Search Bar */}
       <div className="self-stretch h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
         <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-center gap-4 inline-flex">
           <Image src="/images/search.svg" alt="search" width={24} height={24} />

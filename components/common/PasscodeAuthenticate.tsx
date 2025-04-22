@@ -9,11 +9,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
-import { AppDispatch } from "@/lib/wallet/store";
+import { AppDispatch, RootState } from "@/lib/wallet/store";
 import { updateAuthed } from "@/lib/wallet/store/app-context";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useId, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 
 /**
@@ -33,7 +34,10 @@ export function PasscodeAuthDialog({
   const stableId = useId(); // Generate a stable ID for this instance
   const apiClient = useApiClient();
   const dispatch = useDispatch<AppDispatch>();
-
+  const initialized = useSelector(
+    (state: RootState) => state.appContext.initialized
+  );
+  const router = useRouter();
   const [passcode, setPasscode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -131,53 +135,66 @@ export function PasscodeAuthDialog({
       >
         <DialogHeader>
           <DialogTitle className="text-white text-lg font-medium font-['Sora']">
-            Authentication Required
+            {initialized ? "Authentication Required" : "Wallet Initialization"}
           </DialogTitle>
         </DialogHeader>
-
-        <div className="flex-col justify-start items-start gap-3 flex w-full">
-          <div className="w-full">
-            <div className="text-white text-sm font-normal font-['Sora'] leading-normal mb-1">
-              Enter Your Wallet Passcode:
-            </div>
-            <div className="w-full flex justify-center items-center">
-              <div className="inline-block">
-                <InputOTP
-                  value={passcode}
-                  onChange={(value) => setPasscode(value)}
-                  maxLength={6}
-                  disabled={isLoading}
-                >
-                  <InputOTPGroup className="gap-2">
-                    <InputOTPSlot index={0} className="w-12 h-12 text-xl" />
-                    <InputOTPSlot index={1} className="w-12 h-12 text-xl" />
-                    <InputOTPSlot index={2} className="w-12 h-12 text-xl" />
-                    <InputOTPSlot index={3} className="w-12 h-12 text-xl" />
-                    <InputOTPSlot index={4} className="w-12 h-12 text-xl" />
-                    <InputOTPSlot index={5} className="w-12 h-12 text-xl" />
-                  </InputOTPGroup>
-                </InputOTP>
+        {initialized ? (
+          <div className="flex-col justify-start items-start gap-3 flex w-full">
+            <div className="w-full">
+              <div className="text-white text-sm font-normal font-['Sora'] leading-normal mb-1">
+                Enter Your Wallet Passcode:
               </div>
+              <div className="w-full flex justify-center items-center">
+                <div className="inline-block">
+                  <InputOTP
+                    value={passcode}
+                    onChange={(value) => setPasscode(value)}
+                    maxLength={6}
+                    disabled={isLoading}
+                  >
+                    <InputOTPGroup className="gap-2">
+                      <InputOTPSlot index={0} className="w-12 h-12 text-xl" />
+                      <InputOTPSlot index={1} className="w-12 h-12 text-xl" />
+                      <InputOTPSlot index={2} className="w-12 h-12 text-xl" />
+                      <InputOTPSlot index={3} className="w-12 h-12 text-xl" />
+                      <InputOTPSlot index={4} className="w-12 h-12 text-xl" />
+                      <InputOTPSlot index={5} className="w-12 h-12 text-xl" />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              </div>
+              {error && (
+                <div className="text-red-500 text-xs mt-1">{error}</div>
+              )}
             </div>
-            {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
           </div>
-        </div>
+        ) : (
+          <Button
+            onClick={() => {
+              router.push("/wallet");
+            }}
+          >
+            Initialize Wallet
+          </Button>
+        )}
 
         <DialogFooter className="w-full mt-4">
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading || passcode.length < 6}
-            className="w-full bg-gradient-to-r from-[#9747FF] to-[#7F45E2] hover:from-[#9747FF] hover:to-[#8a4dd4]"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Authenticating...
-              </>
-            ) : (
-              "Authenticate"
-            )}
-          </Button>
+          {initialized && (
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading || passcode.length < 6}
+              className="w-full bg-gradient-to-r from-[#9747FF] to-[#7F45E2] hover:from-[#9747FF] hover:to-[#8a4dd4]"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                "Authenticate"
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

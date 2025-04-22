@@ -252,10 +252,10 @@ export default function PlayGame({}: PlayGameProps) {
   }, []);
 
   return (
-    <div className="w-full h-full bg-black">
+    <div className="w-full h-full">
       <GamePlayInfo />
       <DndProvider options={HTML5toTouch}>
-        <div className="h-[40%] mt-4">
+        <div className="h-[40%] mt-0">
           <MergingArea
             onDrop={handleDrop}
             onDropandMerge={handleDropToMerge}
@@ -266,8 +266,8 @@ export default function PlayGame({}: PlayGameProps) {
             inventory={inventory as any[]}
           />
         </div>
-        <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-1/2 w-full">
-          <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+        <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-[50%] w-full">
+          <div className="w-full px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
             <SearchIcon className="w-5 h-5 text-white" />
             <Input
               className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none"
@@ -275,7 +275,7 @@ export default function PlayGame({}: PlayGameProps) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="self-stretch flex-col justify-start items-start gap-1 flex">
+          <div className="flex-col justify-start items-start gap-1 flex">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Infinite elements:
             </div>
@@ -293,11 +293,11 @@ export default function PlayGame({}: PlayGameProps) {
                 ))}
             </div>
           </div>
-          <div className="self-stretch flex-col justify-start items-start gap-1 flex">
+          <div className="flex-col justify-start items-start gap-1 flex h-full">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
-            <div className="relative justify-start items-center gap-2 inline-flex flex-wrap  overflow-y-auto">
+            <div className="relative justify-start items-center gap-2 inline-flex flex-wrap  overflow-y-auto h-[120px] sm:h-[120px] md:h-[140px] lg:h-[160px] xl:h-[180px]">
               {isLoading ? (
                 <TagSkeleton />
               ) : (
