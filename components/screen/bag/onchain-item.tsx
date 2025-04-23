@@ -18,6 +18,7 @@ import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
+import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
@@ -53,10 +54,16 @@ export const CardItem = React.memo(
       url: "marketplace/listings",
     }).post;
 
+    const burnNFT = useApi({
+      key: ["burnNFT"],
+      method: "POST",
+      url: "marketplace/use-nft",
+    }).post;
+
     const appContext = useSelector((state: RootState) => state.appContext);
     const { data: network } = useNetwork(appContext.networkId);
     const { user } = useUser();
-
+    const { address } = useAccount(appContext.accountId);
     const [listingPrice, setListingPrice] = useState<string>("");
     const [dialogOpen, setDialogOpen] = useState(false);
     const [transactionStatus, setTransactionStatus] = useState<
@@ -208,6 +215,72 @@ export const CardItem = React.memo(
       }
     }
 
+    async function onBurn(): Promise<void> {
+      try {
+        setTransactionStatus("submitting");
+
+        const txb = new Transaction();
+        txb.moveCall({
+          target: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"burn"}`,
+          arguments: [txb.object(id)],
+        });
+        const response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: txb.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
+          },
+          { withAuth: true }
+        );
+
+        if (response && response.digest) {
+          setTransactionDigest(response.digest);
+          setTransactionStatus("syncing");
+
+          // Sync with backend
+          try {
+            await burnNFT?.mutateAsync({
+              itemId: Number(itemId),
+              nftId: id,
+              transactionDigest: response.digest,
+              ownerAddress: address,
+            });
+
+            setTransactionStatus("success");
+            toast.success("Your NFT has been used successfully");
+          } catch (error) {
+            console.error("Backend sync error:", error);
+            setTransactionStatus("error");
+            toast.error(
+              "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
+            );
+          }
+        } else {
+          setTransactionStatus("error");
+          toast.error("Failed to list NFT. Please try again.");
+        }
+      } catch (error: any) {
+        console.error("Transaction error:", error);
+        if (error.message === "Authentication required") {
+          setOpenAuthDialog(true);
+        } else {
+          setTransactionStatus("error");
+          toast.error(
+            error instanceof Error ? error.message : "An unknown error occurred"
+          );
+        }
+      } finally {
+      }
+    }
+
     const jsonContent = `{
         "p": "sui-20",
         "element": "${element}", 
@@ -249,8 +322,10 @@ export const CardItem = React.memo(
               <Button
                 size={"sm"}
                 className="text-black text-xs uppercase rounded-full hover:bg-[#f0f0f0] transition-colors"
+                onClick={onBurn}
+                disabled={isProcessing || burnNFT?.isPending}
               >
-                Use
+                {isProcessing ? "Processing..." : "Use"}
               </Button>
               <DialogTrigger asChild>
                 <Button
