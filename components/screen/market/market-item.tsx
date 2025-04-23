@@ -204,7 +204,17 @@ export const MarketItem = React.memo(
           ],
           typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
         });
-
+        console.log(nftId);
+        const [takenObject] = txb.moveCall({
+          target: "0x2::kiosk::take",
+          arguments: [
+            txb.object(user.kiosk.objectId),
+            txb.object(user.kiosk.ownerCapId),
+            txb.pure.id(nftId),
+          ],
+          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+        });
+        txb.transferObjects([takenObject], address);
         const response = await apiClient.callFunc<
           SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
           undefined
@@ -227,7 +237,7 @@ export const MarketItem = React.memo(
           try {
             await marketplaceDeListings?.mutateAsync({
               kioskId: user.kiosk.objectId,
-              nftId: id,
+              nftId: nftId,
               transactionDigest: response.digest,
             });
 
