@@ -52,11 +52,12 @@ export function useNFTList(options?: UseNFTListOptions) {
       if (data && data.length > 0) {
         const nftList = data.map(({ data }) => {
           const display = data?.display?.data;
-
+          console.log(data);
           return {
             id: data!.objectId,
             name: display!.name || "Element NFT",
             amount: display!.amount || 0,
+            itemId: Number(display!.itemId),
           };
         });
 
