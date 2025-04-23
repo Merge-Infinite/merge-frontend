@@ -247,15 +247,20 @@ export const NFTMarket = () => {
       }
       setLoadingClaim(true);
       const txb = new Transaction();
-
-      txb.moveCall({
+      const amtArg = txb.moveCall({
+        target: "0x1::option::some",
+        arguments: [txb.pure.u64(profit * Number(MIST_PER_SUI))],
+        typeArguments: ["u64"],
+      });
+      const coin = txb.moveCall({
         target: "0x2::kiosk::withdraw",
         arguments: [
           txb.object(user.kiosk.objectId),
           txb.object(user.kiosk.ownerCapId),
-          txb.pure.u64(profit * Number(MIST_PER_SUI)),
+          amtArg,
         ],
       });
+      txb.transferObjects([coin], txb.pure.address(address));
 
       const response = await apiClient.callFunc<
         SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
@@ -367,12 +372,12 @@ export const NFTMarket = () => {
                 </Button>
               </div>
               <Card className="flex !p-2 bg-neutral-950/60 rounded-2xl outline outline-1 outline-offset-[-1px] border border-[#1f1f1f] inline-flex flex-col justify-start items-start">
-                <CardHeader className="self-stretch inline-flex  gap-2 p-2">
+                <CardHeader className="self-stretch inline-flex  gap-2 p-1">
                   <div className="flex-1 justify-start text-white text-base font-normal font-['Sora'] leading-normal">
                     Your Balance:
                   </div>
                 </CardHeader>
-                <CardContent className="self-stretch inline-flex justify-between items-center p-2">
+                <CardContent className="self-stretch inline-flex justify-between items-center p-1">
                   <div className="flex justify-start items-start gap-1">
                     <Image
                       src="/images/sui.svg"
