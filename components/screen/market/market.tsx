@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
@@ -23,7 +23,7 @@ import { RootState } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
-import { formatAddress } from "@mysten/sui/utils";
+import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { SearchIcon, ShoppingCart, Wallet } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
@@ -103,10 +103,13 @@ export const NFTMarket = () => {
   const [isOwned, setIsOwned] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
+  const [loadingClaim, setLoadingClaim] = useState(false);
   const {
     items: marketplaceListings,
     loading,
     refetch,
+    profit,
+    refetchProfit,
   } = useMarketPlace(isOwned ? user?.kiosk?.objectId : undefined, {
     pollingInterval: undefined,
   });
@@ -236,6 +239,65 @@ export const NFTMarket = () => {
     }
   }, [isOwned]);
 
+  async function claimProfit(): Promise<void> {
+    try {
+      if (!profit) {
+        toast.error("No profit to claim");
+        return;
+      }
+      setLoadingClaim(true);
+      const txb = new Transaction();
+
+      txb.moveCall({
+        target: "0x2::kiosk::withdraw",
+        arguments: [
+          txb.object(user.kiosk.objectId),
+          txb.object(user.kiosk.ownerCapId),
+          txb.pure.u64(profit * Number(MIST_PER_SUI)),
+        ],
+      });
+
+      const response = await apiClient.callFunc<
+        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+        undefined
+      >(
+        "txn",
+        "signAndExecuteTransactionBlock",
+        {
+          transactionBlock: txb.serialize(),
+          context: {
+            network,
+            walletId: appContext.walletId,
+            accountId: appContext.accountId,
+          },
+        },
+        { withAuth: true }
+      );
+
+      if (response && response.digest) {
+        // Sync with backend
+        try {
+          toast.success("Profit claimed successfully");
+        } catch (error) {
+          console.error("Backend sync error:", error);
+        }
+      } else {
+        toast.error("Failed to claim profit. Please try again.");
+      }
+    } catch (error: any) {
+      console.log(error);
+      if (error.message === "Authentication required") {
+        setOpenAuthDialog(true);
+      } else {
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      }
+    } finally {
+      setLoadingClaim(false);
+    }
+  }
+
   return (
     <div className="w-full h-full flex flex-col gap-4">
       <div className="flex flex-col gap-4 fixed top-4 left-4 right-4 bg-black">
@@ -272,36 +334,71 @@ export const NFTMarket = () => {
           <WalletBanner onConnect={handleCreateKiosk} />
         ) : (
           <div className="w-full h-full">
-            <div className="flex justify-between rounded-3xl fixed top-12 left-4 right-4 gap-2">
-              <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
-                <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
-                  <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
-                  <SearchIcon className="w-5 h-5 text-white" />
+            <div className="flex flex-col rounded-3xl fixed top-12 left-4 right-4 gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
+                  <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+                    <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
+                    <SearchIcon className="w-5 h-5 text-white" />
+                  </div>
                 </div>
+                <Button
+                  size="sm"
+                  className={cn(
+                    "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
+                    isOwned
+                      ? "bg-primary text-black"
+                      : "bg-[#141414] text-white"
+                  )}
+                  onClick={() => setIsOwned((prev) => !prev)}
+                >
+                  Owned
+                </Button>
+                <Button
+                  size="sm"
+                  className={cn(
+                    "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
+                  )}
+                  onClick={() => {
+                    dispatch(updateTabMode(TabMode.BAG));
+                  }}
+                >
+                  Sell
+                </Button>
               </div>
-              <Button
-                size="sm"
-                className={cn(
-                  "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
-                  isOwned ? "bg-primary text-black" : "bg-[#141414] text-white"
-                )}
-                onClick={() => setIsOwned((prev) => !prev)}
-              >
-                Owned
-              </Button>
-              <Button
-                size="sm"
-                className={cn(
-                  "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
-                )}
-                onClick={() => {
-                  dispatch(updateTabMode(TabMode.BAG));
-                }}
-              >
-                Sell
-              </Button>
+              <Card className="flex !p-2 bg-neutral-950/60 rounded-2xl outline outline-1 outline-offset-[-1px] border border-[#1f1f1f] inline-flex flex-col justify-start items-start">
+                <CardHeader className="self-stretch inline-flex  gap-2 p-2">
+                  <div className="flex-1 justify-start text-white text-base font-normal font-['Sora'] leading-normal">
+                    Your Balance:
+                  </div>
+                </CardHeader>
+                <CardContent className="self-stretch inline-flex justify-between items-center p-2">
+                  <div className="flex justify-start items-start gap-1">
+                    <Image
+                      src="/images/sui.svg"
+                      alt="Sui Logo"
+                      className="h-6 w-6 mr-1 text-orange-500"
+                      width={24}
+                      height={24}
+                    />
+                    <div className="text-center justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                      {profit}
+                    </div>
+                  </div>
+                  <Button
+                    className="bg-[#a668ff] flex justify-center items-center gap-2 w-fit px-4 py-0"
+                    onClick={claimProfit}
+                    disabled={loadingClaim || !profit}
+                  >
+                    <div className="text-center justify-start text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
+                      {loadingClaim ? "Claiming..." : "Claim"}
+                    </div>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
-            <div className="h-full overflow-y-auto mt-20">
+
+            <div className="h-full overflow-y-auto" style={{ marginTop: 300 }}>
               {loading ? (
                 <MarketplaceSkeleton />
               ) : filteredListings.length > 0 ? (
