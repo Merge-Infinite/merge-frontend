@@ -4,7 +4,14 @@ import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import useApi from "@/hooks/useApi";
+
 import { useUser } from "@/hooks/useUser";
 import { SELLER_ADDRESS } from "@/lib/utils";
 import {
@@ -260,9 +267,41 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           <div className="text-white text-sm font-normal leading-normal">
             Subscription
           </div>
-          <div className="text-[#68ffd1] text-sm font-normal underline leading-normal">
-            Benefit
-          </div>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <div className="text-[#68ffd1] text-sm font-normal underline leading-normal">
+                Benefit
+              </div>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="bg-zinc-900 rounded-t-3xl p-0 max-w-none h-72"
+            >
+              <div className="p-4 flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                  <SheetTitle className="text-white text-base m-0">
+                    Benefit
+                  </SheetTitle>
+                </div>
+
+                <div className="self-stretch inline-flex flex-col justify-start items-start gap-1">
+                  <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                    1. Skip the ad to see the recipe.
+                  </div>
+                  <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                    2. x2 energy when completing task.
+                  </div>
+                  <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                    3. x2 energy recovery per hour.
+                  </div>
+                  <div className="self-stretch justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                    4. Bonus points for AirDrop token program (Coming soon).
+                  </div>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </CardHeader>
         <CardContent className="w-full">
           {fetchProducts?.isPending ? (
