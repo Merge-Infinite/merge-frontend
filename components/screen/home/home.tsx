@@ -3,7 +3,12 @@
 import { GameScreen } from "@/components/screen/home/game";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppDispatch } from "@/lib/wallet/store";
-import { AppMode, updateAppMode } from "@/lib/wallet/store/app-context";
+import {
+  AppMode,
+  TabMode,
+  updateAppMode,
+  updateTabMode,
+} from "@/lib/wallet/store/app-context";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
@@ -23,7 +28,10 @@ export function HomeScreen() {
         <TabsTrigger
           value="game"
           className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 text-sm font-semibold px-4 py-2 rounded-none"
-          onClick={() => setAppMode(AppMode.GAMES)}
+          onClick={() => {
+            dispatch(updateTabMode(TabMode.HOME));
+            setAppMode(AppMode.GAMES);
+          }}
         >
           GAME
         </TabsTrigger>

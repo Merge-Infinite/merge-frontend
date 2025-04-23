@@ -14,7 +14,6 @@ import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
   TabMode,
-  updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
 import { initBackButton, retrieveLaunchParams } from "@telegram-apps/sdk";
@@ -41,8 +40,6 @@ export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   useEffect(() => {
-    dispatch(updateTabMode(TabMode.HOME));
-    dispatch(updateAppMode(AppMode.GAMES));
     backButton.hide();
   }, []);
 
@@ -76,6 +73,7 @@ export default function Home() {
 
   console.log(user.profile, initialized, authed);
 
+  console.log(tabMode);
   return (
     <div className="flex flex-col items-center h-full w-full p-4">
       {!user.profile ? (
@@ -88,11 +86,11 @@ export default function Home() {
           onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
         >
           <TabsList
-            className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black z-10 ${
+            className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8 bg-black z-10 ${
               appMode !== AppMode.GAMES ? "hidden" : ""
             }`}
             style={{
-              bottom: 8,
+              bottom: 40,
             }}
           >
             <TabsTrigger value="home">

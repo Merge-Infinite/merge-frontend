@@ -44,12 +44,14 @@ const SocialChannelItem = ({
       <Button
         variant="default"
         size="sm"
-        className="bg-primary hover:bg-purple-600 rounded-full px-4 h-8 w-fit"
+        className={`bg-primary hover:bg-purple-600 rounded-full px-4 h-8 w-fit ${
+          status === "pending" ? "bg-white" : ""
+        }`}
         disabled={status === "verified"}
         isLoading={isLoading}
         onClick={onClick}
       >
-        <span className="text-xs text-black font-normal uppercase underline">
+        <span className="text-xs text-black font-normal uppercase ">
           {status === "verified"
             ? "Completed"
             : status === "pending"
