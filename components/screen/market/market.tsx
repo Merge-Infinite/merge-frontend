@@ -398,7 +398,10 @@ export const NFTMarket = () => {
               </Card>
             </div>
 
-            <div className="h-full overflow-y-auto" style={{ marginTop: 300 }}>
+            <div
+              className="h-full overflow-y-auto bg-white"
+              style={{ marginTop: 200 }}
+            >
               {loading ? (
                 <MarketplaceSkeleton />
               ) : filteredListings.length > 0 ? (
