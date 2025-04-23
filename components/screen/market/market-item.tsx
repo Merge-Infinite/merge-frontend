@@ -200,7 +200,7 @@ export const MarketItem = React.memo(
           arguments: [
             txb.object(user.kiosk.objectId),
             txb.object(user.kiosk.ownerCapId),
-            txb.pure.address(id),
+            txb.pure.address(nftId),
           ],
           typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
         });
@@ -242,6 +242,7 @@ export const MarketItem = React.memo(
           toast.error("Failed to delist NFT. Please try again.");
         }
       } catch (error: any) {
+        console.log(error);
         if (error.message === "Authentication required") {
           setOpenAuthDialog(true);
         } else {

@@ -1,6 +1,6 @@
-import { Button } from "@telegram-apps/telegram-ui";
 import { Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
 
 const CreateWallet = () => {
   const router = useRouter();
@@ -16,7 +16,7 @@ const CreateWallet = () => {
         onClick={() => {
           router.push("/wallet");
         }}
-        className="bg-[#a668ff] hover:bg-[#9655e8] text-black"
+        className="bg-[#a668ff] hover:bg-[#9655e8] text-black flex gap-2 text-white"
       >
         <Wallet className="mr-2 h-4 w-4" /> Create Wallet
       </Button>
