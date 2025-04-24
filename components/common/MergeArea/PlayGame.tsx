@@ -558,7 +558,6 @@ export default function PlayGame({}: PlayGameProps) {
                     ?.filter(
                       (element: any) => !element.isBasic && element.amount > 0
                     )
-                    .slice(0, 1)
                     .map((element: any) => {
                       // Count how many of this item are currently in use
                       const usedCount = Object.values(mergingBoxes).filter(
