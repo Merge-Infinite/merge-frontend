@@ -1,8 +1,8 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import PlayGame from "@/components/screen/play/play";
 import { initBackButton } from "@telegram-apps/sdk";
 
+import PlayGame from "@/components/screen/play/play";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

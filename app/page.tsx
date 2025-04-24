@@ -14,6 +14,7 @@ import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
   TabMode,
+  updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
 import { initBackButton, retrieveLaunchParams } from "@telegram-apps/sdk";
@@ -41,6 +42,7 @@ export default function Home() {
   const router = useRouter();
   useEffect(() => {
     backButton.hide();
+    dispatch(updateAppMode(AppMode.GAMES));
   }, []);
 
   useEffect(() => {

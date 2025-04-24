@@ -5,7 +5,6 @@ import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
 import IconHome from "../../../assets/icons/bag.svg";
 import IconHistory from "../../../assets/icons/history.svg";
 import IconNFT from "../../../assets/icons/nft.svg";
-import IconSwap from "../../../assets/icons/swap.svg";
 import { useFeatureFlagsWithNetwork } from "../../../hooks/useFeatureFlags";
 import type { Extendable, StyleExtendable } from "../../../types";
 import styles from "./index.module.scss";
@@ -95,7 +94,7 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
         alt="explore"
         title="Explore"
       /> */}
-
+      {/* 
       <MenuItem
         redDot={!clickedSwap}
         onClick={() => setClickedSwap(true)}
@@ -103,7 +102,7 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
         icon={<IconSwap />}
         alt="swap"
         title="Swap"
-      />
+      /> */}
 
       <MenuItem
         to="/transaction/flow"
