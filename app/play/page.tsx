@@ -3,19 +3,21 @@
 import { initBackButton } from "@telegram-apps/sdk";
 
 import PlayGame from "@/components/common/MergeArea/PlayGame";
-import { useUser } from "@/hooks/useUser";
+import { AppDispatch } from "@/lib/wallet/store";
+import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
+import { useDispatch } from "react-redux";
 export default function Home() {
   const [backButton] = initBackButton();
-  const { user } = useUser();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     backButton.show();
 
     backButton.on("click", () => {
       router.back();
+      dispatch(updateTabMode(TabMode.HOME));
     });
   }, []);
 
