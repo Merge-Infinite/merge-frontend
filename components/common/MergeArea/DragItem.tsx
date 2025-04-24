@@ -160,6 +160,17 @@ const DraggableBox = ({
     }
   }, [onRemove, instanceId]);
 
+  // Stop propagation of touch events on the remove button to prevent conflicts with draggable
+  const handleRemoveTouch = useCallback(
+    (e: React.TouchEvent) => {
+      e.stopPropagation();
+      if (instanceId) {
+        onRemove?.(instanceId);
+      }
+    },
+    [onRemove, instanceId]
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -195,13 +206,26 @@ const DraggableBox = ({
         {amount && amount > 0 ? `(${amount})` : ""}
       </div>
       {!isFromInventory && !isMerging && (
-        <Image
+        <div
+          className="p-2 flex items-center justify-center"
           onClick={handleRemove}
-          src="/images/remove.svg"
-          alt="fire"
-          width={18}
-          height={18}
-        />
+          onTouchEnd={handleRemoveTouch}
+          style={{
+            cursor: "pointer",
+            touchAction: "manipulation",
+            minWidth: "44px",
+            minHeight: "44px",
+            margin: "-12px", // Negative margin to maintain visual size while increasing hit area
+          }}
+        >
+          <Image
+            src="/images/remove.svg"
+            alt="Remove"
+            width={18}
+            height={18}
+            style={{ pointerEvents: "none" }}
+          />
+        </div>
       )}
       {isMerging && mergingTarget?.instanceId === instanceId && (
         <MergeLoadingAnimation />
