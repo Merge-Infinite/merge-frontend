@@ -74,7 +74,7 @@ export const RecipeDetail = ({ item }: { item: Item }) => {
 
       {!getRecipeApi?.isPending && (
         <div
-          className="flex flex-col justify-start items-start gap-1 overflow-y-auto"
+          className="flex flex-col justify-start items-start gap-1 overflow-y-auto flex-wrap"
           style={{
             height: "90%",
           }}
