@@ -60,7 +60,7 @@ export const RecipeDetail = ({ item }: { item: Item }) => {
   console.log(getRecipeApi?.isPending);
 
   return (
-    <div className="flex flex-col items-start h-full gap-4 mt-4 ">
+    <div className="flex flex-col items-start h-full gap-4 mt-4 w-full">
       {getRecipeApi?.isPending && (
         <div className="text-white text-center w-full">Loading recipes...</div>
       )}
@@ -74,7 +74,7 @@ export const RecipeDetail = ({ item }: { item: Item }) => {
 
       {!getRecipeApi?.isPending && (
         <div
-          className="flex flex-col justify-start items-start gap-1 overflow-y-auto flex-wrap"
+          className="flex flex-col justify-start items-start gap-3  w-full  overflow-y-auto "
           style={{
             height: "90%",
           }}
@@ -82,7 +82,7 @@ export const RecipeDetail = ({ item }: { item: Item }) => {
           {getRecipeApi?.data?.recipes?.map((recipe: Recipe, index: number) => (
             <div
               key={recipe.id}
-              className="self-stretch inline-flex justify-start items-center gap-1"
+              className="self-stretch inline-flex justify-start items-center gap-1 flex-wrap"
             >
               <div className="justify-start text-white font-normal font-['Sora'] leading-normal">
                 {index + 1}.
