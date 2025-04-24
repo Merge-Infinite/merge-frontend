@@ -9,16 +9,8 @@ import React, {
   useState,
 } from "react";
 import DraggableBox from "./DragItem";
-import { calculateDistance, getElementCenter } from "./dragUtilities";
-import { Coordinates } from "./types"; // Using our custom types
 
 export interface MergingAreaProps {
-  onDrop: (item: any, delta: Coordinates, clientOffset: Coordinates) => void;
-  onDropandMerge: (
-    targetInstanceId: string,
-    droppedItem: any,
-    isFromInventory: boolean
-  ) => void;
   mergingBoxes: { [key: string]: any };
   onRemove: (id: string) => void;
   mergingTarget: { [key: string]: any };
@@ -27,8 +19,6 @@ export interface MergingAreaProps {
 }
 
 export const MergingArea = ({
-  onDrop,
-  onDropandMerge,
   mergingBoxes,
   onRemove,
   mergingTarget,
@@ -46,39 +36,13 @@ export const MergingArea = ({
   }, [inventory]);
 
   // Setup droppable area with dnd-kit
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: "merging-area",
-  });
-
-  // Function to find the closest element to a point (used for merging)
-  const findClosestElement = useCallback(
-    (position: Coordinates, minDistance = 50) => {
-      if (!containerRef.current) return null;
-
-      let closestElement: Element | null = null;
-      let minDist = minDistance;
-
-      // Get all draggable elements in the container
-      const draggableElements = containerRef.current.querySelectorAll(
-        '[data-draggable="true"]'
-      );
-
-      draggableElements.forEach((element) => {
-        const elementCenter = getElementCenter(element as HTMLElement);
-        const distance = calculateDistance(position, elementCenter);
-
-        if (distance < minDist) {
-          minDist = distance;
-          closestElement = element;
-        }
-      });
-
-      return closestElement
-        ? closestElement.getAttribute("data-instance-id")
-        : null;
+    data: {
+      type: "merging-area",
+      accepts: "draggable-box",
     },
-    []
-  );
+  });
 
   // Memoize the handler for box removal
   const handleRemove = useCallback(
@@ -103,42 +67,6 @@ export const MergingArea = ({
       onRemove(id);
     },
     [onRemove, mergingBoxes, inventory]
-  );
-
-  // Update usedItems counter when items are merged
-  const handleDropAndMerge = useCallback(
-    (targetInstanceId: string, droppedItem: any) => {
-      // First check if the item being dropped is from inventory and has limited amount
-      if (droppedItem.isFromInventory) {
-        const originalId = droppedItem.originalId;
-        const inventoryItem = inventory.find(
-          (item) => item.itemId === originalId
-        );
-
-        if (inventoryItem && !inventoryItem.isBasic) {
-          // Calculate how many we've already used
-          const currentUsed = usedItems[originalId] || 0;
-
-          // Check if we have enough available
-          if (currentUsed >= inventoryItem.amount) {
-            return;
-          }
-
-          // Update the count of used items
-          setUsedItems((prev) => ({
-            ...prev,
-            [originalId]: (prev[originalId] || 0) + 1,
-          }));
-        }
-      }
-
-      onDropandMerge(
-        targetInstanceId,
-        droppedItem,
-        droppedItem.isFromInventory
-      );
-    },
-    [onDropandMerge, inventory, usedItems]
   );
 
   // Convert mergingBoxes object to array only when it changes
@@ -187,7 +115,6 @@ export const MergingArea = ({
           {...box}
           key={box.instanceId}
           isFromInventory={false}
-          onDrop={handleDropAndMerge}
           onRemove={handleRemove}
           isHidden={box.isHidden}
           isNew={box.isNew}
@@ -198,14 +125,7 @@ export const MergingArea = ({
         />
       );
     });
-  }, [
-    visibleBoxes,
-    inventory,
-    isMerging,
-    mergingTarget,
-    handleRemove,
-    handleDropAndMerge,
-  ]);
+  }, [visibleBoxes, inventory, isMerging, mergingTarget, handleRemove]);
 
   return (
     <div
@@ -215,6 +135,7 @@ export const MergingArea = ({
         containerRef.current = node;
       }}
       className="relative h-full will-change-contents"
+      data-merging-area="true"
     >
       {boxComponents}
     </div>

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cn } from "@/lib/utils";
-import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import Image from "next/image";
 import React, { useCallback, useMemo } from "react";
 import Emoji from "../Emoji";
@@ -70,12 +69,44 @@ const DraggableBox = ({
   );
 
   // Setup draggable with dnd-kit
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: instanceId || id,
-      data: itemData,
-      disabled: isDisabled || isMerging,
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: instanceId || id,
+    data: {
+      ...itemData,
+      type: "draggable-box",
+      instanceId: instanceId || id,
+      isFromInventory,
+    },
+    disabled: isDisabled || isMerging,
+  });
+
+  // Setup droppable as well - but only for items that aren't from inventory and aren't disabled
+  const { setNodeRef: setDropNodeRef, over } = useDroppable({
+    id: instanceId || id,
+    disabled: isFromInventory || isDisabled || isMerging,
+    data: {
+      accepts: "draggable-box",
+      instanceId: instanceId || id,
+    },
+  });
+
+  // Use both refs
+  const setNodeRef = useCallback(
+    (node: HTMLElement | null) => {
+      setDragNodeRef(node);
+      setDropNodeRef(node);
+    },
+    [setDragNodeRef, setDropNodeRef]
+  );
+
+  // Check if something is being dragged over this item
+  const isOver = !!over;
 
   // Memoize the style object
   const style = useMemo(() => {
@@ -88,19 +119,40 @@ const DraggableBox = ({
       cursor: isDisabled ? "not-allowed" : "grab",
       zIndex: isDragging ? 1000 : undefined,
       touchAction: "none", // Required by dnd-kit to work correctly with touch devices
+      width: "auto", // Ensure width is based on content
+      height: "auto", // Ensure height is based on content
+      transition: isDragging ? "none" : "box-shadow 0.2s ease", // Disable transitions during drag
     };
 
-    // Apply transform only when dragging
+    // Apply transform only when dragging, but don't scale
     if (isDragging && transform) {
       return {
         ...baseStyle,
-        transform: CSS.Transform.toString(transform),
-        opacity: 0.9,
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, // Simplified transform without scale
+        opacity: 0.5, // Make the original more transparent while dragging
+      };
+    }
+
+    // Add highlight effect when being dragged over (only for droppable items)
+    if (isOver && !isFromInventory && !isDisabled && !isMerging) {
+      return {
+        ...baseStyle,
+        boxShadow: "0 0 0 2px #3498db",
+        borderColor: "#3498db",
       };
     }
 
     return baseStyle;
-  }, [isDragging, isFromInventory, isDisabled, transform, left, top]);
+  }, [
+    isDragging,
+    isFromInventory,
+    isDisabled,
+    transform,
+    left,
+    top,
+    isOver,
+    isMerging,
+  ]);
 
   // Memoize the remove handler
   const handleRemove = useCallback(() => {
@@ -116,10 +168,18 @@ const DraggableBox = ({
         "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
         isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
         isDisabled && "bg-gray-200",
-        isHidden && "hidden"
+        isHidden && "hidden",
+        isOver &&
+          !isFromInventory &&
+          !isDisabled &&
+          !isMerging &&
+          "ring-2 ring-blue-500"
       )}
       style={style}
       data-draggable="true"
+      data-droppable={
+        !isFromInventory && !isDisabled && !isMerging ? "true" : "false"
+      }
       data-instance-id={instanceId}
       {...listeners}
       {...attributes}

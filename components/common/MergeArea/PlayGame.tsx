@@ -21,8 +21,8 @@ import { Coordinates } from "@dnd-kit/utilities";
 import { SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
-import Emoji from "../../common/Emoji";
-import GamePlayInfo from "../../common/play-info";
+import Emoji from "../Emoji";
+import GamePlayInfo from "../play-info";
 import DraggableBox from "./DragItem";
 import { adjustPositionWithinBounds, createUniqueId } from "./dragUtilities";
 import MergingArea from "./MergingArea";
@@ -126,12 +126,21 @@ export default function PlayGame({}: PlayGameProps) {
   // Handle drag end event
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over, delta } = event;
+
+    // Reset active states
     setActiveId(null);
     setActiveItem(null);
 
     if (!active) return;
 
-    const activeData = active.data.current as BoxItem;
+    // Get data from active item
+    const activeData = active.data.current as any;
+
+    if (!activeData) {
+      console.error("No data found in active item");
+      return;
+    }
+
     const isFromInventory = activeData.isFromInventory;
 
     // Get the client position from the event
@@ -150,24 +159,39 @@ export default function PlayGame({}: PlayGameProps) {
           : 0,
     } as Coordinates;
 
+    console.log("Drag end:", {
+      activeId: active.id,
+      activeData,
+      overId: over?.id,
+    });
+
     // If dropped over another specific item (for merging)
     if (over && over.id !== "merging-area" && over.id !== active.id) {
+      console.log("Attempting to merge with:", over.id);
       const targetInstanceId = over.id as string;
-      const targetBox = mergingBoxes[targetInstanceId];
 
-      if (targetBox) {
+      if (mergingBoxes[targetInstanceId]) {
+        console.log(
+          "Found target box in mergingBoxes, calling handleDropToMerge"
+        );
+        // Call merge function with fully filled activeData
         handleDropToMerge(
           targetInstanceId,
-          activeData,
-          isFromInventory || false
+          {
+            ...activeData,
+            id: activeData.id || active.id,
+            instanceId: activeData.instanceId || active.id,
+            isFromInventory: !!isFromInventory,
+          },
+          !!isFromInventory
         );
+        return; // Exit early after merge attempt
       }
     }
-    // If dropped anywhere in the merging area or no specific target
-    else {
-      // Handle as a general drop to the area
-      handleDrop(activeData, delta as any, clientPosition);
-    }
+
+    // If we get here, handle as a general drop to the area
+    console.log("Handling as general drop");
+    handleDrop(activeData, delta as any, clientPosition);
   };
 
   const handleDropToMerge = useCallback(
@@ -176,9 +200,18 @@ export default function PlayGame({}: PlayGameProps) {
       droppedItem: any,
       isFromInventory: boolean
     ) => {
+      console.log("handleDropToMerge called with:", {
+        targetInstanceId,
+        droppedItem,
+        isFromInventory,
+      });
+
       // If we have two items in merging area, combine them
       const targetBox = (mergingBoxes as any)[targetInstanceId];
-      if (!targetBox) return;
+      if (!targetBox) {
+        console.error("Target box not found:", targetInstanceId);
+        return;
+      }
 
       // Check if either item is from inventory and has limited amount
       const checkItemAvailability = (item: any) => {
@@ -206,6 +239,7 @@ export default function PlayGame({}: PlayGameProps) {
         !checkItemAvailability(targetBox) ||
         !checkItemAvailability(droppedItem)
       ) {
+        console.error("Item availability check failed");
         return;
       }
 
@@ -355,8 +389,8 @@ export default function PlayGame({}: PlayGameProps) {
         let left = Math.round(droppedItem.left + delta.x);
         let top = Math.round(droppedItem.top + delta.y);
 
-        // Get the container dimensions (assuming a container element with width and height)
-        const container = document.querySelector(".h-[40%]");
+        // Get the merging area container
+        const container = document.querySelector('[data-merging-area="true"]');
         if (container) {
           const containerRect = container.getBoundingClientRect();
 
@@ -395,7 +429,9 @@ export default function PlayGame({}: PlayGameProps) {
           clientOffset.y !== undefined
         ) {
           // For new drops, position relative to the drop area
-          const container = document.querySelector(".h-[40%]");
+          const container = document.querySelector(
+            '[data-merging-area="true"]'
+          );
           let left = Math.round(clientOffset.x - 60);
           let top = Math.round(clientOffset.y - 100);
 
@@ -456,6 +492,23 @@ export default function PlayGame({}: PlayGameProps) {
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        // Customize how items are visually transformed during drag
+        modifiers={[
+          // This modifier prevents scaling during drag
+          ({ transform }) => {
+            return {
+              ...transform,
+              scaleX: 1,
+              scaleY: 1,
+            };
+          },
+        ]}
+        // Disable DndContext default animations that cause flickering
+        measuring={{
+          droppable: {
+            strategy: "always",
+          },
+        }}
       >
         <div className="h-[40%] mt-0">
           <MergingArea

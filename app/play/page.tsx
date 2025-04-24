@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { initBackButton } from "@telegram-apps/sdk";
 
-import PlayGame from "@/components/screen/play/play";
+import PlayGame from "@/components/common/MergeArea/PlayGame";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
