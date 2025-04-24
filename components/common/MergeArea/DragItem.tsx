@@ -118,8 +118,7 @@ const DraggableBox = ({
       top,
       cursor: isDisabled ? "not-allowed" : "grab",
       zIndex: isDragging ? 1000 : undefined,
-      width: "auto", // Ensure width is based on content
-      height: "auto", // Ensure height is based on content
+
       transition: isDragging ? "none" : "box-shadow 0.2s ease",
       touchAction: "none",
     };
@@ -165,7 +164,7 @@ const DraggableBox = ({
     <div
       ref={setNodeRef}
       className={cn(
-        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-1 flex ",
+        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-1 flex h-fit",
         isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
         isDisabled && "bg-gray-200",
         isHidden && "hidden",

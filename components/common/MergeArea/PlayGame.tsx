@@ -550,7 +550,7 @@ export default function PlayGame({}: PlayGameProps) {
               Crafted elements:
             </div>
             <div className="flex flex-1 h-full">
-              <div className="flex flex-1 gap-2 inline-flex flex-wrap overflow-y-auto h-[60%]">
+              <div className="flex gap-2 inline-flex flex-wrap overflow-y-auto h-[60%]">
                 {isLoading ? (
                   <TagSkeleton />
                 ) : (
@@ -558,6 +558,7 @@ export default function PlayGame({}: PlayGameProps) {
                     ?.filter(
                       (element: any) => !element.isBasic && element.amount > 0
                     )
+                    .slice(0, 1)
                     .map((element: any) => {
                       // Count how many of this item are currently in use
                       const usedCount = Object.values(mergingBoxes).filter(
