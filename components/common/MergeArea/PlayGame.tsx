@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import TagSkeleton from "@/components/common/ElementSkeleton";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
@@ -9,7 +8,6 @@ import {
   DndContext,
   DragEndEvent,
   DragOverEvent,
-  DragOverlay,
   DragStartEvent,
   MouseSensor,
   rectIntersection,
@@ -21,7 +19,7 @@ import { Coordinates } from "@dnd-kit/utilities";
 import { SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
-import Emoji from "../Emoji";
+import TagSkeleton from "../ElementSkeleton";
 import GamePlayInfo from "../play-info";
 import DraggableBox from "./DragItem";
 import { adjustPositionWithinBounds, createUniqueId } from "./dragUtilities";
@@ -79,7 +77,7 @@ export default function PlayGame({}: PlayGameProps) {
     useSensor(TouchSensor, {
       // Press delay of 250ms, with tolerance of 5px of movement
       activationConstraint: {
-        delay: 250,
+        delay: 0,
         tolerance: 5,
       },
     })
@@ -484,7 +482,7 @@ export default function PlayGame({}: PlayGameProps) {
   }, []);
 
   return (
-    <div className="w-full h-full">
+    <div className="flex flex-col flex-1 w-full h-full no-scrollbar overflow-hidden">
       <GamePlayInfo />
       <DndContext
         sensors={sensors}
@@ -492,7 +490,6 @@ export default function PlayGame({}: PlayGameProps) {
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
-        // Customize how items are visually transformed during drag
         modifiers={[
           // This modifier prevents scaling during drag
           ({ transform }) => {
@@ -510,7 +507,7 @@ export default function PlayGame({}: PlayGameProps) {
           },
         }}
       >
-        <div className="h-[40%] mt-0">
+        <div className="h-[30%]">
           <MergingArea
             onDrop={handleDrop}
             onDropandMerge={handleDropToMerge}
@@ -521,7 +518,7 @@ export default function PlayGame({}: PlayGameProps) {
             inventory={inventory as any[]}
           />
         </div>
-        <div className="flex-col justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-3xl h-[50%] w-full">
+        <div className="flex-col flex-1 justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-xl h-[57%] w-full">
           <div className="w-full px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
             <SearchIcon className="w-5 h-5 text-white" />
             <Input
@@ -552,57 +549,44 @@ export default function PlayGame({}: PlayGameProps) {
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
-            <div className="relative justify-start items-center gap-2 inline-flex flex-wrap overflow-y-auto h-[120px] sm:h-[120px] md:h-[140px] lg:h-[160px] xl:h-[180px]">
-              {isLoading ? (
-                <TagSkeleton />
-              ) : (
-                (!isLoading && (inventory as any[]))
-                  ?.filter(
-                    (element: any) => !element.isBasic && element.amount > 0
-                  )
-                  .map((element: any) => {
-                    // Count how many of this item are currently in use
-                    const usedCount = Object.values(mergingBoxes).filter(
-                      (box: any) =>
-                        !box.isHidden &&
-                        (box.originalId === element.itemId ||
-                          box.id === element.itemId)
-                    ).length;
+            <div className="flex flex-1 h-full">
+              <div className="flex flex-1 gap-2 inline-flex flex-wrap overflow-y-auto h-[60%]">
+                {isLoading ? (
+                  <TagSkeleton />
+                ) : (
+                  (!isLoading && (inventory as any[]))
+                    ?.filter(
+                      (element: any) => !element.isBasic && element.amount > 0
+                    )
+                    .map((element: any) => {
+                      // Count how many of this item are currently in use
+                      const usedCount = Object.values(mergingBoxes).filter(
+                        (box: any) =>
+                          !box.isHidden &&
+                          (box.originalId === element.itemId ||
+                            box.id === element.itemId)
+                      ).length;
 
-                    // Check if we've used all available items
-                    const isDisabled = usedCount >= element.amount;
+                      // Check if we've used all available items
+                      const isDisabled = usedCount >= element.amount;
 
-                    return (
-                      <DraggableBox
-                        key={element.id}
-                        id={element.itemId}
-                        title={element.handle}
-                        emoji={element.emoji}
-                        amount={element.amount}
-                        isFromInventory={true}
-                        isDisabled={isDisabled}
-                      />
-                    );
-                  })
-              )}
+                      return (
+                        <DraggableBox
+                          key={element.id}
+                          id={element.itemId}
+                          title={element.handle}
+                          emoji={element.emoji}
+                          amount={element.amount}
+                          isFromInventory={true}
+                          isDisabled={isDisabled}
+                        />
+                      );
+                    })
+                )}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* DragOverlay shows a visual representation of the dragged item */}
-        <DragOverlay>
-          {activeId && activeItem ? (
-            <div className="px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex opacity-90">
-              <div className="text-black text-xs font-normal font-['Sora'] capitalize leading-normal">
-                <Emoji emoji={activeItem.emoji} size={18} />
-                {activeItem.title}
-                {activeItem.amount && activeItem.amount > 0
-                  ? `(${activeItem.amount})`
-                  : ""}
-              </div>
-            </div>
-          ) : null}
-        </DragOverlay>
       </DndContext>
     </div>
   );

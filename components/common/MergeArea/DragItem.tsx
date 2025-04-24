@@ -118,10 +118,10 @@ const DraggableBox = ({
       top,
       cursor: isDisabled ? "not-allowed" : "grab",
       zIndex: isDragging ? 1000 : undefined,
-      touchAction: "none", // Required by dnd-kit to work correctly with touch devices
       width: "auto", // Ensure width is based on content
       height: "auto", // Ensure height is based on content
-      transition: isDragging ? "none" : "box-shadow 0.2s ease", // Disable transitions during drag
+      transition: isDragging ? "none" : "box-shadow 0.2s ease",
+      touchAction: "none",
     };
 
     // Apply transform only when dragging, but don't scale
@@ -165,7 +165,7 @@ const DraggableBox = ({
     <div
       ref={setNodeRef}
       className={cn(
-        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
+        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-1 flex ",
         isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
         isDisabled && "bg-gray-200",
         isHidden && "hidden",
