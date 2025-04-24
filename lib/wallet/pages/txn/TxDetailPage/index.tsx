@@ -166,7 +166,7 @@ const TxDetailPage = (props: TxDetailPageProps) => {
         </div>
         <div className={"flex items-center gap-2"}>
           <Image
-            src={`/images/${txnDetail?.icon}.svg`}
+            src={`/images/Txn.svg`}
             alt={txnDetail?.title || ""}
             width={20}
             height={35}

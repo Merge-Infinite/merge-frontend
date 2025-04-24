@@ -3,7 +3,6 @@ import { default as classnames, default as classNames } from "classnames";
 import { ReactNode } from "react";
 import { useMatch, useNavigate, useResolvedPath } from "react-router-dom";
 import IconHome from "../../../assets/icons/bag.svg";
-import IconExplore from "../../../assets/icons/explore.svg";
 import IconHistory from "../../../assets/icons/history.svg";
 import IconNFT from "../../../assets/icons/nft.svg";
 import IconSwap from "../../../assets/icons/swap.svg";
@@ -90,12 +89,12 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
       }}
     >
       <MenuItem to="/home" icon={<IconHome />} alt="home" title="Wallet" />
-      <MenuItem
+      {/* <MenuItem
         to="/dapps"
         icon={<IconExplore />}
         alt="explore"
         title="Explore"
-      />
+      /> */}
 
       <MenuItem
         redDot={!clickedSwap}

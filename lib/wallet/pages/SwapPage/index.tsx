@@ -129,6 +129,8 @@ export default function SwapPage() {
       )
     : filteredData;
 
+  console.log("supportedToCoins", supportedToCoins);
+
   const buildSwapTransaction = (payload: any) => {
     if (!cetusSwapClient.current) {
       throw new Error("cetusSwapClient is not ready");
@@ -584,12 +586,12 @@ export default function SwapPage() {
       </div>
 
       <div className="min-h-[28px] mx-[24px] flex flex-col gap-2">
-        {warningMessage && (
+        {/* {warningMessage && (
           <Alert type="warn" className="break-words">
             {" "}
             {warningMessage}
           </Alert>
-        )}
+        )} */}
         {errorMessage && (
           <Alert type="error" className="break-words">
             {" "}
