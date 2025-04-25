@@ -79,7 +79,18 @@ const ForgetPassword = (props: ForgetPasswordProps) => {
             </FormControl>
           </div>
 
-          <Button type={"submit"} className={"mt-6"}>
+          <Button
+            type={"submit"}
+            onClick={async () => {
+              await apiClient.callFunc<null, undefined>(
+                "root",
+                "resetAppData",
+                null
+              );
+              await dispatch(resetAppContext()).unwrap();
+            }}
+            className={"mt-6"}
+          >
             Reset Merge Wallet
           </Button>
         </Form>
