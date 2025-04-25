@@ -119,7 +119,7 @@ export function OnchainBagScreen() {
             objectId: kioskObject.objectId,
             ownerCapId: kioskCapObject.objectId,
           });
-          refetch();
+          await refetch();
 
           toast.success("Kiosk created successfully!");
         }
