@@ -519,7 +519,7 @@ export default function PlayGame({}: PlayGameProps) {
           />
         </div>
         <div className="flex-col flex-1 justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-xl h-[57%] w-full">
-          <div className="w-full px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+          <div className="w-full px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4 z-1">
             <SearchIcon className="w-5 h-5 text-white" />
             <Input
               className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none"
@@ -527,7 +527,7 @@ export default function PlayGame({}: PlayGameProps) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex-col justify-start items-start gap-1 flex">
+          <div className="flex-col justify-start items-start gap-1 flex z-1">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Infinite elements:
             </div>
@@ -545,7 +545,7 @@ export default function PlayGame({}: PlayGameProps) {
                 ))}
             </div>
           </div>
-          <div className="flex-col justify-start items-start gap-1 flex h-full">
+          <div className="flex-col justify-start items-start gap-1 flex h-full z-10">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
