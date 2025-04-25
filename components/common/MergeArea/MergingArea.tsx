@@ -133,7 +133,7 @@ export const MergingArea = ({
         setNodeRef(node);
         containerRef.current = node;
       }}
-      className="relative h-full will-change-contents"
+      className="relative h-full will-change-contents w-full"
       data-merging-area="true"
     >
       {boxComponents}
