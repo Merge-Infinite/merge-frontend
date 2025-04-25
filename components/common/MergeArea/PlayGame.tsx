@@ -9,6 +9,7 @@ import {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
+  MeasuringStrategy,
   MouseSensor,
   rectIntersection,
   TouchSensor,
@@ -503,14 +504,12 @@ export default function PlayGame({}: PlayGameProps) {
         // Disable DndContext default animations that cause flickering
         measuring={{
           droppable: {
-            strategy: "always",
+            strategy: MeasuringStrategy.Always,
           },
         }}
       >
-        <div className="h-[30%]">
+        <div className="h-[30%] relative">
           <MergingArea
-            onDrop={handleDrop}
-            onDropandMerge={handleDropToMerge}
             mergingBoxes={mergingBoxes}
             onRemove={handleRemove}
             isMerging={mergeApi?.isPending ?? false}
@@ -518,7 +517,7 @@ export default function PlayGame({}: PlayGameProps) {
             inventory={inventory as any[]}
           />
         </div>
-        <div className="flex-col flex-1 justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-xl h-[57%] w-full">
+        <div className="flex-col flex-1 justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-xl h-[57%] w-full relative">
           <div className="w-full px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4 z-1">
             <SearchIcon className="w-5 h-5 text-white" />
             <Input
@@ -545,12 +544,12 @@ export default function PlayGame({}: PlayGameProps) {
                 ))}
             </div>
           </div>
-          <div className="flex-col justify-start items-start gap-1 flex h-full z-10">
+          <div className="flex-col justify-start items-start gap-1 flex h-full z-1000">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
             <div className="flex flex-1 h-full">
-              <div className="flex gap-2 inline-flex flex-wrap overflow-y-auto h-[60%]">
+              <div className="relative flex gap-2 inline-flex flex-wrap overflow-y-auto h-[60%]">
                 {isLoading ? (
                   <TagSkeleton />
                 ) : (

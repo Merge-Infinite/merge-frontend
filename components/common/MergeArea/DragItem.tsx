@@ -15,11 +15,9 @@ const DraggableBox = ({
   left,
   top,
   amount,
-  onDrop,
   onRemove,
   isHidden,
   originalId,
-  isNew,
   isFromInventory,
   isMerging,
   mergingTarget,
@@ -116,9 +114,9 @@ const DraggableBox = ({
       position: isFromInventory ? "static" : "absolute",
       left,
       top,
+      paddingLeft: "12px",
       cursor: isDisabled ? "not-allowed" : "grab",
-      zIndex: isDragging ? 1000 : undefined,
-
+      zIndex: isDragging ? 9999 : undefined,
       transition: isDragging ? "none" : "box-shadow 0.2s ease",
       touchAction: "none",
     };
@@ -175,7 +173,7 @@ const DraggableBox = ({
     <div
       ref={setNodeRef}
       className={cn(
-        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-1 flex h-fit",
+        "px-3 py-1 bg-white rounded-3xl justify-center items-center  flex h-fit z-1000",
         isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
         isDisabled && "bg-gray-200",
         isHidden && "hidden",
@@ -207,15 +205,14 @@ const DraggableBox = ({
       </div>
       {!isFromInventory && !isMerging && (
         <div
-          className="p-2 flex items-center justify-center"
+          className="flex items-center justify-center "
           onClick={handleRemove}
           onTouchEnd={handleRemoveTouch}
           style={{
             cursor: "pointer",
             touchAction: "manipulation",
-            minWidth: "44px",
-            minHeight: "44px",
-            margin: "-12px", // Negative margin to maintain visual size while increasing hit area
+            minWidth: "32px",
+            // margin: "-12px",
           }}
         >
           <Image

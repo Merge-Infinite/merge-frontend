@@ -130,7 +130,6 @@ export const MergingArea = ({
   return (
     <div
       ref={(node) => {
-        // Set both refs
         setNodeRef(node);
         containerRef.current = node;
       }}
