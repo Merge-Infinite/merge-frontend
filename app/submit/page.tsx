@@ -13,20 +13,20 @@ import {
 } from "@/components/ui/sheet";
 import { useAdsgram } from "@/hooks/useAdsgram";
 import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
 import { shortenName } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function SubmitItem() {
   const searchParams = useSearchParams();
   const itemChallengeId = searchParams.get("itemChallengeId");
-  const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
   const [backButton] = initBackButton();
   const router = useRouter();
-
+  const { user } = useUser();
   const fetchItemChallenge = useApi({
     key: ["item-challenge"],
     method: "GET",
@@ -43,7 +43,7 @@ export default function SubmitItem() {
     key: ["crafted-items-today"],
     method: "GET",
     url: `challenges/crafted-items/today?itemId=${fetchItemChallenge?.data?.item?.id}`,
-    enabled: false,
+    validateParams: () => !!fetchItemChallenge?.data?.item?.id,
   }).get;
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function SubmitItem() {
       router.back();
     });
     fetchItemChallenge?.refetch();
-  }, [fetchItemChallenge, fetchCraftedItemsToday]);
+  }, []);
 
   useEffect(() => {
     if (fetchItemChallenge?.data?.item?.id) {
@@ -71,6 +71,13 @@ export default function SubmitItem() {
     },
   });
 
+  const isEligible = useMemo(() => {
+    return (
+      user?.userBalance?.subscriptionEndDate &&
+      new Date(user?.userBalance?.subscriptionEndDate) > new Date()
+    );
+  }, [user?.userBalance?.subscriptionEndDate]);
+
   return (
     <div className="flex flex-col h-full gap-4 p-4">
       <div className="self-stretch justify-start items-center gap-2 inline-flex">
@@ -83,7 +90,13 @@ export default function SubmitItem() {
         <Button
           isLoading={isLoading}
           disabled={isLoading}
-          onClick={showAd}
+          onClick={() => {
+            if (!isEligible) {
+              showAd();
+            } else {
+              setIsRecipeDetailOpen(true);
+            }
+          }}
           className="px-3 py-1 rounded-3xl border border-white justify-center items-center gap-2 flex w-fit"
         >
           <div className="text-white text-xs font-normal leading-normal">
@@ -105,7 +118,7 @@ export default function SubmitItem() {
       </div>
       <div
         className={`flex px-3 py-1 rounded-3xl border border-[#333333] justify-center items-center gap-2 w-fit ${
-          fetchCraftedItemsToday?.data?.length > 0
+          fetchCraftedItemsToday?.data
             ? "bg-white text-[#333]"
             : "bg-[#333333] text-white"
         }`}
@@ -118,8 +131,7 @@ export default function SubmitItem() {
       <Button
         className="px-3 py-1  rounded-3xl justify-center items-center gap-2 inline-flex w-fit"
         disabled={
-          fetchCraftedItemsToday?.data?.length === 0 ||
-          submitItemChallenge?.isPending
+          !fetchCraftedItemsToday?.data || submitItemChallenge?.isPending
         }
         onClick={() => {
           submitItemChallenge?.mutateAsync({

@@ -29,7 +29,7 @@ export function PasscodeAuthDialog({
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSuccess: () => Promise<void>;
+  onSuccess: () => any;
 }) {
   const stableId = useId(); // Generate a stable ID for this instance
   const apiClient = useApiClient();
