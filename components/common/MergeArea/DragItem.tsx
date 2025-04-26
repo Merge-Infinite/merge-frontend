@@ -211,8 +211,8 @@ const DraggableBox = ({
           style={{
             cursor: "pointer",
             touchAction: "manipulation",
-            minWidth: "32px",
-            // margin: "-12px",
+            marginLeft: "8px",
+            padding: "2px 6px",
           }}
         >
           <Image
