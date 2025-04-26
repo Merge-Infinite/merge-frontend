@@ -376,7 +376,7 @@ export const NFTMarket = () => {
                       height={24}
                     />
                     <div className="text-center justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                      {profit}
+                      {profit || 0}
                     </div>
                   </div>
                   <Button
