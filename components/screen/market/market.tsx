@@ -24,7 +24,7 @@ import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
-import { SearchIcon, ShoppingCart, Wallet } from "lucide-react";
+import { SearchIcon, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -63,26 +63,6 @@ const MarketplaceSkeleton = () => (
           </div>
         </Card>
       ))}
-  </div>
-);
-
-// Wallet Connect Banner
-const WalletBanner = ({ onConnect }: { onConnect: () => void }) => (
-  <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2a1a3a] p-4 rounded-lg mt-4 flex flex-col sm:flex-row items-center justify-between ">
-    <div className="mb-4 sm:mb-0">
-      <h3 className="text-white text-lg font-['Sora'] mb-2">
-        Connect Your Wallet
-      </h3>
-      <p className="text-gray-400 text-sm">
-        Connect your wallet to start buying and selling NFTs
-      </p>
-    </div>
-    <Button
-      onClick={onConnect}
-      className="bg-[#a668ff] hover:bg-[#9655e8] text-white"
-    >
-      <Wallet className="mr-2 h-4 w-4" /> Connect Wallet
-    </Button>
   </div>
 );
 
@@ -341,7 +321,7 @@ export const NFTMarket = () => {
         {!initialized ? (
           <CreateWallet />
         ) : user && !user.kiosk ? (
-          <div className="flex flex-col gap-4 w-full h-full">
+          <div className="flex flex-col gap-4 w-full h-full mt-4 ">
             <div className="text-white text-2xl font-bold">
               Creating your kiosk...
             </div>
