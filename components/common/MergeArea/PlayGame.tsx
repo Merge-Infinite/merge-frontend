@@ -80,7 +80,7 @@ export default function PlayGame({}: PlayGameProps) {
     useSensor(TouchSensor, {
       // Press delay of 250ms, with tolerance of 5px of movement
       activationConstraint: {
-        delay: 250,
+        delay: 0,
         tolerance: 5,
       },
     })

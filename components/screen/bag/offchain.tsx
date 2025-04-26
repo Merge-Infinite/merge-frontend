@@ -114,6 +114,7 @@ export function OffchainBagScreen() {
   };
 
   const mintNFTs = useCallback(async () => {
+    console.log("mintNFTs", selectedItem, mintQuantity);
     if (!selectedItem || !mintQuantity || mintQuantity <= 0) {
       toast.error("Please select an item and enter a valid quantity");
       return null;
@@ -299,7 +300,7 @@ export function OffchainBagScreen() {
       <PasscodeAuthDialog
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}
-        onSuccess={mintNFTs}
+        onSuccess={() => {}}
       />
       <Dialog
         open={!!selectedItem}
