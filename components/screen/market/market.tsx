@@ -206,6 +206,9 @@ export const NFTMarket = () => {
       if (error.message === "Authentication required") {
         setOpenAuthDialog(true);
       } else {
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
       }
     }
   }, [address, authed]);
@@ -338,7 +341,11 @@ export const NFTMarket = () => {
         {!initialized ? (
           <CreateWallet />
         ) : user && !user.kiosk ? (
-          <WalletBanner onConnect={handleCreateKiosk} />
+          <div className="flex flex-col gap-4 w-full h-full">
+            <div className="text-white text-2xl font-bold">
+              Creating your kiosk...
+            </div>
+          </div>
         ) : (
           <div className="w-full h-full">
             <div className="flex flex-col rounded-3xl fixed top-12 left-4 right-4 gap-2">
