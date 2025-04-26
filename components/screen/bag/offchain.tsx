@@ -300,7 +300,6 @@ export function OffchainBagScreen() {
       <PasscodeAuthDialog
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}
-        onSuccess={() => {}}
       />
       <Dialog
         open={!!selectedItem}
