@@ -83,7 +83,7 @@ const Menu: React.FC<MenuProps> = (props: Extendable) => {
       )}
       style={{
         position: "fixed",
-        bottom: "10px",
+        bottom: "40px",
         width: "70%",
       }}
     >
