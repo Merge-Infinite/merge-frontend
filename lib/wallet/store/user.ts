@@ -1,11 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface UserBalance {
-  energyBalance: number;
-  coinBalance: number;
-  gemBalance: number;
-}
-
 export interface UserProfile {
   id: string;
   telegramId: string;

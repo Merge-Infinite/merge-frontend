@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/useUser";
-import { AppDispatch } from "@/lib/wallet/store";
+import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   TabMode,
   updateAuthed,
@@ -10,7 +10,7 @@ import {
 } from "@/lib/wallet/store/app-context";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 interface GamePlayInfoProps {
   explore?: number;
@@ -23,6 +23,7 @@ interface GamePlayInfoProps {
 export default function UserInfo({}: GamePlayInfoProps) {
   const router = useRouter();
   const { user } = useUser();
+  const userStore = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
   const clearData = async () => {
     // Clear localStorage
@@ -65,14 +66,15 @@ export default function UserInfo({}: GamePlayInfoProps) {
         >
           <Image src="/images/energy.svg" alt="energy" width={24} height={24} />
           <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-            {user?.userBalance?.energyBalance.toLocaleString() || 0}
+            {userStore?.profile?.userBalance?.energyBalance.toLocaleString() ||
+              0}
           </div>
           <Image src="/images/plus.svg" alt="energy" width={24} height={24} />
         </div>
         <div className="justify-start items-start gap-1 flex">
           <Image src="/images/m3r8.svg" alt="mask" width={24} height={24} />
           <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-            {user?.m3rBalance?.balance.toLocaleString() || 0}
+            {userStore?.profile?.m3rBalance?.balance.toLocaleString() || 0}
           </div>
         </div>
         <div
@@ -81,7 +83,7 @@ export default function UserInfo({}: GamePlayInfoProps) {
         >
           <Image src="/images/friend.svg" alt="mask" width={24} height={24} />
           <div className="text-center text-[#68ffd1] text-sm font-normal font-['Sora'] underline uppercase leading-normal">
-            {user?.friendCount || 0}
+            {userStore?.profile?.friendCount || 0}
           </div>
         </div>
       </div>

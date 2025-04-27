@@ -3,13 +3,13 @@
 import useAdsgram from "@/hooks/useAdsgram";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import { AppDispatch } from "@/lib/wallet/store";
+import { AppDispatch, RootState } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { ArrowLeftIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { RecipeDetail } from "../screen/play/recipe-detail";
 import { RecipeList } from "../screen/play/recipe-list";
@@ -26,6 +26,8 @@ interface GamePlayInfoProps {
 
 export default function GamePlayInfo({}: GamePlayInfoProps) {
   const { user, refetch } = useUser();
+  const userStore = useSelector((state: RootState) => state.user);
+
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const [isRecipeListOpen, setIsRecipeListOpen] = useState(false);
@@ -97,7 +99,8 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
               height={24}
             />
             <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-              {user?.userBalance?.energyBalance.toLocaleString()}/48
+              {userStore?.profile?.userBalance?.energyBalance.toLocaleString()}
+              /48
             </div>
           </div>
           <Image
