@@ -144,7 +144,7 @@ const MiTask = ({ type }: { type: string }) => {
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 h-full relative">
+    <div className="w-full flex flex-col gap-4 h-full] relative ">
       <Collapsible
         open={socialChannelsOpen}
         onOpenChange={setSocialChannelsOpen}

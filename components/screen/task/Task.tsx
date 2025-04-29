@@ -35,7 +35,7 @@ export const TaskScreen = () => {
     <div
       className="flex flex-col items-center justify-start h-full w-full"
       style={{
-        paddingBottom: 100,
+        paddingBottom: 170,
       }}
     >
       <Tabs defaultValue="mi" className="w-full h-full ">
@@ -59,13 +59,16 @@ export const TaskScreen = () => {
             SPECIAL
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="mi" className="overflow-y-auto h-full ]">
+        <TabsContent value="mi" className="overflow-y-auto h-full ">
           <MiTask type="mi" />
         </TabsContent>
         <TabsContent value="sui" className="overflow-y-auto h-full ">
           <MiTask type="sui" />
         </TabsContent>
-        <TabsContent value="special" className=" h-full overflow-y-auto ">
+        <TabsContent
+          value="special"
+          className=" h-full overflow-y-auto mb-[100px]"
+        >
           <MiTask type="special" />
         </TabsContent>
       </Tabs>
