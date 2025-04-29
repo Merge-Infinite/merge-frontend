@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/collapsible";
 import useApi from "@/hooks/useApi";
 import { useUtils } from "@telegram-apps/sdk-react";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { UsernameDialog } from "./UsernameDialog";
@@ -164,11 +163,12 @@ const MiTask = ({ type }: { type: string }) => {
           </div>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon" className="h-6 w-6 p-0">
-              {socialChannelsOpen ? (
-                <ChevronUp size={20} />
-              ) : (
-                <ChevronDown size={20} />
-              )}
+              <Image
+                src="/images/remove-black.svg"
+                alt="Social Channel"
+                width={20}
+                height={20}
+              />
             </Button>
           </CollapsibleTrigger>
         </CardHeader>
