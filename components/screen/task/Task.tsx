@@ -33,12 +33,12 @@ const suiTask = [
 export const TaskScreen = () => {
   return (
     <div
-      className="flex flex-col items-center justify-start"
+      className="flex flex-col items-center justify-start h-full w-full"
       style={{
         paddingBottom: 100,
       }}
     >
-      <Tabs defaultValue="mi" className="w-full h-full">
+      <Tabs defaultValue="mi" className="w-full h-full ">
         <TabsList className="flex justify-center gap-6 bg-transparent">
           <TabsTrigger
             value="mi"
@@ -59,22 +59,13 @@ export const TaskScreen = () => {
             SPECIAL
           </TabsTrigger>
         </TabsList>
-        <TabsContent
-          value="mi"
-          className="overflow-y-auto h-[var(--tg-viewport-height) - 100px]"
-        >
+        <TabsContent value="mi" className="overflow-y-auto h-full ]">
           <MiTask type="mi" />
         </TabsContent>
-        <TabsContent
-          value="sui"
-          className="overflow-y-auto h-[var(--tg-viewport-height) - 100px]"
-        >
+        <TabsContent value="sui" className="overflow-y-auto h-full ">
           <MiTask type="sui" />
         </TabsContent>
-        <TabsContent
-          value="special"
-          className="overflow-y-auto h-[var(--tg-viewport-height) - 100px]"
-        >
+        <TabsContent value="special" className=" h-full overflow-y-auto ">
           <MiTask type="special" />
         </TabsContent>
       </Tabs>

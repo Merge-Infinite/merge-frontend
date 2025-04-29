@@ -64,16 +64,14 @@ export function UsernameDialog({
   }, [task?.platform]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
       <DialogContent
-        className="w-full h-1/3 p-0 bg-[#121212] border-[#1f1f1f] text-white fixed bottom-0 top-auto rounded-t-xl rounded-b-none max-w-full"
-        style={{
-          height: 300,
-        }}
+        className="w-full top-[80%] p-0 bg-[#121212]  border-[#1f1f1f] text-white rounded-xl "
+        style={{}}
       >
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col h-full justify-between py-4"
+          className="flex flex-col h-full justify-between py-4 gap-4"
         >
           <DialogHeader className="pb-4 border-b border-[#333333]">
             <div
@@ -114,7 +112,7 @@ export function UsernameDialog({
           </DialogHeader>
 
           <div className="px-4 flex-1 h-full">
-            <div className="flex flex-col gap-2 mt-4">
+            <div className="flex flex-col gap-4">
               <label className="text-white text-sm font-normal">
                 Verification
               </label>

@@ -84,7 +84,7 @@ export default function Home() {
         <Tabs
           defaultValue={tabMode || "home"}
           value={tabMode}
-          className="w-full"
+          className="w-full h-full"
           onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
         >
           <TabsList
@@ -133,10 +133,10 @@ export default function Home() {
           <TabsContent value="bag" className="h-full">
             <BagScreen />
           </TabsContent>
-          <TabsContent value="task" className="h-full">
+          <TabsContent value="task" className="h-full ">
             <TaskScreen />
           </TabsContent>
-          <TabsContent value="shop" className="h-full">
+          <TabsContent value="shop" className="h-full ">
             <Shop />
           </TabsContent>
           <TabsContent value="leaderboard" className="h-full">
