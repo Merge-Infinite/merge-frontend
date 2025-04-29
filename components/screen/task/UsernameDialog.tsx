@@ -103,9 +103,7 @@ export function UsernameDialog({
                     }
                   }}
                 >
-                  <span className="text-neutral-950 text-xs font-bold underline">
-                    GO
-                  </span>
+                  <span className="text-neutral-950 text-xs font-bold">GO</span>
                 </Button>
               </div>
             </div>
