@@ -23,7 +23,7 @@ export const Leaderboard = () => {
   }, []);
   return (
     <div
-      className="flex flex-col items-center justify-start"
+      className="flex flex-col items-center justify-start p-4"
       style={{
         paddingBottom: 100,
       }}
