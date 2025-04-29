@@ -163,12 +163,21 @@ const MiTask = ({ type }: { type: string }) => {
           </div>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon" className="h-6 w-6 p-0">
-              <Image
-                src="/images/remove-black.svg"
-                alt="Social Channel"
-                width={20}
-                height={20}
-              />
+              {!socialChannelsOpen ? (
+                <Image
+                  src="/images/add.svg"
+                  alt="Social Channel"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                <Image
+                  src="/images/remove-black.svg"
+                  alt="Social Channel"
+                  width={20}
+                  height={20}
+                />
+              )}
             </Button>
           </CollapsibleTrigger>
         </CardHeader>
