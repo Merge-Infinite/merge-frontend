@@ -22,6 +22,7 @@ import { SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import GamePlayInfo from "../../common/play-info";
+import TagSkeleton from "../ElementSkeleton";
 import Emoji from "../Emoji";
 import DraggableBox from "./DragItem";
 import { adjustPositionWithinBounds, createUniqueId } from "./dragUtilities";
