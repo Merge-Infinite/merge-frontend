@@ -158,7 +158,9 @@ const MiTask = ({ type }: { type: string }) => {
               width={24}
               height={24}
             />
-            <h3 className="text-sm font-bold text-white">Social Channel</h3>
+            <h3 className="text-sm font-bold text-white">
+              {type === "special" ? "MI Special Challenge" : "Social Channel"}
+            </h3>
           </div>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon" className="h-6 w-6 p-0">
