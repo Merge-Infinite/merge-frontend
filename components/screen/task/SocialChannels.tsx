@@ -67,7 +67,6 @@ const MiTask = ({ type }: { type: string }) => {
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState<any>(null);
   const [socialChannelsOpen, setSocialChannelsOpen] = useState(true);
-  const [contributorsOpen, setContributorsOpen] = useState(false);
   const utils = useUtils();
 
   const taskList = useApi({
@@ -194,7 +193,7 @@ const MiTask = ({ type }: { type: string }) => {
         </CollapsibleContent>
       </Collapsible>
 
-      <Collapsible
+      {/* <Collapsible
         open={contributorsOpen}
         onOpenChange={setContributorsOpen}
         className="rounded-3xl border border-[#1f1f1f]"
@@ -224,12 +223,13 @@ const MiTask = ({ type }: { type: string }) => {
             <p className="text-sm text-muted-foreground">No contributors yet</p>
           </CardContent>
         </CollapsibleContent>
-      </Collapsible>
+      </Collapsible> */}
       <UsernameDialog
         open={open}
         onOpenChange={setOpen}
         onSubmit={handleSubmit}
         task={task}
+        answerType={task?.answerType}
       />
     </div>
   );

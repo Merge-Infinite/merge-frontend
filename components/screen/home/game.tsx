@@ -10,7 +10,7 @@ export function GameScreen() {
       <UserInfo />
       <div className="flex-col justify-start items-start gap-4 inline-flex">
         <ChallengeHeader />
-        <ChallengeGrid category="Daily" />
+        <ChallengeGrid category="Trend" />
       </div>
     </div>
   );

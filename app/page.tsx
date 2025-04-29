@@ -105,9 +105,9 @@ export default function Home() {
             <TabsTrigger value="task">
               <Image src="/images/task.svg" alt="logo" width={24} height={24} />
             </TabsTrigger>
-            <TabsTrigger value="leaderboard">
+            {/* <TabsTrigger value="leaderboard">
               <Image src="/images/rank.svg" alt="logo" width={24} height={24} />
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="bag">
               <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
             </TabsTrigger>

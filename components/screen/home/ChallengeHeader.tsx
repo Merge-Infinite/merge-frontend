@@ -3,8 +3,10 @@
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 export default function ChallengeHeader() {
+  const router = useRouter();
   const { user } = useUser();
   const fetchPoints = useApi({
     key: ["total-points"],
@@ -30,7 +32,12 @@ export default function ChallengeHeader() {
             {fetchPoints?.data?.totalPoints.toLocaleString()} Points
           </div>
         </div>
-        <div className="justify-start items-start gap-1 flex">
+        <div
+          className="justify-start items-start gap-1 flex"
+          onClick={() => {
+            router.push("/leaderboard");
+          }}
+        >
           <Image src="/images/rank.svg" alt="rank" width={24} height={24} />
           <div className="text-center text-[#68ffd1] text-sm font-normal font-['Sora'] underline uppercase leading-normal">
             Rank: ?

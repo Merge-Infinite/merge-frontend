@@ -17,6 +17,7 @@ interface UsernameDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (username: string) => void;
   task: any;
+  answerType: string;
 }
 
 export function UsernameDialog({
@@ -24,6 +25,7 @@ export function UsernameDialog({
   onOpenChange,
   onSubmit,
   task,
+  answerType,
 }: UsernameDialogProps) {
   const [username, setUsername] = useState("");
   const utils = useUtils();
@@ -43,6 +45,19 @@ export function UsernameDialog({
         return "/images/reddit.svg";
       case "discord":
         return "/images/discord.svg";
+      case "tiktok":
+        return "/images/tiktok.svg";
+      case "x":
+        return "/images/twitter.svg";
+      case "instagram":
+        return "/images/instagram.svg";
+      case "youtube":
+        return "/images/youtube.svg";
+      case "twitch":
+        return "/images/twitch.svg";
+      case "facebook":
+        return "/images/facebook.svg";
+
       default:
         return "/images/m3r8_symbol.svg";
     }
@@ -75,9 +90,9 @@ export function UsernameDialog({
                   height={24}
                   className="w-6 h-6"
                 />
-                <span className="text-white font-normal">
+                {/* <span className="text-white font-normal">
                   {task?.description || "Task"}
-                </span>
+                </span> */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -107,8 +122,12 @@ export function UsernameDialog({
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="bg-[#141414] border-[#333333] rounded-3xl h-10 text-[#5c5c5c]"
-                placeholder="Type Your Username..."
+                className="bg-[#141414] border-[#333333] rounded-3xl h-10 text-[#fff]"
+                placeholder={
+                  answerType === "api"
+                    ? "Type Your Username..."
+                    : "Type Your answer"
+                }
                 autoComplete="off"
               />
               <span className="text-white text-sm font-normal">
