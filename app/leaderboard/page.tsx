@@ -3,8 +3,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import LeaderboardTab from "@/components/screen/leaderboard/leaderboard-tab";
-import React from "react";
+import { AppDispatch } from "@/lib/wallet/store";
+import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
+import { initBackButton } from "@telegram-apps/sdk";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
 export const Leaderboard = () => {
+  const [backButton] = initBackButton();
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => {
+    backButton.show();
+
+    backButton.on("click", () => {
+      router.back();
+      dispatch(updateTabMode(TabMode.HOME));
+    });
+  }, []);
   return (
     <div
       className="flex flex-col items-center justify-start"
