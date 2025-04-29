@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import TagSkeleton from "@/components/common/ElementSkeleton";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
@@ -293,7 +292,7 @@ export default function PlayGame({}: PlayGameProps) {
                 ))}
             </div>
           </div>
-          <div className="flex-col justify-start items-start gap-1 flex h-full">
+          {/* <div className="flex-col justify-start items-start gap-1 flex h-full">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
@@ -331,7 +330,7 @@ export default function PlayGame({}: PlayGameProps) {
                   })
               )}
             </div>
-          </div>
+          </div> */}
         </div>
       </DndProvider>
     </div>

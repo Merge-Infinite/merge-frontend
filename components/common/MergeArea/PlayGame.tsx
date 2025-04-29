@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import TagSkeleton from "@/components/common/ElementSkeleton";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
@@ -532,7 +531,7 @@ export default function PlayGame({}: PlayGameProps) {
             inventory={inventory as any[]}
           />
         </div>
-        <div className="flex-col flex-1 justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-xl h-[57%] w-full relative">
+        <div className="flex-col flex-1 justify-start items-start gap-5 inline-flex px-3 py-2 bg-[#141414] rounded-xl h-[47%] w-full relative">
           <div className="w-full px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
             <SearchIcon className="w-5 h-5 text-white" />
             <Input
