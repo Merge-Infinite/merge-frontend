@@ -27,7 +27,11 @@ const SocialChannelItem = ({
   onClick?: () => void;
 }) => {
   return (
-    <div className="flex justify-between items-center py-2 px-1 w-full">
+    <div
+      className={`flex justify-between items-center py-2 px-1 w-full ${
+        status === "verified" ? "opacity-50" : ""
+      }`}
+    >
       <div className="flex-1">
         <p className="text-sm font-normal text-white">{title}</p>
         <div className="flex items-center gap-2">
@@ -40,24 +44,33 @@ const SocialChannelItem = ({
           <span className="text-sm text-white">{reward}</span>
         </div>
       </div>
-      <Button
-        variant="default"
-        size="sm"
-        className={`bg-primary hover:bg-purple-600 rounded-full px-4 h-8 w-fit ${
-          status === "pending" ? "bg-white" : ""
-        }`}
-        disabled={status === "verified"}
-        isLoading={isLoading}
-        onClick={onClick}
-      >
-        <span className="text-xs text-black font-normal uppercase ">
-          {status === "verified"
-            ? "Completed"
-            : status === "pending"
-            ? "Verify"
-            : "Go"}
-        </span>
-      </Button>
+      {status !== "verified" ? (
+        <Button
+          variant="default"
+          size="sm"
+          className={`bg-primary hover:bg-purple-600 rounded-full px-4 h-8 w-fit ${
+            status === "pending" ? "bg-white" : ""
+          }`}
+          disabled={status === "verified"}
+          isLoading={isLoading}
+          onClick={onClick}
+        >
+          <span className="text-xs text-black font-normal uppercase ">
+            {status === "verified"
+              ? "Completed"
+              : status === "pending"
+              ? "Verify"
+              : "Go"}
+          </span>
+        </Button>
+      ) : (
+        <Image
+          src="/images/green-success.svg"
+          alt="Social Channel"
+          width={20}
+          height={20}
+        />
+      )}
     </div>
   );
 };
