@@ -563,7 +563,7 @@ export default function PlayGame({}: PlayGameProps) {
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
-            <div className="relative justify-start items-start gap-2 inline-flex flex-wrap overflow-y-auto h-full">
+            <div className="relative justify-start items-start gap-2 inline-flex flex-wrap overflow-y-auto h-full h-[150px] md:h-[150px] lg:h-[180px] xl:h-2300px]">
               {isLoading ? (
                 <TagSkeleton />
               ) : (
