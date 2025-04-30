@@ -41,7 +41,9 @@ export const LeaderboardTab = () => {
                       width={20}
                       height={20}
                     />
-                    <span className="text-emerald-300 underline">{100}</span>
+                    <span className="text-emerald-300 underline">
+                      {getLeaderboard?.data?.event?.eventData?.prize || "?"}
+                    </span>
                   </div>
                 </SheetTrigger>
                 <SheetContent
