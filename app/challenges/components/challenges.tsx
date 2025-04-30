@@ -47,7 +47,7 @@ export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
   return (
     <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex">
       {!!fetchTrendChallenges?.data && (
-        <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex">
+        <div className="w-full  flex-col justify-start items-start gap-2 inline-flex">
           <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
             Trending Challenges
           </div>

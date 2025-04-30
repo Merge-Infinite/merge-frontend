@@ -29,7 +29,7 @@ export default function ChallengeItem({
       className={`px-3 py-1 rounded-3xl justify-center items-center gap-2 flex ${bgClass} ${remainingClasses} border border-[#333333]`}
       onClick={() => {
         if (!isActive) return;
-        router.push(`/challenges?day=${number}&&type=daily`);
+        router.push(`/challenges?type=trend`);
       }}
     >
       <div
