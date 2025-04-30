@@ -8,6 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import useApi from "@/hooks/useApi";
+import { useUser } from "@/hooks/useUser";
 import { useUtils } from "@telegram-apps/sdk-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
@@ -80,6 +81,7 @@ const MiTask = ({ type }: { type: string }) => {
   const [task, setTask] = useState<any>(null);
   const [socialChannelsOpen, setSocialChannelsOpen] = useState(true);
   const utils = useUtils();
+  const { refetch } = useUser();
 
   const taskList = useApi({
     key: ["taskList"],
@@ -116,9 +118,10 @@ const MiTask = ({ type }: { type: string }) => {
         socialTaskId: taskId,
         userIdentifier: userIdentifier,
       });
-      userTaskList?.refetch();
+      await userTaskList?.refetch();
+      await refetch();
     },
-    [verifyTask, userTaskList]
+    [verifyTask, userTaskList, refetch]
   );
 
   const onStartTask = useCallback(
