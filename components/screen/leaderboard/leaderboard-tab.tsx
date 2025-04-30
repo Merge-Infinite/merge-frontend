@@ -41,7 +41,7 @@ export const LeaderboardTab = () => {
                       width={20}
                       height={20}
                     />
-                    <span className="text-emerald-300 underline">{500}</span>
+                    <span className="text-emerald-300 underline">{100}</span>
                   </div>
                 </SheetTrigger>
                 <SheetContent
