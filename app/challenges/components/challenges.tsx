@@ -49,7 +49,7 @@ export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
       {!!fetchTrendChallenges?.data && (
         <div className="w-full  flex-col justify-start items-start gap-2 inline-flex">
           <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
-            Trending Challenges
+            Special challenge
           </div>
           <div className="self-stretch justify-start items-center gap-2 inline-flex flex-wrap">
             {fetchTrendChallenges?.isPending ? (
