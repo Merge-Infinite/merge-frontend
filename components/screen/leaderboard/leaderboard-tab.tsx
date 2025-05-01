@@ -115,7 +115,7 @@ export const LeaderboardTab = () => {
         <CardContent className="p-0 mt-2">
           <ScrollArea className="h-full">
             <div className="flex flex-col gap-4">
-              {/* {getLeaderboard?.data?.leaderboard?.map(
+              {getLeaderboard?.data?.leaderboard?.map(
                 (entry: any, index: number) => (
                   <div key={index} className={`flex items-start gap-2 `}>
                     <RankMedal rank={entry.rank} />
@@ -149,7 +149,7 @@ export const LeaderboardTab = () => {
                     </div>
                   </div>
                 )
-              )} */}
+              )}
             </div>
           </ScrollArea>
         </CardContent>
