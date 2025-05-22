@@ -14,13 +14,6 @@ interface UseKioskItemsOptions {
   pollingInterval?: number;
 }
 
-/**
- * React hook to fetch items from multiple Sui kiosks
- *
- * @param kioskIds Array of kiosk object IDs to fetch items from
- * @param options Configuration options for the hook
- * @returns Object containing items, loading state, error state, and refetch function
- */
 export function useMarketPlace(
   kioskId?: string,
   options: UseKioskItemsOptions = {}

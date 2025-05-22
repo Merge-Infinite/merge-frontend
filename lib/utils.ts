@@ -51,9 +51,12 @@ export const POLICY_ID =
 export const NFT_MODULE_NAME = "element_nft";
 
 export const MINT_NFT_FEE = 0.05;
+export const GENERATION_FEE = 0.01;
+
 export const suiClient = new SuiClient({
   url: getFullnodeUrl(process.env.NEXT_PUBLIC_SUI_NETWORK as any),
 });
+
 export const SELLER_ADDRESS =
   "0x9a1057730e9062b2819c52acc40cd06d7c990d6152a6754a231f1ca1b849521a";
 export const MARKET_MINT_FEE =
@@ -62,7 +65,16 @@ export const ADMIN_ADDRESS =
   "0xce1b022dd5633fae11efabc9a48c871637b66c2f3e608929cf8fd4ba7683e205";
 export const MARKET_FEE =
   "0x3c6540da727b07eee28b7da498930ad1cc337775079e3424cc6266333179b080";
+
+export const CREATURE_NFT_PACKAGE_ID =
+  "0x77e4547a82e270b12216d01a49e58838287202375efe2cd97570223d9b6cdac4";
+export const COLLECTION_OBJECT_ID =
+  "0x2f53f92e4b0e2700d1239fe6a89090b89578496bece23fc97c03967e57c1cc80";
+export const CREATURE_NFT_MODULE_NAME = "creature_nft";
+export const CREATURE_NFT_ADMIN_CAP =
+  "0xc685660b8eac2fa721f5ebbea59ead30213a28ccbd0ad9ba2043318700bd31f2";
+
 export const kioskClient = new KioskClient({
-  client: suiClient,
+  client: suiClient as any,
   network: process.env.NEXT_PUBLIC_SUI_NETWORK as Network,
 });

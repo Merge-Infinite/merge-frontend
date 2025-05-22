@@ -315,7 +315,7 @@ export const CardItem = React.memo(
             </CardContent>
 
             <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline">
-              {formatAddress(id)}
+              #{formatAddress(id)}
             </div>
 
             <div className="w-full flex justify-between items-center gap-2">

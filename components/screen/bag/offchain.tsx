@@ -170,8 +170,6 @@ export function OffchainBagScreen() {
         { withAuth: true }
       );
 
-      // console.log("response", response);
-
       if (response && (response as any).signature) {
         const result = await mintNFTsApi?.mutateAsync({
           transactionBlockBytes: (response as any).transactionBlockBytes,

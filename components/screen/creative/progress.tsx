@@ -1,0 +1,121 @@
+"use client";
+import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import creativeApi from "@/lib/api/creative";
+import { formatAddress } from "@mysten/sui/utils";
+import Image from "next/image";
+import { useEffect } from "react";
+
+export const NFTGenerationJobStatus = {
+  PENDING: "PENDING",
+  GENERATING_IMAGE: "GENERATING_IMAGE",
+  UPLOADING_IPFS: "UPLOADING_IPFS",
+  MINTING: "MINTING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+};
+
+const mappingStatusToText = {
+  [NFTGenerationJobStatus.PENDING]: "Pending",
+  [NFTGenerationJobStatus.GENERATING_IMAGE]: "Generating Image",
+  [NFTGenerationJobStatus.UPLOADING_IPFS]: "Uploading IPFS",
+  [NFTGenerationJobStatus.MINTING]: "Minting",
+  [NFTGenerationJobStatus.COMPLETED]: "Completed",
+  [NFTGenerationJobStatus.FAILED]: "Failed",
+};
+
+const mappingStatusToBadgeColor = {
+  [NFTGenerationJobStatus.PENDING]: "#ffebad",
+  [NFTGenerationJobStatus.GENERATING_IMAGE]: "#ffebad",
+  [NFTGenerationJobStatus.UPLOADING_IPFS]: "#ffebad",
+  [NFTGenerationJobStatus.MINTING]: "#ffebad",
+  [NFTGenerationJobStatus.COMPLETED]: "#99ffc6",
+  [NFTGenerationJobStatus.FAILED]: "#ff1744",
+};
+
+const mappingStatusToBadgeTextColor = {
+  [NFTGenerationJobStatus.PENDING]: "#b78401",
+  [NFTGenerationJobStatus.GENERATING_IMAGE]: "#b78401",
+  [NFTGenerationJobStatus.UPLOADING_IPFS]: "#b78401",
+  [NFTGenerationJobStatus.MINTING]: "#b78401",
+  [NFTGenerationJobStatus.COMPLETED]: "#009093",
+  [NFTGenerationJobStatus.FAILED]: "#fff",
+};
+
+const CreatureCustomizer = () => {
+  const {
+    data: nftJobs,
+    isLoading: nftJobsLoading,
+    refetch: refetchNftJobs,
+  } = creativeApi.getNftJob.useQuery();
+
+  useEffect(() => {
+    refetchNftJobs();
+  }, []);
+
+  return (
+    <div className="flex justify-start items-start gap-4 grid grid-cols-2">
+      {nftJobsLoading ? (
+        <SkeletonCard />
+      ) : (
+        <>
+          {(nftJobs as any[])?.map((nft) => (
+            <Card className="w-44 bg-transparent border-none" key={nft.id}>
+              <CardContent className="p-0 flex flex-col items-center gap-2">
+                <div className="w-44 h-44 bg-zinc-800 rounded-2xl flex justify-center items-center overflow-hidden">
+                  {nft.blobId && (
+                    <Image
+                      src={`https://wal.gg/${nft.blobId}`}
+                      alt={nft.name}
+                      width={176}
+                      height={176}
+                    />
+                  )}
+                </div>
+                {nft.transactionHash && (
+                  <div
+                    onClick={() => {
+                      window.open(
+                        `https://suivision.xyz/txblock/${nft.transactionHash}`,
+                        "_blank"
+                      );
+                    }}
+                    className="text-emerald-300 text-sm font-normal underline leading-normal cursor-pointer"
+                  >
+                    #{formatAddress(nft.transactionHash)}
+                  </div>
+                )}
+                <div className="text-white text-sm font-normal leading-normal text-center">
+                  {nft.name}
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="w-full justify-center bg-white text-black hover:bg-white font-['Sora'] rounded-3xl py-1 text-xs"
+                  style={{
+                    backgroundColor:
+                      mappingStatusToBadgeColor[
+                        nft.status as keyof typeof mappingStatusToBadgeColor
+                      ],
+                    color:
+                      mappingStatusToBadgeTextColor[
+                        nft.status as keyof typeof mappingStatusToBadgeTextColor
+                      ],
+                  }}
+                >
+                  {
+                    mappingStatusToText[
+                      nft.status as keyof typeof mappingStatusToText
+                    ]
+                  }
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default CreatureCustomizer;

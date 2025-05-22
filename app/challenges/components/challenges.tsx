@@ -42,8 +42,6 @@ export const ChallengeTab = ({ day, type }: { day: string; type: string }) => {
     fetchTrendChallenges?.refetch();
   }, []);
 
-  console.log(fetchTrendChallenges?.data);
-
   return (
     <div className="w-full h-full flex-col justify-start items-start gap-2 inline-flex">
       {!!fetchTrendChallenges?.data && (

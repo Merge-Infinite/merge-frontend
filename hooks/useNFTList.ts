@@ -1,5 +1,5 @@
 // hooks/useNFTList.ts
-import { NFT_MODULE_NAME, NFT_PACKAGE_ID, suiClient } from "@/lib/utils";
+import { suiClient } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,13 +13,14 @@ export interface NFT {
 }
 
 interface UseNFTListOptions {
+  structType: string;
   refreshInterval?: number;
   autoFetch?: boolean;
   walletAddress?: string;
 }
 
 export function useNFTList(options?: UseNFTListOptions) {
-  const [nfts, setNfts] = useState<NFT[]>([]);
+  const [nfts, setNfts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -28,9 +29,8 @@ export function useNFTList(options?: UseNFTListOptions) {
 
   // Fetch NFTs owned by the connected wallet
   const fetchNFTs = useCallback(async () => {
-    console.log("fetchNFTs", walletAddress);
-    if (!walletAddress) {
-      setError(new Error("No wallet address available"));
+    if (!walletAddress || !options?.structType) {
+      setError(new Error("No wallet address or struct type available"));
       return;
     }
 
@@ -42,7 +42,7 @@ export function useNFTList(options?: UseNFTListOptions) {
       const { data } = await suiClient.getOwnedObjects({
         owner: walletAddress,
         filter: {
-          StructType: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"ElementNFT"}`,
+          StructType: options?.structType,
         },
         options: {
           showContent: true,
@@ -50,18 +50,9 @@ export function useNFTList(options?: UseNFTListOptions) {
         },
       });
       if (data && data.length > 0) {
-        const nftList = data.map(({ data }) => {
-          const display = data?.display?.data;
-          console.log(data);
-          return {
-            id: data!.objectId,
-            name: display!.name || "Element NFT",
-            amount: display!.amount || 0,
-            itemId: Number(display!.itemId),
-          };
-        });
+        console.log(data);
 
-        setNfts(nftList);
+        setNfts(data);
       } else {
         setNfts([]);
       }

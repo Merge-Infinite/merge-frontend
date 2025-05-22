@@ -3,10 +3,18 @@
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useNFTList } from "@/hooks/useNFTList";
 import { useUser } from "@/hooks/useUser";
+import {
+  CREATURE_NFT_MODULE_NAME,
+  CREATURE_NFT_PACKAGE_ID,
+  NFT_MODULE_NAME,
+  NFT_PACKAGE_ID,
+} from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -17,11 +25,13 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { Transaction } from "@mysten/sui/transactions";
+import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { CardItem } from "./onchain-item";
+
 export function OnchainBagScreen() {
   const apiClient = useApiClient();
   const { user, refetch } = useUser();
@@ -38,6 +48,19 @@ export function OnchainBagScreen() {
     walletAddress: address,
     refreshInterval: undefined,
     autoFetch: true,
+    structType: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"ElementNFT"}`,
+  });
+
+  const {
+    nfts: creatureNfts,
+    loading: creatureNftsLoading,
+    error: creatureNftsError,
+    refresh: creatureNftsRefresh,
+  } = useNFTList({
+    walletAddress: address,
+    refreshInterval: undefined,
+    autoFetch: true,
+    structType: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {
@@ -140,6 +163,8 @@ export function OnchainBagScreen() {
     }
   }, [user, authed, address]);
 
+  console.log(creatureNfts);
+
   return (
     <div className="flex flex-col gap-4 w-full h-full">
       {!initialized ? (
@@ -172,16 +197,71 @@ export function OnchainBagScreen() {
             {loading ? (
               <SkeletonCard />
             ) : (
-              nfts.map((card, index) => (
-                <CardItem
-                  key={index}
-                  element={card.name}
-                  amount={card.amount}
-                  emoji={card.emoji}
-                  itemId={card.itemId}
-                  id={card.id}
-                />
-              ))
+              nfts
+                .map((nft) => {
+                  const display = nft?.data?.display?.data;
+                  return {
+                    id: nft!.data.objectId,
+                    name: display?.name || "Element NFT",
+                    amount: display?.amount || 0,
+                    itemId: Number(display?.itemId),
+                  };
+                })
+                .map((card, index) => (
+                  <CardItem
+                    key={index}
+                    element={card.name}
+                    amount={card.amount}
+                    emoji={card.emoji}
+                    itemId={card.itemId}
+                    id={card.id}
+                  />
+                ))
+            )}
+
+            {creatureNftsLoading ? (
+              <SkeletonCard />
+            ) : (
+              creatureNfts
+                .map(({ data }) => {
+                  const metadata = data?.content?.fields.metadata;
+                  return {
+                    id: data!.objectId,
+                    name: metadata?.fields?.name || "Creature NFT",
+                    imageUrl: metadata?.fields?.image_uri || "",
+                  };
+                })
+                .map((card, index) => (
+                  <Card className="w-44 bg-transparent border-none">
+                    <CardContent className="p-0 flex flex-col items-center gap-2">
+                      {/* Image Container */}
+                      <Image
+                        src={`https://wal.gg/${card.imageUrl}`}
+                        alt="Project preview"
+                        width={176}
+                        height={176}
+                        className="rounded-2xl"
+                      />
+
+                      {/* Hash ID */}
+                      <div className="text-emerald-300 text-sm font-normal underline leading-normal">
+                        #{formatAddress(card.id)}
+                      </div>
+
+                      <div className="text-white text-sm font-normal leading-normal text-center">
+                        {card.name}
+                      </div>
+
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-44 h-6 px-4 bg-white hover:bg-gray-100 text-black rounded-3xl text-xs font-normal uppercase leading-normal"
+                      >
+                        Stake
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
             )}
           </div>
         </div>
