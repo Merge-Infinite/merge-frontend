@@ -68,6 +68,12 @@ export function OffchainBagScreen() {
   }, [address, appContext.accountId, appContext.authed]);
 
   useEffect(() => {
+    if (!appContext.authed) {
+      setOpenAuthDialog(true);
+    }
+  }, [appContext.authed]);
+
+  useEffect(() => {
     const fetchItems = async () => {
       setInitialLoading(true);
       try {
@@ -80,11 +86,7 @@ export function OffchainBagScreen() {
     fetchItems();
   }, []);
 
-  useEffect(() => {
-    if (!appContext.authed) {
-      setOpenAuthDialog(true);
-    }
-  }, [appContext.authed]);
+
 
   const handleItemClick = (item) => {
     setSelectedItem(item);

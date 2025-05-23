@@ -54,8 +54,8 @@ const CreatureCustomizer = () => {
   const [selectedFeature, setSelectedFeature] = useState("");
   const [elementDialog, setElementDialog] = useState(false);
   const [quantity, setQuantity] = useState("1");
-  const [topic, setTopic] = useState("brainrot");
-  const [creatureName, setCreatureName] = useState("Tralalero Tralala");
+  const [topic, setTopic] = useState("");
+  const [creatureName, setCreatureName] = useState("");
   const [searchText, setSearchText] = useState("");
   const [debouncedText] = useDebounce(searchText, 500);
   const [mintBottomSheetOpen, setMintBottomSheetOpen] = useState(false);
@@ -98,6 +98,53 @@ const CreatureCustomizer = () => {
       limits[feature as keyof typeof limits] -
       (selectedElements[feature as keyof typeof selectedElements]?.length || 0)
     );
+  };
+
+  // Validation function to check if all required fields are filled
+  const validateMintRequirements = () => {
+    const missingFields = [];
+
+    // Check if topic is selected
+    if (!topic || topic.trim() === "") {
+      missingFields.push("Topic");
+    }
+
+    // Check if creature name is filled
+    if (!creatureName || creatureName.trim() === "") {
+      missingFields.push("Creature Name");
+    }
+
+    // Check if all required elements are selected
+    const requiredFeatures = [
+      "Style",
+      "Material",
+      "Head",
+      "Body",
+      "Hand",
+      "Leg",
+      "Environment",
+    ];
+    const missingFeatures = requiredFeatures.filter((feature) => {
+      const selected = selectedElements[feature];
+      return !selected || selected.length === 0;
+    });
+
+    if (missingFeatures.length > 0) {
+      missingFields.push(
+        ...missingFeatures.map((feature) => `${feature} element`)
+      );
+    }
+
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+    };
+  };
+
+  // Check if mint button should be enabled
+  const isMintEnabled = () => {
+    const validation = validateMintRequirements();
+    return validation.isValid && !isLoading && !isPending;
   };
 
   useEffect(() => {
@@ -206,12 +253,29 @@ const CreatureCustomizer = () => {
     });
   };
 
+  // Handle mint button click with validation
+  const handleMintButtonClick = () => {
+    const validation = validateMintRequirements();
+
+    if (!validation.isValid) {
+      const missingText = validation.missingFields.join(", ");
+      toast.error(`Please complete the following: ${missingText}`);
+      return;
+    }
+
+    setMintBottomSheetOpen(true);
+  };
+
   const handleMintClick = async () => {
     try {
-      if (!topic || !creatureName) {
-        toast.error("Please fill in all fields");
+      // Double-check validation before proceeding
+      const validation = validateMintRequirements();
+      if (!validation.isValid) {
+        const missingText = validation.missingFields.join(", ");
+        toast.error(`Please complete the following: ${missingText}`);
         return;
       }
+
       startLoading();
       const paymentTx = new Transaction();
 
@@ -250,6 +314,7 @@ const CreatureCustomizer = () => {
       }
     } catch (error) {
       console.error(error);
+      toast.error("Failed to mint creature. Please try again.");
     } finally {
       stopLoading();
     }
@@ -262,9 +327,9 @@ const CreatureCustomizer = () => {
         setOpen={(open) => setOpenAuthDialog(open)}
       />
       <div className="w-full">
-        <Select onValueChange={(value) => setTopic(value)}>
+        <Select onValueChange={(value) => setTopic(value)} value={topic}>
           <SelectTrigger className="w-full bg-[#1f1f1f] text-white rounded-2xl border-none">
-            <SelectValue className="text-white" placeholder="Brainrot" />
+            <SelectValue className="text-white" placeholder="Select Topic" />
           </SelectTrigger>
           <SelectContent className="bg-[#1f1f1f] text-white border-[#333333]">
             <SelectItem value="brainrot">Brainrot</SelectItem>
@@ -277,6 +342,7 @@ const CreatureCustomizer = () => {
       <Input
         value={creatureName}
         onChange={(e) => setCreatureName(e.target.value)}
+        placeholder="Enter creature name"
         className="bg-[#141414] text-white border-[#333333] rounded-[32px] font-bold"
       />
 
@@ -370,8 +436,13 @@ const CreatureCustomizer = () => {
 
       {/* Mint Button */}
       <Button
-        className="mt-2 w-full bg-[#a668ff] text-neutral-950 rounded-3xl uppercase"
-        onClick={() => setMintBottomSheetOpen(true)}
+        className={`mt-2 w-full rounded-3xl uppercase ${
+          isMintEnabled()
+            ? "bg-[#a668ff] text-neutral-950 hover:bg-[#9555e6]"
+            : "bg-[#4a4a4a] text-[#888888] cursor-not-allowed"
+        }`}
+        onClick={handleMintButtonClick}
+        disabled={!isMintEnabled()}
       >
         Mint
       </Button>
@@ -536,33 +607,6 @@ const CreatureCustomizer = () => {
               </div>
 
               <div className="flex-1 inline-flex flex-col justify-start items-start gap-4">
-                {/* Countdown timer */}
-                {/* <div className="self-stretch px-3 py-1 bg-[#a668ff] rounded-3xl inline-flex justify-center items-center gap-2">
-                  <div className="text-center justify-start text-neutral-950 text-xs font-normal uppercase leading-normal">
-                    {remainingTime}
-                  </div>
-                </div> */}
-
-                {/* Regenerate controls */}
-                {/* <div className="self-stretch inline-flex justify-center items-center gap-1">
-                  <div className="w-4 h-4 relative">
-                    <div className="w-px h-2 left-[12.33px] top-[7.48px] absolute bg-white" />
-                    <div className="w-1.5 h-1 left-[7.19px] top-[4.62px] absolute bg-white" />
-                  </div>
-                  <Button
-                    variant="secondary"
-                    className="flex-1 px-3 py-1 bg-white rounded-3xl flex justify-center items-center gap-2"
-                  >
-                    <div className="justify-start text-black text-xs font-normal uppercase leading-normal">
-                      re-generate
-                    </div>
-                  </Button>
-                  <div className="w-4 h-4 relative">
-                    <div className="w-2 h-0 left-[3.67px] top-[8px] absolute outline outline-[1.50px] outline-offset-[-0.75px] outline-white" />
-                    <div className="w-[2.67px] h-1.5 left-[9px] top-[5px] absolute outline outline-[1.50px] outline-offset-[-0.75px] outline-white" />
-                  </div>
-                </div> */}
-
                 {/* Subscription info */}
                 <div className="self-stretch justify-start text-neutral-600 text-xs font-normal leading-none">
                   Subscription accounts will get previews and 3 times

@@ -163,7 +163,6 @@ export function OnchainBagScreen() {
     }
   }, [user, authed, address]);
 
-  console.log(creatureNfts);
 
   return (
     <div className="flex flex-col gap-4 w-full h-full">
@@ -271,6 +270,7 @@ export function OnchainBagScreen() {
         setOpen={(open) => setOpenAuthDialog(open)}
         onSuccess={async () => {
           await refresh();
+          await creatureNftsRefresh();
         }}
       />
     </div>
