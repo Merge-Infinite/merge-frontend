@@ -74,6 +74,8 @@ export const CREATURE_NFT_MODULE_NAME = "creature_nft";
 export const CREATURE_NFT_ADMIN_CAP =
   "0xc685660b8eac2fa721f5ebbea59ead30213a28ccbd0ad9ba2043318700bd31f2";
 
+export const FEE_ADDRESS =
+  "0x9a1057730e9062b2819c52acc40cd06d7c990d6152a6754a231f1ca1b849521a";
 export const kioskClient = new KioskClient({
   client: suiClient as any,
   network: process.env.NEXT_PUBLIC_SUI_NETWORK as Network,

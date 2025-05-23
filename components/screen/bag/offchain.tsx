@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
-import { ADMIN_ADDRESS, MARKET_MINT_FEE, MINT_NFT_FEE } from "@/lib/utils";
+import { ADMIN_ADDRESS, FEE_ADDRESS, MINT_NFT_FEE } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -86,8 +86,6 @@ export function OffchainBagScreen() {
     fetchItems();
   }, []);
 
-
-
   const handleItemClick = (item) => {
     setSelectedItem(item);
     // Default to 1 as the mint quantity for better UX
@@ -153,7 +151,7 @@ export function OffchainBagScreen() {
       // Transfer the combined fee to the fee collection address
       paymentTx.transferObjects([gasFeeAmount], ADMIN_ADDRESS);
 
-      paymentTx.transferObjects([mintFeeAmount], MARKET_MINT_FEE);
+      paymentTx.transferObjects([mintFeeAmount], FEE_ADDRESS);
 
       const response = await apiClient.callFunc<
         SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,

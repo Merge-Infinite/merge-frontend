@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import {
-  MARKET_FEE,
+  FEE_ADDRESS,
   mists_to_sui,
   NFT_MODULE_NAME,
   NFT_PACKAGE_ID,
@@ -120,7 +120,7 @@ export const MarketItem = React.memo(
         txb.transferObjects([nft], txb.pure.address(address));
         // Calculate 3% fee for the platform owner
         const feeAmount = Math.floor(Number(price) * 0.03);
-        const platformOwnerAddress = MARKET_FEE;
+        const platformOwnerAddress = FEE_ADDRESS;
         if (feeAmount <= 0) return;
 
         const feeCoin = txb.splitCoins(txb.gas, [feeAmount]);
