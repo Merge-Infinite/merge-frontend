@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import Image from "next/image";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import Emoji from "../Emoji";
 import MergeLoadingAnimation from "../MergeLoadingAnimation";
 
@@ -22,6 +22,7 @@ const DraggableBox = ({
   isMerging,
   mergingTarget,
   isDisabled,
+  isNew,
 }: {
   id: string;
   instanceId?: string;
@@ -40,11 +41,13 @@ const DraggableBox = ({
   mergingTarget?: { [key: string]: any };
   isDisabled?: boolean;
 }) => {
-  // Create the item data to be passed during drag
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  // Create the item data to be passed during drag - memoized for performance
   const itemData = useMemo(
     () => ({
       id,
-      instanceId,
+      instanceId: instanceId || id,
       title,
       emoji,
       left,
@@ -60,13 +63,13 @@ const DraggableBox = ({
       emoji,
       left,
       top,
+      originalId,
       isFromInventory,
       amount,
-      originalId,
     ]
   );
 
-  // Setup draggable with dnd-kit
+  // Setup draggable with dnd-kit - optimized for performance
   const {
     attributes,
     listeners,
@@ -78,14 +81,12 @@ const DraggableBox = ({
     data: {
       ...itemData,
       type: "draggable-box",
-      instanceId: instanceId || id,
-      isFromInventory,
     },
     disabled: isDisabled || isMerging,
   });
 
-  // Setup droppable as well - but only for items that aren't from inventory and aren't disabled
-  const { setNodeRef: setDropNodeRef, over } = useDroppable({
+  // Setup droppable - only for items that can receive drops
+  const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
     id: instanceId || id,
     disabled: isFromInventory || isDisabled || isMerging,
     data: {
@@ -94,96 +95,153 @@ const DraggableBox = ({
     },
   });
 
-  // Use both refs
+  // Combine refs efficiently
   const setNodeRef = useCallback(
-    (node: HTMLElement | null) => {
+    (node: HTMLDivElement | null) => {
+      elementRef.current = node;
       setDragNodeRef(node);
       setDropNodeRef(node);
     },
     [setDragNodeRef, setDropNodeRef]
   );
 
-  // Check if something is being dragged over this item
-  const isOver = !!over;
-
-  // Memoize the style object
+  // Optimized style calculation with better performance
   const style = useMemo(() => {
-    // Base styles that apply to both dragging and non-dragging states
     const baseStyle: React.CSSProperties = {
-      opacity: isDisabled ? 0.5 : 1,
       position: isFromInventory ? "static" : "absolute",
-      left,
-      top,
-      paddingLeft: "12px",
-      cursor: isDisabled ? "not-allowed" : "grab",
-      zIndex: isDragging ? 9999 : undefined,
-      transition: isDragging ? "none" : "box-shadow 0.2s ease",
+      left: left,
+      top: top,
+      cursor: isDisabled ? "not-allowed" : isDragging ? "grabbing" : "grab",
       touchAction: "none",
+      willChange: isDragging ? "transform" : "auto",
+      backfaceVisibility: "hidden", // Prevents flickering
+      WebkitBackfaceVisibility: "hidden",
     };
 
-    // Apply transform only when dragging, but don't scale
+    // Handle dragging state with hardware acceleration
     if (isDragging && transform) {
       return {
         ...baseStyle,
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, // Simplified transform without scale
-        opacity: 0.5, // Make the original more transparent while dragging
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: 0.6,
+        zIndex: 1000,
+        transition: "none",
       };
     }
 
-    // Add highlight effect when being dragged over (only for droppable items)
-    if (isOver && !isFromInventory && !isDisabled && !isMerging) {
-      return {
-        ...baseStyle,
-        boxShadow: "0 0 0 2px #3498db",
-        borderColor: "#3498db",
-      };
+    // Handle opacity states
+    if (isDisabled) {
+      baseStyle.opacity = 0.5;
+    } else if (isHidden) {
+      baseStyle.opacity = 0;
+      baseStyle.pointerEvents = "none";
+    } else {
+      baseStyle.opacity = 1;
+    }
+
+    // Smooth transitions when not dragging
+    if (!isDragging) {
+      baseStyle.transition =
+        "opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease";
     }
 
     return baseStyle;
+  }, [isDragging, isFromInventory, isDisabled, isHidden, transform, left, top]);
+
+  // Optimized class calculation
+  const className = useMemo(() => {
+    const classes = [
+      "px-3 py-1 rounded-3xl justify-center items-center flex h-fit relative",
+      "select-none", // Prevent text selection during drag
+    ];
+
+    // Background colors
+    if (isMerging && mergingTarget?.instanceId === instanceId) {
+      classes.push("bg-gray-300");
+    } else if (isDisabled) {
+      classes.push("bg-gray-200");
+    } else {
+      classes.push("bg-white");
+    }
+
+    // Visibility
+    if (isHidden) {
+      classes.push("invisible");
+    }
+
+    // Hover and interaction states
+    if (isOver && !isFromInventory && !isDisabled && !isMerging) {
+      classes.push("ring-2 ring-blue-400 shadow-lg");
+    }
+
+    // New item animation
+    if (isNew && !isDragging) {
+      classes.push("animate-pulse");
+    }
+
+    return cn(...classes);
   }, [
-    isDragging,
-    isFromInventory,
-    isDisabled,
-    transform,
-    left,
-    top,
-    isOver,
     isMerging,
+    mergingTarget?.instanceId,
+    instanceId,
+    isDisabled,
+    isHidden,
+    isOver,
+    isFromInventory,
+    isNew,
+    isDragging,
   ]);
 
-  // Memoize the remove handler
-  const handleRemove = useCallback(() => {
-    if (instanceId) {
-      onRemove?.(instanceId);
-    }
-  }, [onRemove, instanceId]);
+  // Optimized text class calculation
+  const textClassName = useMemo(() => {
+    const classes = [
+      "text-xs font-normal font-['Sora'] capitalize leading-normal flex items-center gap-1",
+    ];
 
-  // Stop propagation of touch events on the remove button to prevent conflicts with draggable
-  const handleRemoveTouch = useCallback(
-    (e: React.TouchEvent) => {
+    if (isMerging && mergingTarget?.instanceId === instanceId) {
+      classes.push("opacity-0");
+    } else if (isDisabled) {
+      classes.push("text-gray-500");
+    } else {
+      classes.push("text-black");
+    }
+
+    return cn(...classes);
+  }, [isMerging, mergingTarget?.instanceId, instanceId, isDisabled]);
+
+  // Memoized event handlers
+  const handleRemove = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
       e.stopPropagation();
-      if (instanceId) {
-        onRemove?.(instanceId);
+      if (instanceId && onRemove) {
+        onRemove(instanceId);
       }
     },
     [onRemove, instanceId]
   );
 
+  // Prevent context menu during drag
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      if (isDragging) {
+        e.preventDefault();
+      }
+    },
+    [isDragging]
+  );
+
+  // Don't render if hidden (better performance than CSS)
+  if (isHidden) {
+    return null;
+  }
+
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        "px-3 py-1 bg-white rounded-3xl justify-center items-center  flex h-fit z-1000",
-        isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
-        isDisabled && "bg-gray-200",
-        isHidden && "hidden",
-        isOver &&
-          !isFromInventory &&
-          !isDisabled &&
-          !isMerging &&
-          "ring-2 ring-blue-500"
-      )}
+      className={className}
       style={style}
+      onContextMenu={handleContextMenu}
       data-draggable="true"
       data-droppable={
         !isFromInventory && !isDisabled && !isMerging ? "true" : "false"
@@ -192,60 +250,78 @@ const DraggableBox = ({
       {...listeners}
       {...attributes}
     >
-      <div
-        className={cn(
-          "text-black text-xs font-normal font-['Sora'] capitalize leading-normal",
-          isMerging && mergingTarget?.instanceId === instanceId && "opacity-0",
-          isDisabled && "text-gray-500"
-        )}
-      >
+      <div className={textClassName}>
         <Emoji emoji={emoji} size={18} />
-        {title}
-        {amount && amount > 0 ? `(${amount})` : ""}
+        <span>
+          {title}
+          {amount && amount > 0 && ` (${amount})`}
+        </span>
       </div>
+
+      {/* Remove button - only show for items in merging area */}
       {!isFromInventory && !isMerging && (
-        <div
-          className="flex items-center justify-center "
+        <button
+          type="button"
+          className="ml-2 p-1 rounded-full hover:bg-gray-100 transition-colors duration-150 touch-manipulation"
           onClick={handleRemove}
-          onTouchEnd={handleRemoveTouch}
-          style={{
-            cursor: "pointer",
-            touchAction: "manipulation",
-            marginLeft: "8px",
-            padding: "2px 6px",
-          }}
+          onTouchEnd={handleRemove}
+          aria-label="Remove item"
+          tabIndex={-1} // Prevent tab focus during drag operations
         >
           <Image
             src="/images/remove.svg"
-            alt="Remove"
-            width={18}
-            height={18}
-            style={{ pointerEvents: "none" }}
+            alt=""
+            width={16}
+            height={16}
+            className="pointer-events-none"
+            loading="lazy"
           />
-        </div>
+        </button>
       )}
+
+      {/* Merge loading animation */}
       {isMerging && mergingTarget?.instanceId === instanceId && (
-        <MergeLoadingAnimation />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <MergeLoadingAnimation />
+        </div>
       )}
     </div>
   );
 };
 
-// Use React.memo with a custom comparison function for optimal re-rendering
-export default React.memo(
-  DraggableBox,
-  (prevProps, nextProps) =>
-    prevProps.id === nextProps.id &&
-    prevProps.instanceId === nextProps.instanceId &&
-    prevProps.title === nextProps.title &&
-    prevProps.emoji === nextProps.emoji &&
-    prevProps.left === nextProps.left &&
-    prevProps.top === nextProps.top &&
-    prevProps.amount === nextProps.amount &&
-    prevProps.isFromInventory === nextProps.isFromInventory &&
-    prevProps.isMerging === nextProps.isMerging &&
-    prevProps.mergingTarget === nextProps.mergingTarget &&
-    prevProps.isHidden === nextProps.isHidden &&
-    prevProps.isDisabled === nextProps.isDisabled &&
-    prevProps.originalId === nextProps.originalId
-);
+// Highly optimized comparison function
+const arePropsEqual = (prevProps: any, nextProps: any) => {
+  // Quick reference checks first (most likely to change)
+  if (prevProps.isDragging !== nextProps.isDragging) return false;
+  if (prevProps.isOver !== nextProps.isOver) return false;
+  if (prevProps.isMerging !== nextProps.isMerging) return false;
+  if (prevProps.isHidden !== nextProps.isHidden) return false;
+  if (prevProps.isNew !== nextProps.isNew) return false;
+  if (prevProps.isDisabled !== nextProps.isDisabled) return false;
+
+  // Position checks (common during drag)
+  if (prevProps.left !== nextProps.left) return false;
+  if (prevProps.top !== nextProps.top) return false;
+
+  // Identity checks
+  if (prevProps.id !== nextProps.id) return false;
+  if (prevProps.instanceId !== nextProps.instanceId) return false;
+  if (prevProps.originalId !== nextProps.originalId) return false;
+
+  // Content checks (less likely to change)
+  if (prevProps.title !== nextProps.title) return false;
+  if (prevProps.emoji !== nextProps.emoji) return false;
+  if (prevProps.amount !== nextProps.amount) return false;
+  if (prevProps.isFromInventory !== nextProps.isFromInventory) return false;
+
+  // Reference checks (functions/objects)
+  if (prevProps.onRemove !== nextProps.onRemove) return false;
+  if (
+    prevProps.mergingTarget?.instanceId !== nextProps.mergingTarget?.instanceId
+  )
+    return false;
+
+  return true;
+};
+
+export default React.memo(DraggableBox, arePropsEqual);
