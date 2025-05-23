@@ -17,9 +17,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Coordinates } from "@dnd-kit/utilities";
 import { SearchIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import GamePlayInfo from "../../common/play-info";
 import TagSkeleton from "../ElementSkeleton";
@@ -58,6 +57,11 @@ export default function PlayGame({}: PlayGameProps) {
   const [debouncedText] = useDebounce(search, 1000);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<BoxItem | null>(null);
+  // Track current mouse/touch position for accurate drop positioning
+  const [currentPointer, setCurrentPointer] = useState<{
+    x: number;
+    y: number;
+  }>({ x: 0, y: 0 });
 
   const { inventory, refetchInventory, refetch, isLoading } =
     useUser(debouncedText);
@@ -68,135 +72,164 @@ export default function PlayGame({}: PlayGameProps) {
     url: "user/craft-word",
   }).post;
 
-  // Configure sensors for both mouse and touch
-  // We can use either the built-in sensors or our custom ones
+  // Track mouse/touch position globally
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setCurrentPointer({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        setCurrentPointer({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("touchmove", handleTouchMove);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
+
+  // Optimized sensors with better activation constraints
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      // Require the mouse to move by 5 pixels before activating
       activationConstraint: {
-        distance: 5,
+        distance: 3, // Reduced from 5 for better responsiveness
       },
     }),
     useSensor(TouchSensor, {
-      // Press delay of 250ms, with tolerance of 5px of movement
       activationConstraint: {
         delay: 0,
-        tolerance: 5,
+        tolerance: 3, // Reduced from 5 for better responsiveness
       },
     })
   );
-
-  // For custom sensors, we would use this pattern:
-  // import { CustomMouseSensor, CustomTouchSensor } from './CustomSensors';
-  // const sensors = useSensors(
-  //   useSensor(CustomMouseSensor, {
-  //     activationConstraint: { distance: 5 },
-  //   }),
-  //   useSensor(CustomTouchSensor, {
-  //     activationConstraint: { delay: 250, tolerance: 5 },
-  //   })
-  // );
 
   useEffect(() => {
     refetchInventory?.();
   }, [debouncedText]);
 
   // Handle drag start event
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
     setActiveItem(active.data.current as BoxItem);
-  };
+  }, []);
 
   // Handle drag over event - used for merging items
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { active, over } = event;
 
-    // Prevent self-dropping
-    if (!over || active.id === over.id) return;
+      // Prevent self-dropping
+      if (!over || active.id === over.id) return;
 
-    const activeData = active.data.current as BoxItem;
-    const overData = mergingBoxes[over.id as string];
+      const activeData = active.data.current as BoxItem;
+      const overData = mergingBoxes[over.id as string];
 
-    if (overData && activeData) {
-      // Prepare for merging
-      setTargetBox(overData);
-    }
-  };
+      if (overData && activeData) {
+        // Prepare for merging
+        setTargetBox(overData);
+      }
+    },
+    [mergingBoxes]
+  );
 
   // Handle drag end event
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over, delta } = event;
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over, delta } = event;
 
-    // Get the exact client position from the event
-    const clientPosition = {
-      x:
-        event.activatorEvent instanceof MouseEvent
-          ? event.activatorEvent.clientX
-          : event.activatorEvent instanceof TouchEvent
-          ? event.activatorEvent.touches[0].clientX
-          : 0,
-      y:
-        event.activatorEvent instanceof MouseEvent
-          ? event.activatorEvent.clientY
-          : event.activatorEvent instanceof TouchEvent
-          ? event.activatorEvent.touches[0].clientY
-          : 0,
-    } as Coordinates;
+      // Reset active states
+      setActiveId(null);
+      setActiveItem(null);
 
-    // Reset active states
-    setActiveId(null);
-    setActiveItem(null);
+      if (!active) return;
 
-    if (!active) return;
+      // Get data from active item
+      const activeData = active.data.current as any;
 
-    // Get data from active item
-    const activeData = active.data.current as any;
-
-    if (!activeData) {
-      console.error("No data found in active item");
-      return;
-    }
-
-    const isFromInventory = activeData.isFromInventory;
-
-    console.log("Drag end:", {
-      activeId: active.id,
-      activeData,
-      overId: over?.id,
-      clientPosition,
-    });
-
-    // If dropped over another specific item (for merging)
-    if (over && over.id !== "merging-area" && over.id !== active.id) {
-      console.log("Attempting to merge with:", over.id);
-      const targetInstanceId = over.id as string;
-
-      if (mergingBoxes[targetInstanceId]) {
-        console.log(
-          "Found target box in mergingBoxes, calling handleDropToMerge"
-        );
-        // Call merge function with fully filled activeData
-        handleDropToMerge(
-          targetInstanceId,
-          {
-            ...activeData,
-            id: activeData.id || active.id,
-            instanceId: activeData.instanceId || active.id,
-            isFromInventory: !!isFromInventory,
-          },
-          !!isFromInventory
-        );
-        return; // Exit early after merge attempt
+      if (!activeData) {
+        console.error("No data found in active item");
+        return;
       }
-    }
 
-    // If we get here, handle as a general drop to the area
-    console.log("Handling as general drop at position:", clientPosition);
+      const isFromInventory = activeData.isFromInventory;
 
-    // Pass the exact client position for precise placement
-    handleDrop(activeData, delta as any, clientPosition);
-  };
+      // If dropped over another specific item (for merging)
+      if (over && over.id !== "merging-area" && over.id !== active.id) {
+        const targetInstanceId = over.id as string;
+
+        if (mergingBoxes[targetInstanceId]) {
+          // Call merge function with fully filled activeData
+          handleDropToMerge(
+            targetInstanceId,
+            {
+              ...activeData,
+              id: activeData.id || active.id,
+              instanceId: activeData.instanceId || active.id,
+              isFromInventory: !!isFromInventory,
+            },
+            !!isFromInventory
+          );
+          return; // Exit early after merge attempt
+        }
+      }
+
+      // For items dropped on the merging area, calculate position from current pointer
+      if (over && over.id === "merging-area") {
+        const container = document.querySelector('[data-merging-area="true"]');
+        if (!container) return;
+
+        const containerRect = container.getBoundingClientRect();
+
+        let dropPosition = { x: 50, y: 50 }; // Default fallback
+
+        // Use current pointer position for inventory items
+        if (activeData.isFromInventory) {
+          dropPosition = {
+            x: Math.max(
+              10,
+              Math.min(
+                containerRect.width - 114,
+                currentPointer.x - containerRect.left - 52
+              )
+            ),
+            y: Math.max(
+              10,
+              Math.min(
+                containerRect.height - 36,
+                currentPointer.y - containerRect.top - 13
+              )
+            ),
+          };
+        }
+        // Use delta for existing items being moved
+        else if (
+          delta &&
+          activeData.left !== undefined &&
+          activeData.top !== undefined
+        ) {
+          dropPosition = {
+            x: Math.max(
+              10,
+              Math.min(containerRect.width - 114, activeData.left + delta.x)
+            ),
+            y: Math.max(
+              10,
+              Math.min(containerRect.height - 36, activeData.top + delta.y)
+            ),
+          };
+        }
+
+        handleDrop(activeData, dropPosition);
+      }
+    },
+    [mergingBoxes, currentPointer]
+  );
 
   const handleDropToMerge = useCallback(
     async (
@@ -204,14 +237,8 @@ export default function PlayGame({}: PlayGameProps) {
       droppedItem: any,
       isFromInventory: boolean
     ) => {
-      console.log("handleDropToMerge called with:", {
-        targetInstanceId,
-        droppedItem,
-        isFromInventory,
-      });
-
       // If we have two items in merging area, combine them
-      const targetBox = (mergingBoxes as any)[targetInstanceId];
+      const targetBox = mergingBoxes[targetInstanceId];
       if (!targetBox) {
         console.error("Target box not found:", targetInstanceId);
         return;
@@ -258,6 +285,7 @@ export default function PlayGame({}: PlayGameProps) {
           ? Number(droppedItem.id.split("_")[0])
           : droppedItem.id;
 
+      // Hide the dropped item immediately
       setMergingBoxes((prev: any) => {
         const newBoxes = { ...prev };
         const droppedInstanceId = droppedItem.instanceId;
@@ -270,27 +298,32 @@ export default function PlayGame({}: PlayGameProps) {
         }
         return newBoxes;
       });
+
       if (isFromInventory) return;
+
       try {
         // Call the API to merge items
         const response: any = await mergeApi?.mutateAsync({
           item1: targetItemId,
           item2: droppedItemId,
         });
+
         // Use the utility function to create a unique ID for the new element
         const newInstanceId = createUniqueId(response.id, instanceCounter);
         setInstanceCounter((prev) => prev + 1);
+
         const newElement = {
           id: newInstanceId,
           originalId: response.id,
           instanceId: newInstanceId,
           title: response.handle,
           emoji: response.emoji,
-          left: droppedItem.left,
-          top: droppedItem.top,
+          left: targetBox.left, // Use target box position
+          top: targetBox.top,
           isNew: true,
         };
 
+        // Update state in one operation
         setMergingBoxes((prev: any) => {
           const newBoxes = { ...prev };
           delete newBoxes[targetInstanceId];
@@ -304,6 +337,7 @@ export default function PlayGame({}: PlayGameProps) {
         refetchInventory?.();
         refetch?.();
 
+        // Remove the "new" flag after animation
         setTimeout(() => {
           setMergingBoxes((prev: any) => {
             const newBoxes = { ...prev };
@@ -318,6 +352,7 @@ export default function PlayGame({}: PlayGameProps) {
         }, 1000);
       } catch (error) {
         console.error("Error combining elements:", error);
+        // Restore items on error
         setMergingBoxes((prev: any) => {
           const newBoxes = { ...prev };
           if (newBoxes[targetInstanceId]) {
@@ -347,13 +382,10 @@ export default function PlayGame({}: PlayGameProps) {
   );
 
   const handleDrop = useCallback(
-    (
-      droppedItem: any,
-      delta: { x: number; y: number },
-      clientOffset: { x: number; y: number }
-    ) => {
+    (droppedItem: any, position: { x: number; y: number }) => {
       if (!droppedItem) return;
 
+      // Check inventory availability for non-inventory items
       if (!droppedItem.isFromInventory) {
         const originalId = droppedItem.originalId;
         const inventoryItem = (inventory as any[])?.find(
@@ -379,106 +411,54 @@ export default function PlayGame({}: PlayGameProps) {
       const instanceId = createUniqueId(droppedItem.id, instanceCounter);
       setInstanceCounter((prev) => prev + 1);
 
-      // Check if this is a draggable item being moved
-      if (
-        droppedItem.id !== undefined &&
-        droppedItem.id !== null &&
-        droppedItem.left !== undefined &&
-        droppedItem.top !== undefined &&
-        delta &&
-        delta.x !== undefined &&
-        delta.y !== undefined
-      ) {
-        // Calculate the new position
-        let left = Math.round(droppedItem.left + delta.x);
-        let top = Math.round(droppedItem.top + delta.y);
+      // Get the merging area container for bounds checking
+      const container = document.querySelector('[data-merging-area="true"]');
+      let { x: left, y: top } = position;
 
-        // Get the merging area container
-        const container = document.querySelector('[data-merging-area="true"]');
-        if (container) {
-          const containerRect = container.getBoundingClientRect();
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
 
-          // Adjust position to stay within bounds
-          const adjustedPosition = adjustPositionWithinBounds(
-            { x: left, y: top },
-            104, // Estimated element width
-            26, // Estimated element height
-            containerRect.width,
-            containerRect.height,
-            10 // Padding from edges
-          );
+        // Adjust position to stay within bounds
+        const adjustedPosition = adjustPositionWithinBounds(
+          { x: left, y: top },
+          104, // Estimated element width
+          26, // Estimated element height
+          containerRect.width,
+          containerRect.height,
+          10 // Padding from edges
+        );
 
-          left = adjustedPosition.x;
-          top = adjustedPosition.y;
-        }
+        left = adjustedPosition.x;
+        top = adjustedPosition.y;
+      }
 
-        const itemId = droppedItem.instanceId || instanceId;
-
+      // Handle existing item movement vs new item creation
+      if (droppedItem.instanceId && mergingBoxes[droppedItem.instanceId]) {
+        // Moving existing item
+        const itemId = droppedItem.instanceId;
         setMergingBoxes((prev: any) => ({
           ...prev,
           [itemId]: {
-            ...droppedItem,
-            originalId: droppedItem.id,
-            instanceId: itemId,
+            ...prev[itemId],
             left,
             top,
           },
         }));
-      }
-      // This is a new item being added from inventory
-      else {
-        if (
-          clientOffset &&
-          clientOffset.x !== undefined &&
-          clientOffset.y !== undefined
-        ) {
-          // For new drops, position relative to the drop area
-          const container = document.querySelector(
-            '[data-merging-area="true"]'
-          );
-          let left = Math.round(clientOffset.x - 60);
-          let top = Math.round(clientOffset.y - 100);
-
-          if (container) {
-            console.log("container", container);
-            const containerRect = container.getBoundingClientRect();
-            console.log("containerRect", containerRect);
-            console.log("clientOffset", clientOffset);
-            // Adjust position to be relative to the container
-            left = Math.round(clientOffset.x - containerRect.left - 25);
-            top = Math.round(clientOffset.y - containerRect.height);
-            console.log("left", left);
-            console.log("top", top);
-            console.log("delta", delta);
-            console.log("clientOffset", clientOffset);
-            // Keep in bounds
-            const adjustedPosition = adjustPositionWithinBounds(
-              { x: left, y: top },
-              104, // Estimated width
-              26, // Estimated height
-              containerRect.width,
-              containerRect.height,
-              10 // Padding
-            );
-
-            left = adjustedPosition.x;
-            top = adjustedPosition.y;
-          }
-
-          setMergingBoxes((prev: any) => ({
-            ...prev,
-            [instanceId]: {
-              id: droppedItem.id,
-              originalId: droppedItem.id,
-              instanceId: instanceId,
-              title: droppedItem.title,
-              emoji: droppedItem.emoji,
-              left: left,
-              top: top,
-              isFromInventory: droppedItem.isFromInventory,
-            },
-          }));
-        }
+      } else {
+        // Creating new item from inventory
+        setMergingBoxes((prev: any) => ({
+          ...prev,
+          [instanceId]: {
+            id: droppedItem.id,
+            originalId: droppedItem.id,
+            instanceId: instanceId,
+            title: droppedItem.title,
+            emoji: droppedItem.emoji,
+            left: left,
+            top: top,
+            isFromInventory: droppedItem.isFromInventory,
+          },
+        }));
       }
     },
     [mergingBoxes, inventory, instanceCounter]
@@ -492,9 +472,19 @@ export default function PlayGame({}: PlayGameProps) {
     });
   }, []);
 
-  useEffect(() => {
-    console.log("mergingBoxes", mergingBoxes);
-  }, [mergingBoxes]);
+  // Memoize filtered inventory items for better performance
+  const basicElements = useMemo(
+    () => (inventory as any[])?.filter((element: any) => element.isBasic) || [],
+    [inventory]
+  );
+
+  const craftedElements = useMemo(
+    () =>
+      (inventory as any[])?.filter(
+        (element: any) => !element.isBasic && element.amount > 0
+      ) || [],
+    [inventory]
+  );
 
   return (
     <div className="w-full h-full">
@@ -505,21 +495,10 @@ export default function PlayGame({}: PlayGameProps) {
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
-        // Customize how items are visually transformed during drag
-        modifiers={[
-          // This modifier prevents scaling during drag
-          ({ transform }) => {
-            return {
-              ...transform,
-              scaleX: 1,
-              scaleY: 1,
-            };
-          },
-        ]}
-        // Disable DndContext default animations that cause flickering
+        // Optimize measuring strategy
         measuring={{
           droppable: {
-            strategy: MeasuringStrategy.Always,
+            strategy: MeasuringStrategy.BeforeDragging,
           },
         }}
       >
@@ -546,17 +525,15 @@ export default function PlayGame({}: PlayGameProps) {
               Infinite elements:
             </div>
             <div className="relative justify-start items-center gap-2 inline-flex flex-wrap">
-              {(inventory as any[])
-                ?.filter((element: any) => element.isBasic)
-                .map((element: any) => (
-                  <DraggableBox
-                    key={element.id}
-                    id={element.itemId}
-                    title={element.handle}
-                    emoji={element.emoji}
-                    isFromInventory={true}
-                  />
-                ))}
+              {basicElements.map((element: any) => (
+                <DraggableBox
+                  key={element.id}
+                  id={element.itemId}
+                  title={element.handle}
+                  emoji={element.emoji}
+                  isFromInventory={true}
+                />
+              ))}
             </div>
           </div>
           <div className="flex-col justify-start items-start gap-1 flex h-full">
@@ -567,34 +544,30 @@ export default function PlayGame({}: PlayGameProps) {
               {isLoading ? (
                 <TagSkeleton />
               ) : (
-                (!isLoading && (inventory as any[]))
-                  ?.filter(
-                    (element: any) => !element.isBasic && element.amount > 0
-                  )
-                  .map((element: any) => {
-                    // Count how many of this item are currently in use
-                    const usedCount = Object.values(mergingBoxes).filter(
-                      (box: any) =>
-                        !box.isHidden &&
-                        (box.originalId === element.itemId ||
-                          box.id === element.itemId)
-                    ).length;
+                craftedElements.map((element: any) => {
+                  // Count how many of this item are currently in use
+                  const usedCount = Object.values(mergingBoxes).filter(
+                    (box: any) =>
+                      !box.isHidden &&
+                      (box.originalId === element.itemId ||
+                        box.id === element.itemId)
+                  ).length;
 
-                    // Check if we've used all available items
-                    const isDisabled = usedCount >= element.amount;
+                  // Check if we've used all available items
+                  const isDisabled = usedCount >= element.amount;
 
-                    return (
-                      <DraggableBox
-                        key={element.id}
-                        id={element.itemId}
-                        title={element.handle}
-                        emoji={element.emoji}
-                        amount={element.amount}
-                        isFromInventory={true}
-                        isDisabled={isDisabled}
-                      />
-                    );
-                  })
+                  return (
+                    <DraggableBox
+                      key={element.id}
+                      id={element.itemId}
+                      title={element.handle}
+                      emoji={element.emoji}
+                      amount={element.amount}
+                      isFromInventory={true}
+                      isDisabled={isDisabled}
+                    />
+                  );
+                })
               )}
             </div>
           </div>

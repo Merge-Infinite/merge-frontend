@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useDrag, useDragDropManager, useDrop } from "react-dnd";
+import React, { useCallback, useMemo } from "react";
+import { useDrag, useDrop } from "react-dnd";
 import Emoji from "./Emoji";
 import MergeLoadingAnimation from "./MergeLoadingAnimation";
 
@@ -75,26 +75,23 @@ const DraggableBox = ({
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.BOX,
-      item: (monitor) => {
-        return item;
-      },
+      item: item,
       canDrag: !isDisabled && !isMerging,
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
     }),
-    [item, isDisabled, isMerging] // Include isDisabled in dependencies
+    [item, isDisabled, isMerging]
   );
 
   // Memoize the drop callback
   const handleDrop = useCallback(
     (dropItem: any) => {
-      console.log("handleDrop dropItem", dropItem);
       if (dropItem.instanceId !== instanceId) {
         onDrop?.(instanceId, { ...dropItem, originalId });
       }
     },
-    [id, onDrop, instanceId, originalId]
+    [instanceId, onDrop, originalId]
   );
 
   const [, drop] = useDrop(
@@ -108,35 +105,6 @@ const DraggableBox = ({
     [handleDrop]
   );
 
-  const dragDropManager = useDragDropManager();
-  const monitor = dragDropManager.getMonitor();
-  const offset = monitor.getSourceClientOffset();
-  const [position, setPosition] = useState({
-    x: offset?.x || 0,
-    y: offset?.y || 0,
-  });
-
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const updatePosition = () => {
-      const offset = monitor.getSourceClientOffset();
-      console.log("offset", offset);
-      if (offset) {
-        setPosition({
-          x: offset.x,
-          y: offset.y,
-        });
-      }
-    };
-
-    const unsubscribe = monitor.subscribeToOffsetChange(updatePosition);
-
-    return () => {
-      unsubscribe();
-    };
-  }, [isDragging]);
-
   // Combine drag and drop refs
   const ref = useCallback(
     (element: any) => {
@@ -146,30 +114,16 @@ const DraggableBox = ({
     [drag, drop]
   );
 
-  // Memoize the style object
+  // Simplified style object - removed complex drag positioning
   const style = useMemo(
-    () =>
-      isDragging
-        ? {
-            opacity: 0.9,
-            position: "fixed" as const,
-            left: position.x || 0,
-            top: position.y || 0,
-            pointerEvents: "none" as const,
-            zIndex: 1000,
-            willChange: "transform",
-            cursor: "grabbing",
-          }
-        : {
-            opacity: isDisabled ? 0.5 : 1,
-            position: isFromInventory
-              ? ("static" as const)
-              : ("absolute" as const),
-            left,
-            top,
-            cursor: isDisabled ? "not-allowed" : "grab",
-          },
-    [isDragging, isFromInventory, isDisabled, position, left, top]
+    () => ({
+      opacity: isDragging ? 0.5 : isDisabled ? 0.5 : 1,
+      position: isFromInventory ? ("static" as const) : ("absolute" as const),
+      left: !isFromInventory ? left : undefined,
+      top: !isFromInventory ? top : undefined,
+      cursor: isDisabled ? "not-allowed" : isDragging ? "grabbing" : "grab",
+    }),
+    [isDragging, isFromInventory, isDisabled, left, top]
   );
 
   // Memoize the remove handler
@@ -179,12 +133,14 @@ const DraggableBox = ({
     }
   }, [onRemove, instanceId]);
 
+  const isMergingTarget = isMerging && mergingTarget?.instanceId === instanceId;
+
   return (
     <div
       ref={ref}
       className={cn(
-        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex",
-        isMerging && mergingTarget?.instanceId === instanceId && "bg-gray-300",
+        "px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 inline-flex select-none",
+        isMergingTarget && "bg-gray-300",
         isDisabled && "bg-gray-200",
         isHidden && "hidden"
       )}
@@ -193,7 +149,7 @@ const DraggableBox = ({
       <div
         className={cn(
           "text-black text-xs font-normal font-['Sora'] capitalize leading-normal",
-          isMerging && mergingTarget?.instanceId === instanceId && "opacity-0",
+          isMergingTarget && "opacity-0",
           isDisabled && "text-gray-500"
         )}
       >
@@ -205,22 +161,21 @@ const DraggableBox = ({
         <Image
           onClick={handleRemove}
           src="/images/remove.svg"
-          alt="fire"
+          alt="remove"
           width={18}
           height={18}
+          className="cursor-pointer"
         />
       )}
-      {isMerging && mergingTarget?.instanceId === instanceId && (
-        <MergeLoadingAnimation />
-      )}
+      {isMergingTarget && <MergeLoadingAnimation />}
     </div>
   );
 };
 
-// Use React.memo with a custom comparison function for optimal re-rendering
-export default React.memo(
-  DraggableBox,
-  (prevProps, nextProps) =>
+// Optimized memo comparison - only check essential props
+export default React.memo(DraggableBox, (prevProps, nextProps) => {
+  // Quick reference equality checks first
+  if (
     prevProps.id === nextProps.id &&
     prevProps.instanceId === nextProps.instanceId &&
     prevProps.title === nextProps.title &&
@@ -230,8 +185,18 @@ export default React.memo(
     prevProps.amount === nextProps.amount &&
     prevProps.isFromInventory === nextProps.isFromInventory &&
     prevProps.isMerging === nextProps.isMerging &&
-    prevProps.mergingTarget === nextProps.mergingTarget &&
     prevProps.isHidden === nextProps.isHidden &&
     prevProps.isDisabled === nextProps.isDisabled &&
     prevProps.originalId === nextProps.originalId
-);
+  ) {
+    // Only check mergingTarget if isMerging is true
+    if (prevProps.isMerging || nextProps.isMerging) {
+      return (
+        prevProps.mergingTarget?.instanceId ===
+        nextProps.mergingTarget?.instanceId
+      );
+    }
+    return true;
+  }
+  return false;
+});

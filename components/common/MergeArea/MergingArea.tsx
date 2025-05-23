@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useDroppable } from "@dnd-kit/core";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import DraggableBox from "./DragItem";
 
 export interface MergingAreaProps {
@@ -27,13 +21,6 @@ export const MergingArea = ({
 }: MergingAreaProps) => {
   // Reference to the container for dimension calculations
   const containerRef = useRef<HTMLDivElement>(null);
-  // Track items that have been used from inventory to prevent overuse
-  const [usedItems, setUsedItems] = useState<Record<string, number>>({});
-
-  // Reset used items when inventory changes (e.g., after a successful merge)
-  useEffect(() => {
-    setUsedItems({});
-  }, [inventory]);
 
   // Setup droppable area with dnd-kit
   const { setNodeRef, isOver } = useDroppable({
@@ -47,46 +34,16 @@ export const MergingArea = ({
   // Memoize the handler for box removal
   const handleRemove = useCallback(
     (id: string) => {
-      // When removing an item, we need to update our usedItems count
-      const box = mergingBoxes[id];
-      if (box) {
-        const originalId = box.originalId;
-
-        // If this is a non-basic item from inventory, decrement the used count
-        const inventoryItem = inventory.find(
-          (item) => item.itemId === originalId
-        );
-        if (inventoryItem && !inventoryItem.isBasic) {
-          setUsedItems((prev) => ({
-            ...prev,
-            [originalId]: Math.max(0, (prev[originalId] || 0) - 1),
-          }));
-        }
-      }
-
       onRemove(id);
     },
-    [onRemove, mergingBoxes, inventory]
+    [onRemove]
   );
 
-  // Convert mergingBoxes object to array only when it changes
-  const boxesArray = useMemo(() => Object.values(mergingBoxes), [mergingBoxes]);
-
-  // Pre-render boxes for immediate display during transitions
-  const [visibleBoxes, setVisibleBoxes] = useState(boxesArray);
-
-  useEffect(() => {
-    // Use requestAnimationFrame to smooth out updates to the DOM
-    const animationId = requestAnimationFrame(() => {
-      setVisibleBoxes(boxesArray);
-    });
-
-    return () => cancelAnimationFrame(animationId);
-  }, [boxesArray]);
-
-  // Cache box components for better performance
+  // Memoize box components for better performance
   const boxComponents = useMemo(() => {
-    return visibleBoxes.map((box: any) => {
+    const boxes = Object.values(mergingBoxes);
+
+    return boxes.map((box: any) => {
       // For each box on the board, check if it's from inventory and has limited amount
       let isDisabled = false;
 
@@ -99,7 +56,7 @@ export const MergingArea = ({
         // If this is a non-basic inventory item, check available amount
         if (inventoryItem && !inventoryItem.isBasic) {
           // Count how many of this item are currently on the board
-          const itemsOnBoard = visibleBoxes.filter(
+          const itemsOnBoard = boxes.filter(
             (b) =>
               !b.isHidden &&
               (b.originalId === originalId || b.id === originalId)
@@ -125,7 +82,7 @@ export const MergingArea = ({
         />
       );
     });
-  }, [visibleBoxes, inventory, isMerging, mergingTarget, handleRemove]);
+  }, [mergingBoxes, inventory, isMerging, mergingTarget, handleRemove]);
 
   return (
     <div
@@ -133,45 +90,47 @@ export const MergingArea = ({
         setNodeRef(node);
         containerRef.current = node;
       }}
-      className="relative h-full will-change-contents w-full"
+      className="relative h-full w-full"
       data-merging-area="true"
+      style={{
+        containIntrinsicSize: "100%", // Help with layout stability
+        contain: "layout style", // Optimize rendering
+      }}
     >
       {boxComponents}
     </div>
   );
 };
 
-// Custom comparison function to prevent unnecessary rerenders
-const areEqual = (prevProps: any, nextProps: any) => {
-  // Check if inventory changed
+// Optimized comparison function
+const areEqual = (prevProps: MergingAreaProps, nextProps: MergingAreaProps) => {
+  // Quick reference checks first
   if (prevProps.inventory !== nextProps.inventory) return false;
+  if (prevProps.isMerging !== nextProps.isMerging) return false;
+  if (prevProps.mergingTarget !== nextProps.mergingTarget) return false;
+  if (prevProps.onRemove !== nextProps.onRemove) return false;
 
-  // Only re-render when mergingBoxes actually changes
-  if (
-    Object.keys(prevProps.mergingBoxes).length !==
-    Object.keys(nextProps.mergingBoxes).length
-  ) {
-    return false;
-  }
+  // Check mergingBoxes length first (quick check)
+  const prevKeys = Object.keys(prevProps.mergingBoxes);
+  const nextKeys = Object.keys(nextProps.mergingBoxes);
 
-  // Check if any box properties have changed
-  for (const key in prevProps.mergingBoxes) {
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  // Deep comparison only if lengths match
+  for (const key of prevKeys) {
     if (!nextProps.mergingBoxes[key]) return false;
 
     const prevBox = prevProps.mergingBoxes[key];
     const nextBox = nextProps.mergingBoxes[key];
 
-    // Compare essential properties that affect rendering
+    // Compare essential properties only
     if (
       prevBox.left !== nextBox.left ||
       prevBox.top !== nextBox.top ||
       prevBox.title !== nextBox.title ||
       prevBox.emoji !== nextBox.emoji ||
-      prevBox.amount !== nextBox.amount ||
       prevBox.isHidden !== nextBox.isHidden ||
-      prevBox.isNew !== nextBox.isNew ||
-      prevBox.isMerging !== nextBox.isMerging ||
-      prevBox.mergingTarget !== nextBox.mergingTarget
+      prevBox.isNew !== nextBox.isNew
     ) {
       return false;
     }
