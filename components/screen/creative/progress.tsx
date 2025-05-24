@@ -51,7 +51,10 @@ const CreatureCustomizer = () => {
   } = creativeApi.getNftJob.useQuery();
 
   useEffect(() => {
-    refetchNftJobs();
+    const interval = setInterval(() => {
+      refetchNftJobs();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
