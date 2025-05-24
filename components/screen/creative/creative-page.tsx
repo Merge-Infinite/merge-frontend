@@ -22,7 +22,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useLoading } from "@/hooks/useLoading";
 import { useUser } from "@/hooks/useUser";
 import creativeApi from "@/lib/api/creative";
-import { ADMIN_ADDRESS, GENERATION_FEE } from "@/lib/utils";
+import { FEE_ADDRESS, GENERATION_FEE } from "@/lib/utils";
 import { formatSUI } from "@/lib/wallet/core";
 import {
   SendAndExecuteTxParams,
@@ -283,7 +283,7 @@ const CreatureCustomizer = () => {
         GENERATION_FEE * Number(MIST_PER_SUI),
       ]);
 
-      paymentTx.transferObjects([mintFeeAmount], ADMIN_ADDRESS);
+      paymentTx.transferObjects([mintFeeAmount], FEE_ADDRESS);
       const response = await apiClient.callFunc<
         SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
         undefined

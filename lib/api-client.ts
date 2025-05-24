@@ -84,6 +84,7 @@ class ApiClient {
   // Handle response
   private handleResponse = (response: AxiosResponse): any => {
     // Return only the data portion of the response
+    console.log("response", response);
     try {
       if (response.data.message) {
         toast.success(response.data.message);
@@ -97,12 +98,18 @@ class ApiClient {
 
   // Handle response error
   private handleResponseError = (error: AxiosError): Promise<ApiError> => {
+    console.log("error", error);
+
     // Handle authentication errors
     if (error.response?.status === 401) {
       handleAuthError();
     }
 
-    toast.error((error.response?.data as any)?.error?.message || error.message);
+    toast.error(
+      (error.response?.data as any)?.message ||
+        (error.response?.data as any)?.error?.message ||
+        error.message
+    );
     // Enhance error object with status and data
     const enhancedError: ApiError = {
       ...error,
