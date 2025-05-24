@@ -167,7 +167,7 @@ const CreatureCustomizer = () => {
       } else {
         const filtered = inventory
           .filter((element) =>
-            element.name.toLowerCase().includes(searchText.toLowerCase())
+            element.handle.toLowerCase().includes(searchText.toLowerCase())
           )
           .filter((element) => !element.isBasic);
         setFilteredElements(filtered);
@@ -179,9 +179,8 @@ const CreatureCustomizer = () => {
     ? inventory.filter((element) => !element.isBasic)
     : [];
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchText(e.target.value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e?.target?.value || "");
   };
 
   // When feature selection button is clicked
@@ -213,30 +212,6 @@ const CreatureCustomizer = () => {
     }
 
     setElementDialog(true);
-  };
-
-  // Add element to the selected feature
-  const confirmElementSelection = () => {
-    if (!selectedElement) return;
-    const newElement = {
-      ...selectedElement,
-      quantity: parseInt(quantity),
-      displayQuantity: `(${parseInt(quantity)})`,
-    };
-
-    setSelectedElements((prev) => {
-      const updatedElements = { ...prev };
-      if (selectedFeature in updatedElements) {
-        const featureKey = selectedFeature as keyof typeof updatedElements;
-        updatedElements[featureKey] = [
-          ...(updatedElements[featureKey] || []),
-          newElement as any,
-        ];
-      }
-      return updatedElements;
-    });
-
-    setElementDialog(false);
   };
 
   // Remove element from a feature
@@ -318,6 +293,51 @@ const CreatureCustomizer = () => {
     } finally {
       stopLoading();
     }
+  };
+
+  const getTotalUsedAmount = (elementId: string) => {
+    let totalUsed = 0;
+    Object.values(selectedElements).forEach((featureElements) => {
+      featureElements.forEach((element) => {
+        if (element.id === elementId) {
+          totalUsed += element.quantity || 1;
+        }
+      });
+    });
+    return totalUsed;
+  };
+
+  const confirmElementSelection = () => {
+    if (!selectedElement) return;
+
+    const totalUsed = getTotalUsedAmount(selectedElement.id);
+    const requestedQuantity = parseInt(quantity);
+    const availableAmount = selectedElement.amount - totalUsed;
+
+    if (requestedQuantity > availableAmount) {
+      toast.error(`You only have ${availableAmount} of this element available`);
+      return;
+    }
+
+    const newElement = {
+      ...selectedElement,
+      quantity: requestedQuantity,
+      displayQuantity: `(${requestedQuantity})`,
+    };
+
+    setSelectedElements((prev) => {
+      const updatedElements = { ...prev };
+      if (selectedFeature in updatedElements) {
+        const featureKey = selectedFeature as keyof typeof updatedElements;
+        updatedElements[featureKey] = [
+          ...(updatedElements[featureKey] || []),
+          newElement as any,
+        ];
+      }
+      return updatedElements;
+    });
+
+    setElementDialog(false);
   };
 
   return (
@@ -555,12 +575,35 @@ const CreatureCustomizer = () => {
                   min="1"
                   max="10"
                   value={quantity}
-                  onChange={(e: any) => {
-                    const value = e.target.value ? parseInt(e.target.value) : 0;
-                    if (selectedElement?.amount >= value && value > 0) {
-                      setQuantity(e.target.value);
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const inputValue = e.target.value;
+
+                    // Allow empty string so users can clear and retype
+                    if (inputValue === "") {
+                      setQuantity("");
+                      return;
+                    }
+
+                    const value = parseInt(inputValue);
+
+                    // Handle invalid number input (like non-numeric characters)
+                    if (isNaN(value)) {
+                      toast.error("Please enter a valid number");
+                      return;
+                    }
+
+                    const totalUsed = getTotalUsedAmount(selectedElement?.id);
+                    const availableAmount = selectedElement?.amount - totalUsed;
+
+                    // Validate that value is greater than 0 and within available amount
+                    if (value > 0 && value <= availableAmount) {
+                      setQuantity(inputValue);
+                    } else if (value <= 0) {
+                      toast.error("Quantity must be greater than 0");
                     } else {
-                      toast.error("You don't have that many elements");
+                      toast.error(
+                        `You only have ${availableAmount} of this element available`
+                      );
                     }
                   }}
                   className="bg-[#141414] text-white border-[#333333] rounded-[32px] font-bold w-60"
@@ -568,6 +611,24 @@ const CreatureCustomizer = () => {
                 <div className="text-neutral-400 text-xs">
                   For example: create a 3-headed dog by setting quantity to 3
                 </div>
+                {selectedElement && (
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="ghost"
+                      className="px-3 py-1 rounded-3xl border border-white justify-start w-fit"
+                    >
+                      <span className="text-white text-xs uppercase">
+                        {selectedElement?.emoji} {selectedElement?.handle}
+                      </span>
+                    </Button>
+                    <div className="text-neutral-400 text-xs">
+                      Available:{" "}
+                      {selectedElement.amount -
+                        getTotalUsedAmount(selectedElement.id)}{" "}
+                      / {selectedElement.amount}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
