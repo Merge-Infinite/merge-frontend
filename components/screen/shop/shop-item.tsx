@@ -13,7 +13,6 @@ import {
 import useApi from "@/hooks/useApi";
 
 import { useUser } from "@/hooks/useUser";
-import { SELLER_ADDRESS } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -25,6 +24,7 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import { SELLER_ADDRESS } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { initInvoice } from "@telegram-apps/sdk";

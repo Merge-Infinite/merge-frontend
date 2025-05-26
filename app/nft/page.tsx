@@ -7,17 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/hooks/useLoading";
 import { useNFTList } from "@/hooks/useNFTList";
-import {
-  COLLECTION_OBJECT_ID,
-  CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
-} from "@/lib/utils";
 import { SendAndExecuteTxParams, TxEssentials } from "@/lib/wallet/core";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import {
+  CREATURE_COLLECTION_OBJECT_ID,
+  CREATURE_NFT_MODULE_NAME,
+  CREATURE_NFT_PACKAGE_ID,
+} from "@/utils/constants";
 import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import { initBackButton } from "@telegram-apps/sdk";
@@ -89,7 +89,7 @@ export default function InventoryStakingInterface() {
         tx.moveCall({
           target: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"stake_creature_entry"}`,
           arguments: [
-            tx.object(COLLECTION_OBJECT_ID),
+            tx.object(CREATURE_COLLECTION_OBJECT_ID),
             tx.object(nftId),
             tx.pure.u8(0),
             tx.object("0x6"),

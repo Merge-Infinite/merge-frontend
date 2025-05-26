@@ -1,9 +1,9 @@
 // hooks/useStakeInfoList.ts
+import { suiClient } from "@/lib/utils";
 import {
   CREATURE_NFT_MODULE_NAME,
   CREATURE_NFT_PACKAGE_ID,
-  suiClient,
-} from "@/lib/utils";
+} from "@/utils/constants";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 

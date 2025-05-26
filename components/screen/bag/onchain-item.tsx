@@ -1,7 +1,7 @@
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import { NFT_MODULE_NAME, NFT_PACKAGE_ID } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -23,6 +22,11 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import {
+  CREATURE_NFT_MODULE_NAME,
+  CREATURE_NFT_PACKAGE_ID,
+  ELEMENT_NFT_MODULE_NAME,
+} from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { Loader2 } from "lucide-react";
@@ -37,15 +41,15 @@ export const CardItem = React.memo(
     amount,
     id,
     itemId,
-    emoji,
     onListingComplete,
+    imageUrl,
   }: {
     element: string;
     amount: string | number;
     id: string;
-    itemId: string;
-    emoji: string;
+    itemId?: number;
     onListingComplete?: () => void;
+    imageUrl: string;
   }) => {
     const apiClient = useApiClient();
     const marketplaceListings = useApi({
@@ -135,7 +139,9 @@ export const CardItem = React.memo(
             txb.object(user.kiosk.ownerCapId),
             txb.object(id),
           ],
-          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+          typeArguments: [
+            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreativeElementNFT`,
+          ],
         });
         txb.moveCall({
           target: "0x2::kiosk::list",
@@ -145,7 +151,9 @@ export const CardItem = React.memo(
             txb.pure.address(id),
             txb.pure.u64(numericPrice * Number(MIST_PER_SUI)),
           ],
-          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+          typeArguments: [
+            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreativeElementNFT`,
+          ],
         });
 
         const response = await apiClient.callFunc<
@@ -221,7 +229,7 @@ export const CardItem = React.memo(
 
         const txb = new Transaction();
         txb.moveCall({
-          target: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"burn"}`,
+          target: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
           arguments: [txb.object(id)],
         });
         const response = await apiClient.callFunc<
@@ -308,11 +316,13 @@ export const CardItem = React.memo(
       <Fragment>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <Card className="border-none gap-2 flex flex-col justify-between items-center hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-4 border border-[#1f1f1f] rounded-2xl w-full">
-              <pre className="text-white text-sm font-normal font-['Sora'] whitespace-pre-wrap">
-                {jsonContent}
-              </pre>
-            </CardContent>
+            <Image
+              src={`https://wal.gg/${imageUrl}`}
+              alt="NFT"
+              width={100}
+              height={100}
+              className="p-4 border border-[#1f1f1f] rounded-2xl w-full"
+            />
 
             <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline">
               #{formatAddress(id)}

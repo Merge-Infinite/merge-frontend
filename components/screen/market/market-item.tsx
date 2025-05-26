@@ -4,13 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import {
-  FEE_ADDRESS,
-  mists_to_sui,
-  NFT_MODULE_NAME,
-  NFT_PACKAGE_ID,
-  POLICY_ID,
-} from "@/lib/utils";
-import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
@@ -20,6 +13,12 @@ import { useFeatureFlags } from "@/lib/wallet/hooks/useFeatureFlags";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import {
+  CREATURE_NFT_PACKAGE_ID,
+  ELEMENT_NFT_MODULE_NAME,
+  ELEMENT_POLICY_ID,
+  FEE_ADDRESS,
+} from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
@@ -108,13 +107,17 @@ export const MarketItem = React.memo(
         const [nft, request] = txb.moveCall({
           target: "0x2::kiosk::purchase",
           arguments: [txb.object(seller_kiosk), txb.object(nftId), paymentCoin],
-          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+          typeArguments: [
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+          ],
         });
 
         txb.moveCall({
           target: `0x2::transfer_policy::confirm_request`,
-          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
-          arguments: [txb.object(POLICY_ID), request],
+          typeArguments: [
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+          ],
+          arguments: [txb.object(ELEMENT_POLICY_ID), request],
         });
 
         txb.transferObjects([nft], txb.pure.address(address));
@@ -202,7 +205,9 @@ export const MarketItem = React.memo(
             txb.object(user.kiosk.ownerCapId),
             txb.pure.address(nftId),
           ],
-          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+          typeArguments: [
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::ElementNFT`,
+          ],
         });
         console.log(nftId);
         const [takenObject] = txb.moveCall({

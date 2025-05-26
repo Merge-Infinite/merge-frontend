@@ -10,12 +10,6 @@ import useApi from "@/hooks/useApi";
 import { useNFTList } from "@/hooks/useNFTList";
 import { useUser } from "@/hooks/useUser";
 import {
-  CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
-  NFT_MODULE_NAME,
-  NFT_PACKAGE_ID,
-} from "@/lib/utils";
-import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
@@ -24,6 +18,11 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import {
+  CREATURE_NFT_MODULE_NAME,
+  CREATURE_NFT_PACKAGE_ID,
+  ELEMENT_NFT_MODULE_NAME,
+} from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
@@ -48,9 +47,10 @@ export function OnchainBagScreen() {
     walletAddress: address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::${"ElementNFT"}`,
+    structType: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"CreativeElementNFT"}`,
   });
 
+  console.log(nfts);
   const {
     nfts: creatureNfts,
     loading: creatureNftsLoading,
@@ -163,7 +163,6 @@ export function OnchainBagScreen() {
     }
   }, [user, authed, address]);
 
-
   return (
     <div className="flex flex-col gap-4 w-full h-full">
       {!initialized ? (
@@ -204,6 +203,7 @@ export function OnchainBagScreen() {
                     name: display?.name || "Element NFT",
                     amount: display?.amount || 0,
                     itemId: Number(display?.itemId),
+                    imageUrl: display?.image_url,
                   };
                 })
                 .map((card, index) => (
@@ -211,8 +211,8 @@ export function OnchainBagScreen() {
                     key={index}
                     element={card.name}
                     amount={card.amount}
-                    emoji={card.emoji}
                     itemId={card.itemId}
+                    imageUrl={card.imageUrl}
                     id={card.id}
                   />
                 ))

@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
-import { ADMIN_ADDRESS, FEE_ADDRESS, MINT_NFT_FEE } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -23,6 +22,7 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import { FEE_ADDRESS, MINT_NFT_FEE } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { Loader2 } from "lucide-react";
@@ -88,7 +88,6 @@ export function OffchainBagScreen() {
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
-    // Default to 1 as the mint quantity for better UX
     setMintQuantity(1);
   };
 
@@ -130,26 +129,14 @@ export function OffchainBagScreen() {
       return null;
     }
     setIsMinting(true);
+
     try {
-      const minGasFeeResponse = await minGasFee?.mutateAsync({
-        itemId: selectedItem.itemId,
-        amount: mintQuantity,
-        walletAddress: address,
-      });
-      const gasEstimationInMist = Math.abs(minGasFeeResponse);
       const paymentTx = new Transaction();
 
       const [mintFeeAmount] = paymentTx.splitCoins(
         paymentTx.gas,
         [MINT_NFT_FEE * Number(MIST_PER_SUI)] // Convert to MIST (smallest SUI unit)
       );
-
-      const [gasFeeAmount] = paymentTx.splitCoins(paymentTx.gas, [
-        gasEstimationInMist,
-      ]);
-
-      // Transfer the combined fee to the fee collection address
-      paymentTx.transferObjects([gasFeeAmount], ADMIN_ADDRESS);
 
       paymentTx.transferObjects([mintFeeAmount], FEE_ADDRESS);
 
@@ -177,9 +164,6 @@ export function OffchainBagScreen() {
           itemId: selectedItem.itemId,
           amount: mintQuantity,
         });
-        toast.success(
-          `You've minted ${mintQuantity} ${selectedItem.handle} NFTs`
-        );
 
         getUserBagApi?.refetch();
         handleCloseModal();

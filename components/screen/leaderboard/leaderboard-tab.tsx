@@ -9,7 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import useApi from "@/hooks/useApi";
-import { formatTimeRemaining } from "@/utils/constants";
+import { formatTimeRemaining } from "@/lib/utils";
 import Image from "next/image";
 import React, { useEffect } from "react";
 
