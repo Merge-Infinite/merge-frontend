@@ -261,6 +261,7 @@ export const CardItem = React.memo(
               nftId: id,
               transactionDigest: response.digest,
               ownerAddress: address,
+              amount: Number(amount),
             });
 
             setTransactionStatus("success");

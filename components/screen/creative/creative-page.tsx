@@ -244,6 +244,14 @@ const CreatureCustomizer = () => {
   const handleMintClick = async () => {
     try {
       // Double-check validation before proceeding
+      console.log(selectedElements);
+      const elementInfos = Object.values(selectedElements)
+        .flat()
+        .map((element) => ({
+          itemId: element.id,
+          amount: element.quantity,
+        }));
+      console.log(elementInfos);
       const validation = validateMintRequirements();
       if (!validation.isValid) {
         const missingText = validation.missingFields.join(", ");
@@ -280,6 +288,7 @@ const CreatureCustomizer = () => {
           topic: topic,
           creatureName: creatureName,
           selectedElements: selectedElements,
+          elementInfos,
           data: {
             transactionBlockBytes: (response as any).transactionBlockBytes,
             signature: (response as any).signature,

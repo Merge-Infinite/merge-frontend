@@ -8,6 +8,10 @@ const creativeApi = router("creative", {
       topic: string;
       creatureName: string;
       selectedElements: Record<string, any[]>;
+      elementInfos: {
+        itemId: string;
+        amount: number;
+      }[];
       data: {
         transactionBlockBytes: string;
         signature: string;
