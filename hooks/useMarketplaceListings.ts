@@ -11,8 +11,7 @@ export interface KioskListing {
   element: string;
   amount: string;
   imageUrl: string;
-  listedAt?: Date;
-  eventId?: string;
+  itemId: string;
 }
 
 interface UseKioskListingsOptions {
@@ -29,8 +28,7 @@ export function useKioskListings(options: UseKioskListingsOptions) {
 
   const { nftType, refreshInterval, autoFetch = true, limit = 50 } = options;
 
-  // Method 1: Fetch via Events (Most Reliable)
-  const fetchListingsViaEvents = useCallback(async () => {
+  const fetchKioskListings = useCallback(async () => {
     if (!nftType) {
       setError(new Error("NFT type is required"));
       return;
@@ -40,86 +38,151 @@ export function useKioskListings(options: UseKioskListingsOptions) {
       setLoading(true);
       setError(null);
 
-      // Query ItemListed events
-      const events = await suiClient.queryEvents({
-        query: {
-          MoveEventType: "0x2::kiosk::ItemListed",
-        },
-        limit: limit * 2, // Get more events to account for sold items
-        order: "descending",
+      // Define event types for our specific NFT type
+      const listedEventType = `0x2::kiosk::ItemListed<${nftType}>`;
+      const purchasedEventType = `0x2::kiosk::ItemPurchased<${nftType}>`;
+      const delistedEventType = `0x2::kiosk::ItemDelisted<${nftType}>`;
+
+      // Fetch all three types of events in parallel
+      const [listedEvents, purchasedEvents, delistedEvents] = await Promise.all(
+        [
+          suiClient.queryEvents({
+            query: { MoveEventType: listedEventType },
+            limit: limit * 3,
+            order: "descending",
+          }),
+          suiClient.queryEvents({
+            query: { MoveEventType: purchasedEventType },
+            limit: limit * 2,
+            order: "descending",
+          }),
+          suiClient.queryEvents({
+            query: { MoveEventType: delistedEventType },
+            limit: limit * 2,
+            order: "descending",
+          }),
+        ]
+      );
+
+      console.log(`Found ${listedEvents.data.length} ItemListed events`);
+      console.log(`Found ${purchasedEvents.data.length} ItemPurchased events`);
+      console.log(`Found ${delistedEvents.data.length} ItemDelisted events`);
+
+      // Create sets of purchased and delisted items for quick lookup
+      const purchasedItems = new Set<string>();
+      const delistedItems = new Set<string>();
+
+      // Process purchased events
+      purchasedEvents.data.forEach((event) => {
+        if (event.parsedJson) {
+          const eventData = event.parsedJson as {
+            id: string;
+            kiosk: string;
+            price: string;
+          };
+          purchasedItems.add(eventData.id);
+        }
       });
+
+      // Process delisted events
+      delistedEvents.data.forEach((event) => {
+        if (event.parsedJson) {
+          const eventData = event.parsedJson as {
+            id: string;
+            kiosk: string;
+          };
+          delistedItems.add(eventData.id);
+        }
+      });
+
+      console.log(`Found ${purchasedItems.size} purchased items`);
+      console.log(`Found ${delistedItems.size} delisted items`);
 
       const activeListings: KioskListing[] = [];
       const processedItems = new Set<string>();
 
-      for (const event of events.data) {
-        if (event.parsedJson && !processedItems.has(event.parsedJson.item_id)) {
-          const eventData = event.parsedJson as any;
+      // Process listed events and filter out purchased/delisted items
+      for (const event of listedEvents.data) {
+        if (event.parsedJson) {
+          const eventData = event.parsedJson as {
+            id: string;
+            kiosk: string;
+            price: string;
+          };
 
-          // Check if this event is for our NFT type
-          if (eventData.item_type === nftType) {
-            try {
-              // Verify the item is still listed by checking its current state
-              const nftObject = await suiClient.getObject({
-                id: eventData.item_id,
-                options: {
-                  showContent: true,
-                  showOwner: true,
-                  showDisplay: true,
-                },
-              });
+          // Skip if we've already processed this item
+          if (processedItems.has(eventData.id)) {
+            continue;
+          }
 
-              // Only include if still owned by a kiosk (not sold)
-              if (
-                nftObject.data?.owner &&
-                "ObjectOwner" in nftObject.data.owner
-              ) {
-                const kioskId = nftObject.data.owner.ObjectOwner;
+          // Skip if item was purchased or delisted
+          if (purchasedItems.has(eventData.id)) {
+            console.log(`Item ${eventData.id} was purchased - skipping`);
+            continue;
+          }
 
-                // Double-check it's still listed in the kiosk
-                const isStillListed = await verifyKioskListing(
-                  kioskId,
-                  eventData.item_id
-                );
+          if (delistedItems.has(eventData.id)) {
+            console.log(`Item ${eventData.id} was delisted - skipping`);
+            continue;
+          }
 
-                if (isStillListed) {
-                  const content = nftObject.data.content as any;
-                  const display = nftObject.data.display?.data;
+          try {
+            console.log(
+              `Processing item ${eventData.id} from kiosk ${eventData.kiosk}`
+            );
 
-                  activeListings.push({
-                    objectId: eventData.item_id,
-                    kioskId,
-                    price: eventData.price || isStillListed.price,
-                    priceInSui:
-                      parseInt(eventData.price || isStillListed.price) /
-                      Number(MIST_PER_SUI),
-                    element: content?.fields?.element || "Unknown",
-                    amount: content?.fields?.amount?.toString() || "1",
-                    imageUrl:
-                      content?.fields?.image_url || display?.image_url || "",
-                    listedAt: new Date(parseInt(event.timestampMs)),
-                    eventId: event.id.eventSeq,
-                  });
+            // Get the NFT object to verify it's still listed and get its details
+            const nftObject = await suiClient.getObject({
+              id: eventData.id,
+              options: {
+                showContent: true,
+                showOwner: true,
+                showDisplay: true,
+              },
+            });
+            console.log("nftObject", nftObject);
+            console.log("eventData", eventData);
+            console.log("event", event);
+            const content = nftObject?.data?.content as any;
+            const display = nftObject?.data?.display?.data;
 
-                  processedItems.add(eventData.item_id);
-                }
-              }
-            } catch (objError) {
-              console.error(
-                `Error processing listing ${eventData.item_id}:`,
-                objError
-              );
-            }
+            const listing: KioskListing = {
+              objectId: eventData.id,
+              kioskId: eventData.kiosk,
+              price: eventData.price,
+              priceInSui: parseInt(eventData.price) / Number(MIST_PER_SUI),
+              element: content?.fields?.element_name || "Unknown",
+              amount: content?.fields?.amount?.toString() || "1",
+              imageUrl: content?.fields?.image_url || display?.image_url || "",
+              itemId: content?.fields?.item_id || display?.item_id || "",
+            };
+
+            activeListings.push(listing);
+            processedItems.add(eventData.id);
+
+            console.log(
+              `Added listing: ${listing.element} for ${listing.priceInSui} SUI`
+            );
+          } catch (objError) {
+            console.error(
+              `Error processing listing ${eventData.id}:`,
+              objError
+            );
+          }
+
+          // Stop if we have enough listings
+          if (activeListings.length >= limit) {
+            break;
           }
         }
-
-        // Stop if we have enough listings
-        if (activeListings.length >= limit) break;
       }
 
+      console.log(
+        `Found ${activeListings.length} active listings after filtering`
+      );
       setListings(activeListings);
     } catch (err) {
-      console.error("Error fetching kiosk listings via events:", err);
+      console.error("Error fetching kiosk listings:", err);
       toast.error("Error fetching marketplace listings");
       setError(
         err instanceof Error ? err : new Error("Unknown error occurred")
@@ -131,10 +194,7 @@ export function useKioskListings(options: UseKioskListingsOptions) {
 
   // Helper function to verify if an item is still listed in a kiosk
   const verifyKioskListing = useCallback(
-    async (
-      kioskId: string,
-      itemId: string
-    ): Promise<{ price: string } | null> => {
+    async (kioskId: string, itemId: string): Promise<boolean> => {
       try {
         const kioskObject = await suiClient.getObject({
           id: kioskId,
@@ -144,19 +204,19 @@ export function useKioskListings(options: UseKioskListingsOptions) {
         if (kioskObject.data?.content && "fields" in kioskObject.data.content) {
           const kioskFields = kioskObject.data.content.fields as any;
 
+          // Check if the item is in the listings
           if (kioskFields.listings?.fields?.contents) {
             const listing = kioskFields.listings.fields.contents.find(
               (l: any) => l.fields.key === itemId
             );
-
-            return listing ? { price: listing.fields.value } : null;
+            return !!listing;
           }
         }
 
-        return null;
+        return false;
       } catch (error) {
         console.error(`Error verifying kiosk listing ${itemId}:`, error);
-        return null;
+        return false;
       }
     },
     []
@@ -165,17 +225,17 @@ export function useKioskListings(options: UseKioskListingsOptions) {
   // Auto-fetch on mount if enabled
   useEffect(() => {
     if (autoFetch) {
-      fetchListingsViaEvents();
+      fetchKioskListings();
     }
-  }, [autoFetch, fetchListingsViaEvents]);
+  }, [autoFetch, fetchKioskListings]);
 
   // Set up auto-refresh
   useEffect(() => {
     if (refreshInterval) {
-      const intervalId = setInterval(fetchListingsViaEvents, refreshInterval);
+      const intervalId = setInterval(fetchKioskListings, refreshInterval);
       return () => clearInterval(intervalId);
     }
-  }, [refreshInterval, fetchListingsViaEvents]);
+  }, [refreshInterval, fetchKioskListings]);
 
   // Utility functions
   const sortByPrice = useCallback(
@@ -206,13 +266,161 @@ export function useKioskListings(options: UseKioskListingsOptions) {
     [listings]
   );
 
+  const getUniqueElements = useCallback(() => {
+    const elements = new Set(listings.map((l) => l.element));
+    return Array.from(elements);
+  }, [listings]);
+
+  const getCheapestByElement = useCallback(() => {
+    const elementMap = new Map<string, KioskListing>();
+
+    listings.forEach((listing) => {
+      const existing = elementMap.get(listing.element);
+      if (!existing || listing.priceInSui < existing.priceInSui) {
+        elementMap.set(listing.element, listing);
+      }
+    });
+
+    return Array.from(elementMap.values());
+  }, [listings]);
+
+  // New function to get marketplace activity (recent purchases/delistings)
+  const getMarketplaceActivity = useCallback(
+    async (activityLimit: number = 20) => {
+      try {
+        const purchasedEventType = `0x2::kiosk::ItemPurchased<${nftType}>`;
+        const delistedEventType = `0x2::kiosk::ItemDelisted<${nftType}>`;
+
+        const [purchasedEvents, delistedEvents] = await Promise.all([
+          suiClient.queryEvents({
+            query: { MoveEventType: purchasedEventType },
+            limit: activityLimit,
+            order: "descending",
+          }),
+          suiClient.queryEvents({
+            query: { MoveEventType: delistedEventType },
+            limit: activityLimit,
+            order: "descending",
+          }),
+        ]);
+
+        const activity: Array<{
+          type: "purchase" | "delisting";
+          itemId: string;
+          kioskId: string;
+          price?: string;
+          priceInSui?: number;
+          txDigest: string;
+          timestamp: number;
+        }> = [];
+
+        // Process purchased events
+        purchasedEvents.data.forEach((event) => {
+          if (event.parsedJson) {
+            const eventData = event.parsedJson as {
+              id: string;
+              kiosk: string;
+              price: string;
+            };
+
+            activity.push({
+              type: "purchase",
+              itemId: eventData.id,
+              kioskId: eventData.kiosk,
+              price: eventData.price,
+              priceInSui: parseInt(eventData.price) / Number(MIST_PER_SUI),
+              txDigest: event.id.txDigest,
+              timestamp: parseInt(event.timestampMs || "0"),
+            });
+          }
+        });
+
+        // Process delisted events
+        delistedEvents.data.forEach((event) => {
+          if (event.parsedJson) {
+            const eventData = event.parsedJson as {
+              id: string;
+              kiosk: string;
+            };
+
+            activity.push({
+              type: "delisting",
+              itemId: eventData.id,
+              kioskId: eventData.kiosk,
+              txDigest: event.id.txDigest,
+              timestamp: parseInt(event.timestampMs || "0"),
+            });
+          }
+        });
+
+        // Sort by timestamp (most recent first)
+        activity.sort((a, b) => b.timestamp - a.timestamp);
+
+        return activity.slice(0, activityLimit);
+      } catch (error) {
+        console.error("Error fetching marketplace activity:", error);
+        return [];
+      }
+    },
+    [nftType]
+  );
+
+  // Get floor price for each element
+  const getFloorPrices = useCallback(() => {
+    const floorPrices = new Map<string, number>();
+
+    listings.forEach((listing) => {
+      const currentFloor = floorPrices.get(listing.element);
+      if (!currentFloor || listing.priceInSui < currentFloor) {
+        floorPrices.set(listing.element, listing.priceInSui);
+      }
+    });
+
+    return Object.fromEntries(floorPrices);
+  }, [listings]);
+
+  // Get market statistics
+  const getMarketStats = useCallback(() => {
+    if (listings.length === 0) {
+      return {
+        totalListings: 0,
+        uniqueElements: 0,
+        averagePrice: 0,
+        medianPrice: 0,
+        totalVolume: 0,
+      };
+    }
+
+    const prices = listings.map((l) => l.priceInSui).sort((a, b) => a - b);
+    const uniqueElements = new Set(listings.map((l) => l.element)).size;
+    const totalVolume = prices.reduce((sum, price) => sum + price, 0);
+    const averagePrice = totalVolume / listings.length;
+    const medianPrice =
+      prices.length % 2 === 0
+        ? (prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2
+        : prices[Math.floor(prices.length / 2)];
+
+    return {
+      totalListings: listings.length,
+      uniqueElements,
+      averagePrice: Number(averagePrice.toFixed(2)),
+      medianPrice: Number(medianPrice.toFixed(2)),
+      totalVolume: Number(totalVolume.toFixed(2)),
+    };
+  }, [listings]);
+
   return {
     listings,
     loading,
     error,
-    refresh: fetchListingsViaEvents,
+    refresh: fetchKioskListings,
     sortByPrice,
     filterByElement,
     filterByPriceRange,
+    getUniqueElements,
+    getCheapestByElement,
+    getMarketplaceActivity,
+    getFloorPrices,
+    getMarketStats,
   };
 }

@@ -173,37 +173,39 @@ export const CardItem = React.memo(
         );
 
         if (response && response.digest) {
-          setTransactionDigest(response.digest);
-          setTransactionStatus("syncing");
+          toast.success("Your NFT has been listed successfully");
+          onListingComplete?.();
+          // setTransactionDigest(response.digest);
+          // setTransactionStatus("syncing");
 
           // Sync with backend
-          try {
-            await marketplaceListings?.mutateAsync({
-              kioskId: user.kiosk.objectId,
-              nftId: id,
-              price: (numericPrice * Number(MIST_PER_SUI)).toString(),
-              transactionDigest: response.digest,
-              itemId: Number(itemId),
-              amount: Number(amount),
-            });
+          // try {
+          //   await marketplaceListings?.mutateAsync({
+          //     kioskId: user.kiosk.objectId,
+          //     nftId: id,
+          //     price: (numericPrice * Number(MIST_PER_SUI)).toString(),
+          //     transactionDigest: response.digest,
+          //     itemId: Number(itemId),
+          //     amount: Number(amount),
+          //   });
 
-            setTransactionStatus("success");
-            toast.success("Your NFT has been listed successfully");
+          //   setTransactionStatus("success");
+          //   toast.success("Your NFT has been listed successfully");
 
-            // Notify parent component if callback is provided
-            if (onListingComplete) {
-              onListingComplete();
-            }
+          //   // Notify parent component if callback is provided
+          //   if (onListingComplete) {
+          //     onListingComplete();
+          //   }
 
-            // Close dialog after a short delay
-            setTimeout(() => setDialogOpen(false), 2000);
-          } catch (error) {
-            console.error("Backend sync error:", error);
-            setTransactionStatus("error");
-            toast.error(
-              "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
-            );
-          }
+          //   // Close dialog after a short delay
+          //   setTimeout(() => setDialogOpen(false), 2000);
+          // } catch (error) {
+          //   console.error("Backend sync error:", error);
+          //   setTransactionStatus("error");
+          //   toast.error(
+          //     "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
+          //   );
+          // }
         } else {
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");

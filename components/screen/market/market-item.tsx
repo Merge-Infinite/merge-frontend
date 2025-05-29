@@ -1,6 +1,6 @@
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { mists_to_sui } from "@/lib/utils";
@@ -33,21 +33,18 @@ export const MarketItem = React.memo(
     amount,
     price,
     loading: initialLoading,
-    itemId,
+    imageUrl,
     emoji,
-    onBuy,
     nftId,
     seller_kiosk,
-    id,
     isOwned,
   }: {
     element: string;
     amount: string | number;
     id: string;
     price?: string;
-    onBuy?: () => void;
     loading?: boolean;
-    itemId: string;
+    imageUrl: string;
     emoji: string;
     nftId: string;
     seller_kiosk: string;
@@ -150,27 +147,27 @@ export const MarketItem = React.memo(
 
         if (response && response.digest) {
           // Show transaction submitted toast
-          toast.success("Transaction Submitted");
+          toast.success(`You are now the owner of ${element} ${emoji}`);
 
           // Sync with backend
-          try {
-            await purchasesApi?.mutateAsync({
-              listingId: id,
-              transactionDigest: response.digest,
-            });
+          // try {
+          //   await purchasesApi?.mutateAsync({
+          //     listingId: id,
+          //     transactionDigest: response.digest,
+          //   });
 
-            // Success message
-            toast.success(`You are now the owner of ${element} ${emoji}`);
+          //   // Success message
+          //   toast.success(`You are now the owner of ${element} ${emoji}`);
 
-            if (onBuy) {
-              onBuy();
-            }
-          } catch (error) {
-            console.error("Backend sync error:", error);
-            toast.error(
-              "Purchase completed but we couldn't update our records. Your NFT is in your wallet."
-            );
-          }
+          //   if (onBuy) {
+          //     onBuy();
+          //   }
+          // } catch (error) {
+          //   console.error("Backend sync error:", error);
+          //   toast.error(
+          //     "Purchase completed but we couldn't update our records. Your NFT is in your wallet."
+          //   );
+          // }
         } else {
           toast.error("Failed to purchase NFT. Please try again.");
         }
@@ -196,14 +193,18 @@ export const MarketItem = React.memo(
 
     async function deListNFT(): Promise<void> {
       try {
+        if (!user) {
+          toast.error("User not found");
+          return;
+        }
         setLoading(true);
         const txb = new Transaction();
 
         txb.moveCall({
           target: "0x2::kiosk::delist",
           arguments: [
-            txb.object(user.kiosk.objectId),
-            txb.object(user.kiosk.ownerCapId),
+            txb.object(user?.kiosk?.objectId),
+            txb.object(user?.kiosk?.ownerCapId),
             txb.pure.address(nftId),
           ],
           typeArguments: [
@@ -214,11 +215,13 @@ export const MarketItem = React.memo(
         const [takenObject] = txb.moveCall({
           target: "0x2::kiosk::take",
           arguments: [
-            txb.object(user.kiosk.objectId),
-            txb.object(user.kiosk.ownerCapId),
+            txb.object(user?.kiosk?.objectId),
+            txb.object(user?.kiosk?.ownerCapId),
             txb.pure.id(nftId),
           ],
-          typeArguments: [`${NFT_PACKAGE_ID}::${NFT_MODULE_NAME}::ElementNFT`],
+          typeArguments: [
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+          ],
         });
         txb.transferObjects([takenObject], address);
         const response = await apiClient.callFunc<
@@ -239,21 +242,22 @@ export const MarketItem = React.memo(
         );
 
         if (response && response.digest) {
+          toast.success("Your NFT has been delisted successfully");
           // Sync with backend
-          try {
-            await marketplaceDeListings?.mutateAsync({
-              kioskId: user.kiosk.objectId,
-              nftId: nftId,
-              transactionDigest: response.digest,
-            });
+          // try {
+          //   await marketplaceDeListings?.mutateAsync({
+          //     kioskId: user.kiosk.objectId,
+          //     nftId: nftId,
+          //     transactionDigest: response.digest,
+          //   });
 
-            toast.success("Your NFT has been delisted successfully");
-          } catch (error) {
-            console.error("Backend sync error:", error);
-            toast.error(
-              "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
-            );
-          }
+          //   toast.success("Your NFT has been delisted successfully");
+          // } catch (error) {
+          //   console.error("Backend sync error:", error);
+          //   toast.error(
+          //     "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
+          //   );
+          // }
         } else {
           toast.error("Failed to delist NFT. Please try again.");
         }
@@ -272,12 +276,14 @@ export const MarketItem = React.memo(
     }
 
     return (
-      <Card className="w-full sm:w-60 bg-transparent border-none transition-all duration-300 gap-2 flex flex-col">
-        <CardContent className="p-4  border border-[#1f1f1f] rounded-2xl">
-          <pre className="text-white text-sm font-normal font-['Sora'] whitespace-pre-wrap">
-            {jsonContent}
-          </pre>
-        </CardContent>
+      <Card className="w-full sm:w-60 bg-transparent border-none transition-all duration-300 gap-2 flex flex-col ">
+        <Image
+          src={`https://wal.gg/${imageUrl}`}
+          alt={element}
+          width={100}
+          height={100}
+          className="self-center"
+        />
 
         <div className="flex flex-col items-center gap-2">
           <div

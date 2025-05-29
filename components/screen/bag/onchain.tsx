@@ -215,6 +215,7 @@ export function OnchainBagScreen() {
                     itemId={card.itemId}
                     imageUrl={card.imageUrl}
                     id={card.id}
+                    onListingComplete={refetch}
                   />
                 ))
             )}

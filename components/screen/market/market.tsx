@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
@@ -89,30 +89,29 @@ export const NFTMarket = () => {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
   const [loadingClaim, setLoadingClaim] = useState(false);
-  const {
-    items: marketplaceListings,
-    loading,
-    refetch,
-    profit,
-    refetchProfit,
-  } = useMarketPlace(isOwned ? user?.kiosk?.objectId : undefined, {
-    pollingInterval: undefined,
-  });
+  const { refetch, profit, refetchProfit } = useMarketPlace(
+    isOwned ? user?.kiosk?.objectId : undefined,
+    {
+      pollingInterval: undefined,
+    }
+  );
 
   const {
-    listings,
-    loading: listingsLoading,
+    listings: marketplaceListings,
+    loading,
     error,
+    refresh,
     sortByPrice,
     filterByElement,
+    getUniqueElements,
   } = useKioskListings({
     nftType: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
     autoFetch: true,
-    refreshInterval: 30000, // 30 seconds
+    refreshInterval: 60000, // Refresh every minute
     limit: 20,
   });
 
-  console.log("listings", listings);
+  console.log("listings", marketplaceListings);
 
   useEffect(() => {
     if (user) {
@@ -220,7 +219,7 @@ export const NFTMarket = () => {
         if (
           searchTerm &&
           !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !listing.id.toLowerCase().includes(searchTerm.toLowerCase())
+          !listing.objectId.toLowerCase().includes(searchTerm.toLowerCase())
         ) {
           return false;
         }
@@ -228,7 +227,7 @@ export const NFTMarket = () => {
         return true;
       })
       .sort((a, b) => {
-        return b.id.localeCompare(a.id);
+        return b.objectId.localeCompare(a.objectId);
       });
   }, [marketplaceListings, searchTerm]);
 
@@ -310,7 +309,7 @@ export const NFTMarket = () => {
 
   return (
     <div className="w-full h-full flex flex-col gap-4">
-      <div className="flex flex-col gap-4 fixed top-4 left-4 right-4 bg-black">
+      <div className="flex flex-col gap-4 fixed top-4 left-4 right-4 bg-black  z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge
@@ -335,6 +334,31 @@ export const NFTMarket = () => {
               </span>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+              Balance:
+            </div>
+            <div className="flex justify-start items-start gap-1">
+              <Image
+                src="/images/sui.svg"
+                alt="Sui Logo"
+                width={20}
+                height={20}
+              />
+              <div className="text-center justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                {profit || 0}
+              </div>
+            </div>
+            <Button
+              className="bg-[#a668ff] flex justify-center items-center gap-2 w-fit px-1 py-1 h-fit"
+              onClick={claimProfit}
+              disabled={loadingClaim || !profit}
+            >
+              <div className="text-center justify-start text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
+                {loadingClaim ? "Claiming..." : "Claim"}
+              </div>
+            </Button>
+          </div>
         </div>
       </div>
       <div className="flex flex-1 h-full">
@@ -348,88 +372,54 @@ export const NFTMarket = () => {
           </div>
         ) : (
           <div className="w-full h-full">
-            <div className="flex flex-col rounded-3xl fixed top-12 left-4 right-4 gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
-                  <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
-                    <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
-                    <SearchIcon className="w-5 h-5 text-white" />
-                  </div>
+            <div className="flex items-center gap-2 fixed top-12 left-4 right-4 gap-2  bg-black z-10 py-2">
+              <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
+                <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+                  <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
+                  <SearchIcon className="w-5 h-5 text-white" />
                 </div>
-                <Button
-                  size="sm"
-                  className={cn(
-                    "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
-                    isOwned
-                      ? "bg-primary text-black"
-                      : "bg-[#141414] text-white"
-                  )}
-                  onClick={() => setIsOwned((prev) => !prev)}
-                >
-                  Owned
-                </Button>
-                <Button
-                  size="sm"
-                  className={cn(
-                    "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
-                  )}
-                  onClick={() => {
-                    dispatch(updateTabMode(TabMode.BAG));
-                  }}
-                >
-                  Sell
-                </Button>
               </div>
-              <Card className="flex !p-2 bg-neutral-950/60 rounded-2xl outline outline-1 outline-offset-[-1px] border border-[#1f1f1f] inline-flex flex-col justify-start items-start">
-                <CardHeader className="self-stretch inline-flex  gap-2 p-1">
-                  <div className="flex-1 justify-start text-white text-base font-normal font-['Sora'] leading-normal">
-                    Your Balance:
-                  </div>
-                </CardHeader>
-                <CardContent className="self-stretch inline-flex justify-between items-center p-1">
-                  <div className="flex justify-start items-start gap-1">
-                    <Image
-                      src="/images/sui.svg"
-                      alt="Sui Logo"
-                      className="h-6 w-6 mr-1 text-orange-500"
-                      width={24}
-                      height={24}
-                    />
-                    <div className="text-center justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                      {profit || 0}
-                    </div>
-                  </div>
-                  <Button
-                    className="bg-[#a668ff] flex justify-center items-center gap-2 w-fit px-4 py-0"
-                    onClick={claimProfit}
-                    disabled={loadingClaim || !profit}
-                  >
-                    <div className="text-center justify-start text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
-                      {loadingClaim ? "Claiming..." : "Claim"}
-                    </div>
-                  </Button>
-                </CardContent>
-              </Card>
+              <Button
+                size="sm"
+                className={cn(
+                  "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
+                  isOwned ? "bg-primary text-black" : "bg-[#141414] text-white"
+                )}
+                onClick={() => setIsOwned((prev) => !prev)}
+              >
+                Owned
+              </Button>
+              <Button
+                size="sm"
+                className={cn(
+                  "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
+                )}
+                onClick={() => {
+                  dispatch(updateTabMode(TabMode.BAG));
+                }}
+              >
+                Sell
+              </Button>
             </div>
 
-            <div className="h-full overflow-y-auto " style={{ marginTop: 200 }}>
+            <div className="h-full overflow-y-auto " style={{ marginTop: 80 }}>
               {loading ? (
                 <MarketplaceSkeleton />
               ) : filteredListings.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {filteredListings.map((listing) => (
                     <MarketItem
-                      key={listing.id}
-                      element={listing.item.handle}
+                      key={listing.objectId}
+                      element={listing.element}
                       amount={listing.amount}
-                      id={listing.id}
-                      itemId={listing.item.id}
-                      emoji={listing.item.emoji}
+                      id={listing.objectId}
+                      imageUrl={listing.imageUrl}
+                      emoji={listing.element}
                       price={listing.price}
-                      nftId={listing.nftId}
+                      nftId={listing.objectId}
                       loading={purchaseLoading}
-                      seller_kiosk={listing.kiosk.objectId}
-                      onBuy={refetch}
+                      seller_kiosk={listing.kioskId}
+                      onSubmitOnchainComplete={refetch}
                       isOwned={isOwned}
                     />
                   ))}

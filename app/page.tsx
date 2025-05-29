@@ -73,9 +73,6 @@ export default function Home() {
   //   }
   // }, [authed, initialized]);
 
-  console.log(user.profile, initialized, authed);
-
-  console.log(tabMode);
   return (
     <div className="flex flex-col items-center h-full w-full p-4">
       {!user.profile ? (

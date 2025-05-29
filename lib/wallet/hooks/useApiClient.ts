@@ -9,7 +9,6 @@ export const ApiClientContext = React.createContext<WebApiClient | null>(null);
 export function useApiClient() {
   const apiClient = useContext(ApiClientContext);
   const { authed } = useSelector((state: RootState) => state.appContext);
-  console.log(`authed: ${authed}`);
   const dispatch = useDispatch();
 
   const handleAuthExpired = useCallback(() => {
