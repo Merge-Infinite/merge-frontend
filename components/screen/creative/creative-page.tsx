@@ -22,7 +22,6 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useLoading } from "@/hooks/useLoading";
 import { useUser } from "@/hooks/useUser";
 import creativeApi from "@/lib/api/creative";
-import { FEE_ADDRESS, GENERATION_FEE } from "@/lib/utils";
 import { formatSUI } from "@/lib/wallet/core";
 import {
   SendAndExecuteTxParams,
@@ -34,6 +33,7 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
+import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { Search } from "lucide-react";

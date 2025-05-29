@@ -23,7 +23,6 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
-  CREATURE_NFT_MODULE_NAME,
   CREATURE_NFT_PACKAGE_ID,
   ELEMENT_NFT_MODULE_NAME,
 } from "@/utils/constants";
@@ -140,7 +139,7 @@ export const CardItem = React.memo(
             txb.object(id),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreativeElementNFT`,
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
           ],
         });
         txb.moveCall({
@@ -152,7 +151,7 @@ export const CardItem = React.memo(
             txb.pure.u64(numericPrice * Number(MIST_PER_SUI)),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreativeElementNFT`,
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
           ],
         });
 
@@ -289,12 +288,6 @@ export const CardItem = React.memo(
       }
     }
 
-    const jsonContent = `{
-        "p": "sui-20",
-        "element": "${element}", 
-        "amt": "${amount}",
-    }`;
-
     const getStatusMessage = () => {
       switch (transactionStatus) {
         case "submitting":
@@ -324,7 +317,12 @@ export const CardItem = React.memo(
               className="p-4 border border-[#1f1f1f] rounded-2xl w-full"
             />
 
-            <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline">
+            <div
+              className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline"
+              onClick={() => {
+                window.open(`https://suivision.xyz/object/${id}`, "_blank");
+              }}
+            >
               #{formatAddress(id)}
             </div>
 

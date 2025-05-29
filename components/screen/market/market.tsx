@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import useApi from "@/hooks/useApi";
 import { useMarketPlace } from "@/hooks/useMarketPlace";
+import { useKioskListings } from "@/hooks/useMarketplaceListings";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { formatSUI } from "@/lib/wallet/core";
@@ -22,6 +23,10 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { OmitToken } from "@/lib/wallet/types";
+import {
+  CREATURE_NFT_PACKAGE_ID,
+  ELEMENT_NFT_MODULE_NAME,
+} from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { SearchIcon, ShoppingCart } from "lucide-react";
@@ -93,6 +98,21 @@ export const NFTMarket = () => {
   } = useMarketPlace(isOwned ? user?.kiosk?.objectId : undefined, {
     pollingInterval: undefined,
   });
+
+  const {
+    listings,
+    loading: listingsLoading,
+    error,
+    sortByPrice,
+    filterByElement,
+  } = useKioskListings({
+    nftType: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+    autoFetch: true,
+    refreshInterval: 30000, // 30 seconds
+    limit: 20,
+  });
+
+  console.log("listings", listings);
 
   useEffect(() => {
     if (user) {
@@ -424,7 +444,6 @@ export const NFTMarket = () => {
       <PasscodeAuthDialog
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}
-        onSuccess={handleCreateKiosk}
       />
     </div>
   );
