@@ -174,7 +174,8 @@ export const CardItem = React.memo(
 
         if (response && response.digest) {
           toast.success("Your NFT has been listed successfully");
-          onListingComplete?.();
+          await onListingComplete?.();
+          setTimeout(() => setDialogOpen(false), 1000);
           // setTransactionDigest(response.digest);
           // setTransactionStatus("syncing");
 
@@ -221,6 +222,7 @@ export const CardItem = React.memo(
           );
         }
       } finally {
+        setTransactionStatus("success");
       }
     }
 
