@@ -16,6 +16,7 @@ export interface KioskListing {
 
 interface UseKioskListingsOptions {
   nftType: string;
+  kioskId?: string;
   refreshInterval?: number;
   autoFetch?: boolean;
   limit?: number;
@@ -130,7 +131,9 @@ export function useKioskListings(options: UseKioskListingsOptions) {
             console.log(
               `Processing item ${eventData.id} from kiosk ${eventData.kiosk}`
             );
-
+            if (options.kioskId && eventData.kiosk !== options.kioskId) {
+              continue;
+            }
             // Get the NFT object to verify it's still listed and get its details
             const nftObject = await suiClient.getObject({
               id: eventData.id,
@@ -190,7 +193,7 @@ export function useKioskListings(options: UseKioskListingsOptions) {
     } finally {
       setLoading(false);
     }
-  }, [nftType, limit]);
+  }, [nftType, limit, options.kioskId]);
 
   // Helper function to verify if an item is still listed in a kiosk
   const verifyKioskListing = useCallback(
@@ -228,6 +231,12 @@ export function useKioskListings(options: UseKioskListingsOptions) {
       fetchKioskListings();
     }
   }, [autoFetch, fetchKioskListings]);
+
+  useEffect(() => {
+    if (options.kioskId) {
+      fetchKioskListings();
+    }
+  }, [options.kioskId]);
 
   // Set up auto-refresh
   useEffect(() => {

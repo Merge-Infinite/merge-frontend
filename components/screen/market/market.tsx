@@ -89,7 +89,7 @@ export const NFTMarket = () => {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
   const [loadingClaim, setLoadingClaim] = useState(false);
-  const { refetch, profit, refetchProfit } = useMarketPlace(
+  const { profit } = useMarketPlace(
     isOwned ? user?.kiosk?.objectId : undefined,
     {
       pollingInterval: undefined,
@@ -99,19 +99,16 @@ export const NFTMarket = () => {
   const {
     listings: marketplaceListings,
     loading,
-    error,
     refresh,
-    sortByPrice,
-    filterByElement,
-    getUniqueElements,
   } = useKioskListings({
+    kioskId: isOwned ? user?.kiosk?.objectId : undefined,
     nftType: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
     autoFetch: true,
     refreshInterval: 60000, // Refresh every minute
     limit: 20,
   });
 
-  console.log("listings", marketplaceListings);
+  console.log("listings");
 
   useEffect(() => {
     if (user) {
@@ -215,7 +212,6 @@ export const NFTMarket = () => {
   const filteredListings = React.useMemo(() => {
     return marketplaceListings
       .filter((listing) => {
-        // Apply search filter
         if (
           searchTerm &&
           !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -231,17 +227,19 @@ export const NFTMarket = () => {
       });
   }, [marketplaceListings, searchTerm]);
 
+  console.log("marketplaceListings", marketplaceListings);
+
   useEffect(() => {
     if (user && !user.kiosk && authed && address) {
       handleCreateKiosk();
     }
   }, [user, authed, address]);
 
-  useEffect(() => {
-    if (user && user.kiosk) {
-      refetch();
-    }
-  }, [isOwned]);
+  // useEffect(() => {
+  //   if (user && user.kiosk) {
+  //     refetch();
+  //   }
+  // }, [isOwned]);
 
   async function claimProfit(): Promise<void> {
     try {
@@ -360,8 +358,37 @@ export const NFTMarket = () => {
             </Button>
           </div>
         </div>
+        <div className="flex items-center gap-2 gap-2  bg-black z-10 pb-2">
+          <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
+            <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
+              <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
+              <SearchIcon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <Button
+            size="sm"
+            className={cn(
+              "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
+              isOwned ? "bg-primary text-black" : "bg-[#141414] text-white"
+            )}
+            onClick={() => setIsOwned((prev) => !prev)}
+          >
+            Owned
+          </Button>
+          <Button
+            size="sm"
+            className={cn(
+              "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
+            )}
+            onClick={() => {
+              dispatch(updateTabMode(TabMode.BAG));
+            }}
+          >
+            Sell
+          </Button>
+        </div>
       </div>
-      <div className="flex flex-1 h-full">
+      <div className="flex flex-1 h-full mt-10">
         {!initialized ? (
           <CreateWallet />
         ) : user && !user.kiosk ? (
@@ -372,36 +399,6 @@ export const NFTMarket = () => {
           </div>
         ) : (
           <div className="w-full h-full">
-            <div className="flex items-center gap-2 fixed top-12 left-4 right-4 gap-2  bg-black z-10 py-2">
-              <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
-                <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
-                  <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
-                  <SearchIcon className="w-5 h-5 text-white" />
-                </div>
-              </div>
-              <Button
-                size="sm"
-                className={cn(
-                  "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
-                  isOwned ? "bg-primary text-black" : "bg-[#141414] text-white"
-                )}
-                onClick={() => setIsOwned((prev) => !prev)}
-              >
-                Owned
-              </Button>
-              <Button
-                size="sm"
-                className={cn(
-                  "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
-                )}
-                onClick={() => {
-                  dispatch(updateTabMode(TabMode.BAG));
-                }}
-              >
-                Sell
-              </Button>
-            </div>
-
             <div className="h-full overflow-y-auto " style={{ marginTop: 80 }}>
               {loading ? (
                 <MarketplaceSkeleton />
@@ -419,7 +416,7 @@ export const NFTMarket = () => {
                       nftId={listing.objectId}
                       loading={purchaseLoading}
                       seller_kiosk={listing.kioskId}
-                      onSubmitOnchainComplete={refetch}
+                      onSubmitOnchainComplete={refresh}
                       isOwned={isOwned}
                     />
                   ))}
