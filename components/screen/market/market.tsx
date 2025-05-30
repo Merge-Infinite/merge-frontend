@@ -89,7 +89,7 @@ export const NFTMarket = () => {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const dispatch = useDispatch();
   const [loadingClaim, setLoadingClaim] = useState(false);
-  const { profit } = useMarketPlace(
+  const { profit, refetchProfit } = useMarketPlace(
     isOwned ? user?.kiosk?.objectId : undefined,
     {
       pollingInterval: undefined,
@@ -290,6 +290,7 @@ export const NFTMarket = () => {
         // Sync with backend
         try {
           toast.success("Profit claimed successfully");
+          refetchProfit();
         } catch (error) {
           console.error("Backend sync error:", error);
         }
@@ -337,9 +338,9 @@ export const NFTMarket = () => {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <div className="flex-1 justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-              Balance:
+              Kiosk:
             </div>
             <div className="flex justify-start items-start gap-1">
               <Image
