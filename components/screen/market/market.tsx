@@ -211,6 +211,11 @@ export const NFTMarket = () => {
 
   const filteredListings = React.useMemo(() => {
     return marketplaceListings
+      .filter((listing) =>
+        isOwned
+          ? listing.kioskId === user?.kiosk?.objectId
+          : listing.kioskId !== user?.kiosk?.objectId
+      )
       .filter((listing) => {
         if (
           searchTerm &&
@@ -308,7 +313,7 @@ export const NFTMarket = () => {
   return (
     <div className="w-full h-full flex flex-col gap-4">
       <div className="flex flex-col gap-4 fixed top-4 left-4 right-4 bg-black  z-10">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"

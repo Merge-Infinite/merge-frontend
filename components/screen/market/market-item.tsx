@@ -38,6 +38,7 @@ export const MarketItem = React.memo(
     nftId,
     seller_kiosk,
     isOwned,
+    onSubmitOnchainComplete,
   }: {
     element: string;
     amount: string | number;
@@ -49,6 +50,7 @@ export const MarketItem = React.memo(
     nftId: string;
     seller_kiosk: string;
     isOwned?: boolean;
+    onSubmitOnchainComplete?: () => void;
   }) => {
     const featureFlags = useFeatureFlags();
     const apiClient = useApiClient();
@@ -208,7 +210,7 @@ export const MarketItem = React.memo(
             txb.pure.address(nftId),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::ElementNFT`,
+            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
           ],
         });
         console.log(nftId);
@@ -243,6 +245,7 @@ export const MarketItem = React.memo(
 
         if (response && response.digest) {
           toast.success("Your NFT has been delisted successfully");
+          await onSubmitOnchainComplete?.();
           // Sync with backend
           // try {
           //   await marketplaceDeListings?.mutateAsync({
