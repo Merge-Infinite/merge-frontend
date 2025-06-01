@@ -24,6 +24,7 @@ import { RootState } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
 import { OmitToken } from "@/lib/wallet/types";
 import {
+  CREATURE_NFT_MODULE_NAME,
   CREATURE_NFT_PACKAGE_ID,
   ELEMENT_NFT_MODULE_NAME,
 } from "@/utils/constants";
@@ -104,11 +105,21 @@ export const NFTMarket = () => {
     kioskId: isOwned ? user?.kiosk?.objectId : undefined,
     nftType: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
     autoFetch: true,
-    refreshInterval: 60000, // Refresh every minute
+    refreshInterval: 60000,
     limit: 20,
   });
 
-  console.log("listings");
+  const {
+    listings: marketplaceCreatureListings,
+    loading: loadingCreature,
+    refresh: refreshCreature,
+  } = useKioskListings({
+    kioskId: isOwned ? user?.kiosk?.objectId : undefined,
+    nftType: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
+    autoFetch: true,
+    refreshInterval: 60000,
+    limit: 20,
+  });
 
   useEffect(() => {
     if (user) {
@@ -133,6 +144,8 @@ export const NFTMarket = () => {
     method: "POST",
     url: "marketplace/kiosk/create",
   }).post;
+
+  console.log("marketplaceCreatureListings", marketplaceCreatureListings);
 
   const handleCreateKiosk = useCallback(async () => {
     try {
@@ -210,7 +223,8 @@ export const NFTMarket = () => {
   }, [address, authed]);
 
   const filteredListings = React.useMemo(() => {
-    return marketplaceListings
+    const listings = [];
+    const elementListings = marketplaceListings
       .filter((listing) =>
         isOwned
           ? listing.kioskId === user?.kiosk?.objectId
@@ -230,21 +244,38 @@ export const NFTMarket = () => {
       .sort((a, b) => {
         return b.objectId.localeCompare(a.objectId);
       });
-  }, [marketplaceListings, searchTerm]);
 
-  console.log("marketplaceListings", marketplaceListings);
+    const creatureListings = marketplaceCreatureListings
+      .filter((listing) =>
+        isOwned
+          ? listing.kioskId === user?.kiosk?.objectId
+          : listing.kioskId !== user?.kiosk?.objectId
+      )
+      .filter((listing) => {
+        if (
+          searchTerm &&
+          !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
+          !listing.objectId.toLowerCase().includes(searchTerm.toLowerCase())
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        return b.objectId.localeCompare(a.objectId);
+      });
+
+    listings.push(...elementListings, ...creatureListings);
+
+    return listings;
+  }, [marketplaceListings, searchTerm]);
 
   useEffect(() => {
     if (user && !user.kiosk && authed && address) {
       handleCreateKiosk();
     }
   }, [user, authed, address]);
-
-  // useEffect(() => {
-  //   if (user && user.kiosk) {
-  //     refetch();
-  //   }
-  // }, [isOwned]);
 
   async function claimProfit(): Promise<void> {
     try {
@@ -414,7 +445,7 @@ export const NFTMarket = () => {
                     <MarketItem
                       key={listing.objectId}
                       element={listing.element}
-                      amount={listing.amount}
+                      recipe={listing.recipe}
                       id={listing.objectId}
                       imageUrl={listing.imageUrl}
                       emoji={listing.element}
@@ -424,6 +455,7 @@ export const NFTMarket = () => {
                       seller_kiosk={listing.kioskId}
                       onSubmitOnchainComplete={refresh}
                       isOwned={isOwned}
+                      type={listing.type}
                     />
                   ))}
                 </div>

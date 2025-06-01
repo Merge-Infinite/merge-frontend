@@ -3,8 +3,6 @@
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useNFTList } from "@/hooks/useNFTList";
@@ -24,11 +22,11 @@ import {
   ELEMENT_NFT_MODULE_NAME,
 } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
-import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { CreativeOnchainItem } from "./creative-onchain-item";
 import { CardItem } from "./onchain-item";
 
 export function OnchainBagScreen() {
@@ -43,7 +41,12 @@ export function OnchainBagScreen() {
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
   );
-  const { nfts, loading, error, refresh } = useNFTList({
+  const {
+    nfts,
+    loading,
+    error,
+    refresh: nftsRefresh,
+  } = useNFTList({
     walletAddress: address,
     refreshInterval: undefined,
     autoFetch: true,
@@ -215,7 +218,7 @@ export function OnchainBagScreen() {
                     itemId={card.itemId}
                     imageUrl={card.imageUrl}
                     id={card.id}
-                    onListingComplete={refetch}
+                    onListingComplete={nftsRefresh}
                   />
                 ))
             )}
@@ -233,35 +236,13 @@ export function OnchainBagScreen() {
                   };
                 })
                 .map((card, index) => (
-                  <Card className="w-44 bg-transparent border-none">
-                    <CardContent className="p-0 flex flex-col items-center gap-2">
-                      {/* Image Container */}
-                      <Image
-                        src={`https://wal.gg/${card.imageUrl}`}
-                        alt="Project preview"
-                        width={176}
-                        height={176}
-                        className="rounded-2xl"
-                      />
-
-                      {/* Hash ID */}
-                      <div className="text-emerald-300 text-sm font-normal underline leading-normal">
-                        #{formatAddress(card.id)}
-                      </div>
-
-                      <div className="text-white text-sm font-normal leading-normal text-center">
-                        {card.name}
-                      </div>
-
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="w-44 h-6 px-4 bg-white hover:bg-gray-100 text-black rounded-3xl text-xs font-normal uppercase leading-normal"
-                      >
-                        Stake
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <CreativeOnchainItem
+                    key={index}
+                    id={card.id}
+                    name={card.name}
+                    imageUrl={card.imageUrl}
+                    onListingComplete={creatureNftsRefresh}
+                  />
                 ))
             )}
           </div>

@@ -36,14 +36,33 @@ import { OmitToken } from "@/lib/wallet/types";
 import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
-import { Search } from "lucide-react";
+import { AlertTriangle, Search } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
+// Recipe type definition
+interface RecipeItem {
+  itemId: number;
+  quantity: number;
+}
+
+interface Recipe {
+  head?: RecipeItem[];
+  body?: RecipeItem[];
+  environment?: RecipeItem[];
+  hand?: RecipeItem[];
+  leg?: RecipeItem[];
+  material?: RecipeItem[];
+  style?: RecipeItem[];
+}
+
 const CreatureCustomizer = () => {
+  const params = useSearchParams();
+  const recipeParam = params.get("recipe");
   const apiClient = useApiClient();
   const { isLoading, startLoading, stopLoading } = useLoading();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -59,6 +78,10 @@ const CreatureCustomizer = () => {
   const [searchText, setSearchText] = useState("");
   const [debouncedText] = useDebounce(searchText, 500);
   const [mintBottomSheetOpen, setMintBottomSheetOpen] = useState(false);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [missingItems, setMissingItems] = useState<{
+    [key: string]: RecipeItem[];
+  }>({});
 
   const [filteredElements, setFilteredElements] = useState<any[]>([]);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
@@ -80,7 +103,132 @@ const CreatureCustomizer = () => {
     Environment: [], // Max: 1
   });
 
-  const { mutate: mint, isPending } = creativeApi.mint.useMutation();
+  const { mutateAsync: mint, isPending } = creativeApi.mint.useMutation();
+
+  // Parse recipe from URL parameter
+  useEffect(() => {
+    if (recipeParam) {
+      try {
+        const parsedRecipe = JSON.parse(decodeURIComponent(recipeParam));
+        setRecipe(parsedRecipe);
+      } catch (error) {
+        console.error("Failed to parse recipe:", error);
+        toast.error("Invalid recipe format");
+      }
+    }
+  }, [recipeParam]);
+
+  // Auto-fill recipe when inventory is loaded
+  useEffect(() => {
+    if (recipe && inventory && inventory.length > 0) {
+      fillRecipeElements();
+    }
+  }, [recipe, inventory]);
+
+  // Function to find inventory item by itemId
+  const findInventoryItem = (itemId: number) => {
+    return inventory?.find((item) => item.itemId === itemId);
+  };
+
+  // Function to fill recipe elements and check for missing items
+  const fillRecipeElements = () => {
+    if (!recipe || !inventory) return;
+
+    const newSelectedElements: { [key: string]: any[] } = {
+      Style: [],
+      Material: [],
+      Head: [],
+      Body: [],
+      Hand: [],
+      Leg: [],
+      Environment: [],
+    };
+
+    const newMissingItems: { [key: string]: RecipeItem[] } = {};
+
+    // Map recipe keys to feature names
+    const keyMapping = {
+      style: "Style",
+      material: "Material",
+      head: "Head",
+      body: "Body",
+      hand: "Hand",
+      leg: "Leg",
+      environment: "Environment",
+    };
+
+    Object.entries(recipe).forEach(([key, items]) => {
+      const featureName = keyMapping[key as keyof typeof keyMapping];
+      if (!featureName || !items) return;
+
+      const missingForFeature: RecipeItem[] = [];
+
+      items.forEach((recipeItem: RecipeItem) => {
+        const inventoryItem = findInventoryItem(recipeItem.itemId);
+
+        if (inventoryItem) {
+          // Check if user has enough quantity
+          const availableAmount = inventoryItem.amount;
+          const requestedAmount = recipeItem.quantity;
+
+          if (availableAmount >= requestedAmount) {
+            // User has enough, add to selected elements
+            const elementToAdd = {
+              ...inventoryItem,
+              quantity: requestedAmount,
+              displayQuantity: `(${requestedAmount})`,
+            };
+            newSelectedElements[featureName].push(elementToAdd);
+            console.log(
+              `Added ${inventoryItem.handle} (${requestedAmount}) to ${featureName}`
+            );
+          } else {
+            // User doesn't have enough, add to missing items
+            missingForFeature.push({
+              ...recipeItem,
+              availableAmount,
+              itemHandle: inventoryItem.handle,
+              itemEmoji: inventoryItem.emoji,
+            });
+            console.log(
+              `Missing ${inventoryItem.handle}: need ${requestedAmount}, have ${availableAmount}`
+            );
+          }
+        } else {
+          // Item not found in inventory
+          missingForFeature.push({
+            ...recipeItem,
+            availableAmount: 0,
+            itemHandle: `Item ${recipeItem.itemId}`,
+            itemEmoji: "❓",
+          });
+          console.log(`Item ${recipeItem.itemId} not found in inventory`);
+        }
+      });
+
+      if (missingForFeature.length > 0) {
+        newMissingItems[featureName] = missingForFeature;
+      }
+    });
+
+    console.log("New selected elements:", newSelectedElements);
+    console.log("Missing items:", newMissingItems);
+
+    setSelectedElements(newSelectedElements);
+    setMissingItems(newMissingItems);
+
+    // Show toast if there are missing items
+    const totalMissing = Object.values(newMissingItems).flat().length;
+    const totalAdded = Object.values(newSelectedElements).flat().length;
+
+    if (totalAdded > 0) {
+      toast.success(`Added ${totalAdded} items from recipe to form`);
+    }
+
+    if (totalMissing > 0) {
+      toast.error(`Missing ${totalMissing} required items for this recipe`);
+    }
+  };
 
   // Get remaining slots for a feature
   const getRemainingSlots = (feature: string) => {
@@ -144,7 +292,13 @@ const CreatureCustomizer = () => {
   // Check if mint button should be enabled
   const isMintEnabled = () => {
     const validation = validateMintRequirements();
-    return validation.isValid && !isLoading && !isPending;
+    const hasMissingItems = Object.keys(missingItems).length > 0;
+    return validation.isValid && !isLoading && !isPending && !hasMissingItems;
+  };
+
+  // Get missing items for a specific feature
+  const getMissingItemsForFeature = (feature: string) => {
+    return missingItems[feature] || [];
   };
 
   useEffect(() => {
@@ -238,6 +392,13 @@ const CreatureCustomizer = () => {
       return;
     }
 
+    if (Object.keys(missingItems).length > 0) {
+      toast.error(
+        "Cannot mint: You have missing required items for this recipe"
+      );
+      return;
+    }
+
     setMintBottomSheetOpen(true);
   };
 
@@ -248,10 +409,9 @@ const CreatureCustomizer = () => {
       const elementInfos = Object.values(selectedElements)
         .flat()
         .map((element) => ({
-          itemId: element.id,
+          itemId: element.itemId,
           amount: element.quantity,
         }));
-      console.log(elementInfos);
       const validation = validateMintRequirements();
       if (!validation.isValid) {
         const missingText = validation.missingFields.join(", ");
@@ -293,12 +453,20 @@ const CreatureCustomizer = () => {
             transactionBlockBytes: (response as any).transactionBlockBytes,
             signature: (response as any).signature,
           },
+        }).then(() => {
+          toast.success("Creature minted successfully");
+          setMintBottomSheetOpen(false);
         });
-        setMintBottomSheetOpen(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Failed to mint creature. Please try again.");
+      if (error.message === "Authentication required") {
+        setOpenAuthDialog(true);
+      } else {
+        toast.error(
+          error.message || "Failed to mint creature. Please try again."
+        );
+      }
     } finally {
       stopLoading();
     }
@@ -355,6 +523,36 @@ const CreatureCustomizer = () => {
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}
       />
+
+      {/* Recipe Status Banner */}
+      {recipe && (
+        <div
+          className={`w-full p-3 rounded-lg border ${
+            Object.keys(missingItems).length > 0
+              ? "bg-red-900/20 border-red-500"
+              : "bg-green-900/20 border-green-500"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {Object.keys(missingItems).length > 0 ? (
+              <>
+                <AlertTriangle className="text-red-400" size={16} />
+                <span className="text-red-400 text-sm font-medium">
+                  Recipe loaded with missing items
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="w-4 h-4 bg-green-400 rounded-full" />
+                <span className="text-green-400 text-sm font-medium">
+                  Recipe loaded successfully
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="w-full">
         <Select onValueChange={(value) => setTopic(value)} value={topic}>
           <SelectTrigger className="w-full bg-[#1f1f1f] text-white rounded-2xl border-none">
@@ -386,6 +584,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Style") <= 0}
           selectedItems={selectedElements.Style}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Style")}
         />
 
         {/* Material Card */}
@@ -397,6 +596,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Material") <= 0}
           selectedItems={selectedElements.Material}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Material")}
         />
       </div>
 
@@ -411,6 +611,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Head") <= 0}
           selectedItems={selectedElements.Head}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Head")}
         />
 
         {/* Body Card */}
@@ -422,6 +623,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Body") <= 0}
           selectedItems={selectedElements.Body}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Body")}
         />
       </div>
 
@@ -436,6 +638,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Hand") <= 0}
           selectedItems={selectedElements.Hand}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Hand")}
         />
 
         {/* Leg Card */}
@@ -447,6 +650,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Leg") <= 0}
           selectedItems={selectedElements.Leg}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Leg")}
         />
       </div>
 
@@ -460,6 +664,7 @@ const CreatureCustomizer = () => {
           disableAddButton={getRemainingSlots("Environment") <= 0}
           selectedItems={selectedElements.Environment}
           removeElement={removeElement}
+          missingItems={getMissingItemsForFeature("Environment")}
         />
       </div>
 
@@ -473,7 +678,7 @@ const CreatureCustomizer = () => {
         onClick={handleMintButtonClick}
         disabled={!isMintEnabled()}
       >
-        Mint
+        {Object.keys(missingItems).length > 0 ? "Missing Items" : "Mint"}
       </Button>
 
       {/* Bottom Sheet for Element Selection */}
@@ -566,8 +771,18 @@ const CreatureCustomizer = () => {
                 variant="ghost"
                 className="px-3 py-1 rounded-3xl border border-white justify-start w-fit"
               >
-                <span className="text-white text-xs uppercase">
-                  {selectedElement?.emoji} {selectedElement?.handle}
+                <span className="text-white text-xs uppercase flex items-center gap-2">
+                  {selectedElement?.emoji.includes("https") ? (
+                    <Image
+                      src={selectedElement?.emoji}
+                      alt={selectedElement?.handle}
+                      width={16}
+                      height={16}
+                    />
+                  ) : (
+                    selectedElement?.emoji
+                  )}
+                  {selectedElement?.handle}
                 </span>
               </Button>
             )}
@@ -627,7 +842,17 @@ const CreatureCustomizer = () => {
                       className="px-3 py-1 rounded-3xl border border-white justify-start w-fit"
                     >
                       <span className="text-white text-xs uppercase">
-                        {selectedElement?.emoji} {selectedElement?.handle}
+                        {selectedElement?.emoji.includes("https") ? (
+                          <Image
+                            src={selectedElement?.emoji}
+                            alt={selectedElement?.handle}
+                            width={16}
+                            height={16}
+                          />
+                        ) : (
+                          selectedElement?.emoji
+                        )}
+                        {selectedElement?.handle}
                       </span>
                     </Button>
                     <div className="text-neutral-400 text-xs">

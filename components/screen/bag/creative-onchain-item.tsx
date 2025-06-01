@@ -1,7 +1,7 @@
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
+  CREATURE_NFT_MODULE_NAME,
   CREATURE_NFT_PACKAGE_ID,
   ELEMENT_NFT_MODULE_NAME,
 } from "@/utils/constants";
@@ -34,21 +35,17 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
-export const CardItem = React.memo(
+export const CreativeOnchainItem = React.memo(
   ({
-    element,
-    amount,
     id,
-    itemId,
-    onListingComplete,
+    name,
     imageUrl,
+    onListingComplete,
   }: {
-    element: string;
-    amount: string | number;
     id: string;
-    itemId?: number;
-    onListingComplete?: () => void;
+    name: string;
     imageUrl: string;
+    onListingComplete?: () => void;
   }) => {
     const apiClient = useApiClient();
     const marketplaceListings = useApi({
@@ -139,7 +136,7 @@ export const CardItem = React.memo(
             txb.object(id),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
           ],
         });
         txb.moveCall({
@@ -151,7 +148,7 @@ export const CardItem = React.memo(
             txb.pure.u64(numericPrice * Number(MIST_PER_SUI)),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
           ],
         });
 
@@ -176,37 +173,6 @@ export const CardItem = React.memo(
           setTransactionStatus("success");
           await onListingComplete?.();
           setTimeout(() => setDialogOpen(false), 1000);
-          // setTransactionDigest(response.digest);
-          // setTransactionStatus("syncing");
-
-          // Sync with backend
-          // try {
-          //   await marketplaceListings?.mutateAsync({
-          //     kioskId: user.kiosk.objectId,
-          //     nftId: id,
-          //     price: (numericPrice * Number(MIST_PER_SUI)).toString(),
-          //     transactionDigest: response.digest,
-          //     itemId: Number(itemId),
-          //     amount: Number(amount),
-          //   });
-
-          //   setTransactionStatus("success");
-          //   toast.success("Your NFT has been listed successfully");
-
-          //   // Notify parent component if callback is provided
-          //   if (onListingComplete) {
-          //     onListingComplete();
-          //   }
-
-          //   // Close dialog after a short delay
-          //   setTimeout(() => setDialogOpen(false), 2000);
-          // } catch (error) {
-          //   console.error("Backend sync error:", error);
-          //   setTransactionStatus("error");
-          //   toast.error(
-          //     "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
-          //   );
-          // }
         } else {
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");
@@ -312,42 +278,35 @@ export const CardItem = React.memo(
     return (
       <Fragment>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Card className="border-none gap-2 flex flex-col justify-between items-center hover:shadow-md transition-shadow duration-200">
-            <Image
-              src={`https://wal.gg/${imageUrl}`}
-              alt="NFT"
-              width={100}
-              height={100}
-              className="p-4 border border-[#1f1f1f] rounded-2xl w-full"
-            />
+          <Card className="w-44 bg-transparent border-none">
+            <CardContent className="p-0 flex flex-col items-center gap-2">
+              {/* Image Container */}
+              <Image
+                src={`https://wal.gg/${imageUrl}`}
+                alt="Project preview"
+                width={176}
+                height={176}
+                className="rounded-2xl"
+              />
 
-            <div
-              className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline"
-              onClick={() => {
-                window.open(`https://suivision.xyz/object/${id}`, "_blank");
-              }}
-            >
-              #{formatAddress(id)}
-            </div>
+              {/* Hash ID */}
+              <div className="text-emerald-300 text-sm font-normal underline leading-normal">
+                #{formatAddress(id)}
+              </div>
 
-            <div className="w-full flex justify-between items-center gap-2">
-              <Button
-                size={"sm"}
-                className="text-black text-xs uppercase rounded-full hover:bg-[#f0f0f0] transition-colors"
-                onClick={onBurn}
-                disabled={isProcessing || burnNFT?.isPending}
-              >
-                {isProcessing ? "Processing..." : "Use"}
-              </Button>
+              <div className="text-white text-sm font-normal leading-normal text-center">
+                {name}
+              </div>
               <DialogTrigger asChild>
                 <Button
-                  size={"sm"}
-                  className="text-black text-xs !bg-white uppercase rounded-full hover:bg-[#f0f0f0] transition-colors"
+                  variant="secondary"
+                  size="sm"
+                  className="w-44 h-6 px-4 bg-white hover:bg-gray-100 text-black rounded-3xl text-xs font-normal uppercase leading-normal"
                 >
                   Sell
                 </Button>
               </DialogTrigger>
-            </div>
+            </CardContent>
           </Card>
 
           <DialogContent className="bg-[#1f1f1f] border-0 text-white p-6 w-[90%] max-w-md">
@@ -401,21 +360,14 @@ export const CardItem = React.memo(
               <div className="flex flex-col gap-4">
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <div className="text-sm font-medium">Element Type:</div>
+                    <div className="text-sm font-medium">Element Name:</div>
                     <Badge
                       variant="outline"
                       className="rounded-3xl border-white p-2 text-white text-xs uppercase"
                     >
-                      {element}
+                      {name}
                     </Badge>
                   </div>
-
-                  <div className="text-sm font-medium">Quantity:</div>
-                  <Input
-                    className="rounded-3xl h-10 bg-[#141414] border-[#333333] text-white font-bold"
-                    value={amount}
-                    readOnly
-                  />
 
                   <div className="flex justify-between items-center">
                     <div className="text-sm font-medium">Listing price:</div>
@@ -497,4 +449,4 @@ export const CardItem = React.memo(
   }
 );
 
-CardItem.displayName = "CardItem";
+CreativeOnchainItem.displayName = "CreativeOnchainItem";

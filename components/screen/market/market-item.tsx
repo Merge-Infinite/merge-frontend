@@ -1,7 +1,6 @@
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { mists_to_sui } from "@/lib/utils";
 import {
@@ -15,14 +14,16 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
+  CREATURE_NFT_MODULE_NAME,
   CREATURE_NFT_PACKAGE_ID,
-  ELEMENT_NFT_MODULE_NAME,
+  CREATURE_POLICY_ID,
   ELEMENT_POLICY_ID,
   FEE_ADDRESS,
 } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -30,7 +31,7 @@ import { toast } from "sonner";
 export const MarketItem = React.memo(
   ({
     element,
-    amount,
+    recipe,
     price,
     loading: initialLoading,
     imageUrl,
@@ -39,9 +40,10 @@ export const MarketItem = React.memo(
     seller_kiosk,
     isOwned,
     onSubmitOnchainComplete,
+    type,
   }: {
     element: string;
-    amount: string | number;
+    recipe?: any;
     id: string;
     price?: string;
     loading?: boolean;
@@ -51,6 +53,7 @@ export const MarketItem = React.memo(
     seller_kiosk: string;
     isOwned?: boolean;
     onSubmitOnchainComplete?: () => void;
+    type: string;
   }) => {
     const featureFlags = useFeatureFlags();
     const apiClient = useApiClient();
@@ -64,23 +67,7 @@ export const MarketItem = React.memo(
     const [loading, setLoading] = useState(initialLoading || false);
     const [copied, setCopied] = useState(false);
     const [openAuthDialog, setOpenAuthDialog] = useState(false);
-    const jsonContent = `{
-        "p": "sui-20",
-        "element": "${element}", 
-        "amt": "${amount}",
-    }`;
-
-    const purchasesApi = useApi({
-      key: ["purchases"],
-      method: "POST",
-      url: "marketplace/purchases",
-    }).post;
-
-    const marketplaceDeListings = useApi({
-      key: ["syncUserBag"],
-      method: "POST",
-      url: "marketplace/delist",
-    }).post;
+    const router = useRouter();
 
     const handleCopyId = () => {
       const currentNetworkConfig = featureFlags.networks[appContext.networkId];
@@ -107,17 +94,13 @@ export const MarketItem = React.memo(
         const [nft, request] = txb.moveCall({
           target: "0x2::kiosk::purchase",
           arguments: [txb.object(seller_kiosk), txb.object(nftId), paymentCoin],
-          typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
-          ],
+          typeArguments: [type],
         });
 
         txb.moveCall({
           target: `0x2::transfer_policy::confirm_request`,
-          typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
-          ],
-          arguments: [txb.object(ELEMENT_POLICY_ID), request],
+          typeArguments: [type],
+          arguments: [txb.object(nftTypeToPolicyId(type)), request],
         });
 
         txb.transferObjects([nft], txb.pure.address(address));
@@ -148,32 +131,11 @@ export const MarketItem = React.memo(
         );
 
         if (response && response.digest) {
-          // Show transaction submitted toast
           toast.success(`You are now the owner of ${element} ${emoji}`);
-
-          // Sync with backend
-          // try {
-          //   await purchasesApi?.mutateAsync({
-          //     listingId: id,
-          //     transactionDigest: response.digest,
-          //   });
-
-          //   // Success message
-          //   toast.success(`You are now the owner of ${element} ${emoji}`);
-
-          //   if (onBuy) {
-          //     onBuy();
-          //   }
-          // } catch (error) {
-          //   console.error("Backend sync error:", error);
-          //   toast.error(
-          //     "Purchase completed but we couldn't update our records. Your NFT is in your wallet."
-          //   );
-          // }
         } else {
           toast.error("Failed to purchase NFT. Please try again.");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Purchase error:", error);
         if (error.message === "Authentication required") {
           setOpenAuthDialog(true);
@@ -209,9 +171,7 @@ export const MarketItem = React.memo(
             txb.object(user?.kiosk?.ownerCapId),
             txb.pure.address(nftId),
           ],
-          typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
-          ],
+          typeArguments: [type],
         });
         console.log(nftId);
         const [takenObject] = txb.moveCall({
@@ -221,9 +181,7 @@ export const MarketItem = React.memo(
             txb.object(user?.kiosk?.ownerCapId),
             txb.pure.id(nftId),
           ],
-          typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
-          ],
+          typeArguments: [type],
         });
         txb.transferObjects([takenObject], address);
         const response = await apiClient.callFunc<
@@ -246,21 +204,6 @@ export const MarketItem = React.memo(
         if (response && response.digest) {
           toast.success("Your NFT has been delisted successfully");
           await onSubmitOnchainComplete?.();
-          // Sync with backend
-          // try {
-          //   await marketplaceDeListings?.mutateAsync({
-          //     kioskId: user.kiosk.objectId,
-          //     nftId: nftId,
-          //     transactionDigest: response.digest,
-          //   });
-
-          //   toast.success("Your NFT has been delisted successfully");
-          // } catch (error) {
-          //   console.error("Backend sync error:", error);
-          //   toast.error(
-          //     "Transaction was successful but we couldn't sync with our servers. Please try again or contact support."
-          //   );
-          // }
         } else {
           toast.error("Failed to delist NFT. Please try again.");
         }
@@ -278,14 +221,19 @@ export const MarketItem = React.memo(
       }
     }
 
+    const handleCopyElements = () => {
+      const formattedRecipe = getRecipe(recipe);
+      router.push(`/creative?recipe=${JSON.stringify(formattedRecipe)}`);
+    };
+
     return (
-      <Card className="w-full sm:w-60 bg-transparent border-none transition-all duration-300 gap-2 flex flex-col ">
+      <Card className="w-full sm:w-60 bg-transparent transition-all duration-300 gap-2 flex flex-col">
         <Image
           src={`https://wal.gg/${imageUrl}`}
           alt={element}
           width={100}
           height={100}
-          className="self-center"
+          className="self-center w-full rounded-2xl border-b border-[#333333]"
         />
 
         <div className="flex flex-col items-center gap-2">
@@ -294,6 +242,19 @@ export const MarketItem = React.memo(
             onClick={handleCopyId}
           >
             {formatAddress(nftId)} {copied ? "✓" : ""}
+            {isCreatureNFT(type) ? (
+              <Image
+                src="/images/copy.svg"
+                alt="Copy"
+                width={20}
+                height={20}
+                className="inline ml-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopyElements();
+                }}
+              />
+            ) : null}
           </div>
           <div className="w-full flex justify-between items-center">
             <div className="flex items-center gap-1">
@@ -350,3 +311,46 @@ export const MarketItem = React.memo(
     );
   }
 );
+
+const nftTypeToPolicyId = (type: string) => {
+  if (
+    type ===
+    `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
+  ) {
+    return CREATURE_POLICY_ID;
+  }
+  return ELEMENT_POLICY_ID;
+};
+
+const isCreatureNFT = (type: string) => {
+  return (
+    type ===
+    `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
+  );
+};
+
+const getRecipe = (metadata: any) => {
+  const recipes: Record<string, Array<{ itemId: number; quantity: number }>> = {
+    head: [] as Array<{ itemId: number; quantity: number }>,
+    body: [] as Array<{ itemId: number; quantity: number }>,
+    environment: [] as Array<{ itemId: number; quantity: number }>,
+    hand: [] as Array<{ itemId: number; quantity: number }>,
+    leg: [] as Array<{ itemId: number; quantity: number }>,
+    material: [] as Array<{ itemId: number; quantity: number }>,
+    style: [] as Array<{ itemId: number; quantity: number }>,
+  };
+  Object.keys(recipes).forEach((key) => {
+    const array = metadata[`${key}_items`] as Array<{
+      fields: { item_id: string; quantity: string };
+    }>;
+    if (array) {
+      recipes[key] = array.map((item) => {
+        return {
+          itemId: Number(item.fields.item_id),
+          quantity: Number(tem.fields.quantity),
+        };
+      });
+    }
+  });
+  return recipes;
+};

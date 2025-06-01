@@ -12,6 +12,8 @@ export interface KioskListing {
   amount: string;
   imageUrl: string;
   itemId: string;
+  type: string;
+  recipe: any;
 }
 
 interface UseKioskListingsOptions {
@@ -69,114 +71,130 @@ export function useKioskListings(options: UseKioskListingsOptions) {
       console.log(`Found ${purchasedEvents.data.length} ItemPurchased events`);
       console.log(`Found ${delistedEvents.data.length} ItemDelisted events`);
 
-      // Create sets of purchased and delisted items for quick lookup
-      const purchasedItems = new Set<string>();
-      const delistedItems = new Set<string>();
+      // Create a map to track the most recent event for each item
+      const itemEvents = new Map<
+        string,
+        {
+          type: "listed" | "purchased" | "delisted";
+          timestamp: number;
+          eventData: any;
+        }
+      >();
 
-      // Process purchased events
-      purchasedEvents.data.forEach((event) => {
+      // Process all events and keep only the most recent one for each item
+      const allEvents = [
+        ...listedEvents.data.map((event) => ({
+          ...event,
+          eventType: "listed" as const,
+        })),
+        ...purchasedEvents.data.map((event) => ({
+          ...event,
+          eventType: "purchased" as const,
+        })),
+        ...delistedEvents.data.map((event) => ({
+          ...event,
+          eventType: "delisted" as const,
+        })),
+      ];
+
+      // Sort all events by timestamp (newest first)
+      allEvents.sort(
+        (a, b) =>
+          parseInt(b.timestampMs || "0") - parseInt(a.timestampMs || "0")
+      );
+
+      // Process events and keep track of the most recent event for each item
+      allEvents.forEach((event) => {
         if (event.parsedJson) {
           const eventData = event.parsedJson as {
             id: string;
             kiosk: string;
-            price: string;
+            price?: string;
           };
-          purchasedItems.add(eventData.id);
+          const timestamp = parseInt(event.timestampMs || "0");
+
+          // Only store if we haven't seen this item yet (since we're processing newest first)
+          if (!itemEvents.has(eventData.id)) {
+            itemEvents.set(eventData.id, {
+              type: event.eventType,
+              timestamp,
+              eventData,
+            });
+          }
         }
       });
 
-      // Process delisted events
-      delistedEvents.data.forEach((event) => {
-        if (event.parsedJson) {
-          const eventData = event.parsedJson as {
-            id: string;
-            kiosk: string;
-          };
-          delistedItems.add(eventData.id);
-        }
-      });
-
-      console.log(`Found ${purchasedItems.size} purchased items`);
-      console.log(`Found ${delistedItems.size} delisted items`);
+      console.log(
+        `Processed ${itemEvents.size} unique items with their most recent events`
+      );
 
       const activeListings: KioskListing[] = [];
-      const processedItems = new Set<string>();
 
-      // Process listed events and filter out purchased/delisted items
-      for (const event of listedEvents.data) {
-        if (event.parsedJson) {
-          const eventData = event.parsedJson as {
-            id: string;
-            kiosk: string;
-            price: string;
+      // Now process only items whose most recent event is 'listed'
+      for (const [itemId, eventInfo] of itemEvents.entries()) {
+        // Only include items whose most recent event is a listing
+        if (eventInfo.type !== "listed") {
+          console.log(
+            `Item ${itemId} most recent event is ${eventInfo.type} - skipping`
+          );
+          continue;
+        }
+
+        const eventData = eventInfo.eventData;
+
+        try {
+          console.log(
+            `Processing item ${itemId} from kiosk ${eventData.kiosk}`
+          );
+          if (options.kioskId && eventData.kiosk !== options.kioskId) {
+            continue;
+          }
+          // Get the NFT object to verify it's still listed and get its details
+          const nftObject = await suiClient.getObject({
+            id: itemId,
+            options: {
+              showContent: true,
+              showOwner: true,
+              showDisplay: true,
+            },
+          });
+          console.log("nftObject", nftObject);
+          console.log("eventData", eventData);
+          const content = nftObject?.data?.content as any;
+          const display = nftObject?.data?.display?.data;
+          console.log("content", content);
+          const listing: KioskListing = {
+            objectId: itemId,
+            kioskId: eventData.kiosk,
+            price: eventData.price || "0",
+            priceInSui: parseInt(eventData.price || "0") / Number(MIST_PER_SUI),
+            element:
+              content?.fields?.element_name ||
+              content?.fields?.metadata.fields.name ||
+              "Unknown",
+            amount: content?.fields?.amount?.toString() || "1",
+            imageUrl:
+              content?.fields?.image_url ||
+              content?.fields?.metadata.fields.image_uri ||
+              display?.image_url ||
+              "",
+            itemId: content?.fields?.item_id || display?.item_id || "",
+            type: content.type,
+            recipe: content?.fields?.metadata.fields || {},
           };
 
-          // Skip if we've already processed this item
-          if (processedItems.has(eventData.id)) {
-            continue;
-          }
+          activeListings.push(listing);
 
-          // Skip if item was purchased or delisted
-          if (purchasedItems.has(eventData.id)) {
-            console.log(`Item ${eventData.id} was purchased - skipping`);
-            continue;
-          }
+          console.log(
+            `Added listing: ${listing.element} for ${listing.priceInSui} SUI`
+          );
+        } catch (objError) {
+          console.error(`Error processing listing ${itemId}:`, objError);
+        }
 
-          if (delistedItems.has(eventData.id)) {
-            console.log(`Item ${eventData.id} was delisted - skipping`);
-            continue;
-          }
-
-          try {
-            console.log(
-              `Processing item ${eventData.id} from kiosk ${eventData.kiosk}`
-            );
-            if (options.kioskId && eventData.kiosk !== options.kioskId) {
-              continue;
-            }
-            // Get the NFT object to verify it's still listed and get its details
-            const nftObject = await suiClient.getObject({
-              id: eventData.id,
-              options: {
-                showContent: true,
-                showOwner: true,
-                showDisplay: true,
-              },
-            });
-            console.log("nftObject", nftObject);
-            console.log("eventData", eventData);
-            console.log("event", event);
-            const content = nftObject?.data?.content as any;
-            const display = nftObject?.data?.display?.data;
-
-            const listing: KioskListing = {
-              objectId: eventData.id,
-              kioskId: eventData.kiosk,
-              price: eventData.price,
-              priceInSui: parseInt(eventData.price) / Number(MIST_PER_SUI),
-              element: content?.fields?.element_name || "Unknown",
-              amount: content?.fields?.amount?.toString() || "1",
-              imageUrl: content?.fields?.image_url || display?.image_url || "",
-              itemId: content?.fields?.item_id || display?.item_id || "",
-            };
-
-            activeListings.push(listing);
-            processedItems.add(eventData.id);
-
-            console.log(
-              `Added listing: ${listing.element} for ${listing.priceInSui} SUI`
-            );
-          } catch (objError) {
-            console.error(
-              `Error processing listing ${eventData.id}:`,
-              objError
-            );
-          }
-
-          // Stop if we have enough listings
-          if (activeListings.length >= limit) {
-            break;
-          }
+        // Stop if we have enough listings
+        if (activeListings.length >= limit) {
+          break;
         }
       }
 
@@ -293,7 +311,6 @@ export function useKioskListings(options: UseKioskListingsOptions) {
     return Array.from(elementMap.values());
   }, [listings]);
 
-  // New function to get marketplace activity (recent purchases/delistings)
   const getMarketplaceActivity = useCallback(
     async (activityLimit: number = 20) => {
       try {
