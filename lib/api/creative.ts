@@ -21,6 +21,10 @@ const creativeApi = router("creative", {
   getNftJob: router.query({
     fetcher: async () => api.get("/creative/nft-jobs"),
   }),
+  updateNftName: router.mutation({
+    mutationFn: async (variables: { jobId: number; name: string }) =>
+      api.post("/creative/update-nft-name", variables),
+  }),
 });
 
 export default creativeApi;
