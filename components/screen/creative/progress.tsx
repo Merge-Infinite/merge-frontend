@@ -14,6 +14,7 @@ export const NFTGenerationJobStatus = {
   MINTING: "MINTING",
   COMPLETED: "COMPLETED",
   FAILED: "FAILED",
+  DUPLICATE_NFT: "DUPLICATE_NFT",
 };
 
 const mappingStatusToText = {

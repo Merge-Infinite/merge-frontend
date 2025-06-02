@@ -52,12 +52,12 @@ export const TaskScreen = () => {
           >
             SUI
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             value="special"
             className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2"
           >
             SPECIAL
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
         <TabsContent value="mi" className="overflow-y-auto h-full ">
           <MiTask type="mi" />
@@ -65,12 +65,12 @@ export const TaskScreen = () => {
         <TabsContent value="sui" className="overflow-y-auto h-full ">
           <MiTask type="sui" />
         </TabsContent>
-        <TabsContent
+        {/* <TabsContent
           value="special"
           className=" h-full overflow-y-auto mb-[100px]"
         >
           <MiTask type="special" />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );
