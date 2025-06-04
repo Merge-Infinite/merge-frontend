@@ -347,7 +347,7 @@ const getRecipe = (metadata: any) => {
       recipes[key] = array.map((item) => {
         return {
           itemId: Number(item.fields.item_id),
-          quantity: Number(tem.fields.quantity),
+          quantity: Number(item.fields.quantity),
         };
       });
     }

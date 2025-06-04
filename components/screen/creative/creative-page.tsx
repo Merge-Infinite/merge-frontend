@@ -454,7 +454,6 @@ const CreatureCustomizer = () => {
             signature: (response as any).signature,
           },
         }).then(() => {
-          toast.success("Creature minted successfully");
           setMintBottomSheetOpen(false);
         });
       }
