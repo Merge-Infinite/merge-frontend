@@ -1,9 +1,6 @@
 // hooks/useStakeInfoList.ts
 import { suiClient } from "@/lib/utils";
-import {
-  CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
-} from "@/utils/constants";
+import { CREATURE_NFT_MODULE_NAME, MER3_PACKAGE_ID } from "@/utils/constants";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -127,7 +124,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       const { data } = await suiClient.getOwnedObjects({
         owner: walletAddress,
         filter: {
-          StructType: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::StakeInfo`,
+          StructType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::StakeInfo`,
         },
         options: {
           showContent: true,
@@ -198,7 +195,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         const { data } = await suiClient.getOwnedObjects({
           owner: address,
           filter: {
-            StructType: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::StakeInfo`,
+            StructType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::StakeInfo`,
           },
           options: {
             showContent: true,

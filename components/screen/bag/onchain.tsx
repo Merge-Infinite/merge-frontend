@@ -18,8 +18,8 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
   ELEMENT_NFT_MODULE_NAME,
+  MER3_PACKAGE_ID,
 } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import Image from "next/image";
@@ -50,7 +50,7 @@ export function OnchainBagScreen() {
     walletAddress: address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"CreativeElementNFT"}`,
+    structType: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"CreativeElementNFT"}`,
   });
 
   console.log(nfts);
@@ -63,7 +63,7 @@ export function OnchainBagScreen() {
     walletAddress: address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
+    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {

@@ -16,7 +16,7 @@ import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_COLLECTION_OBJECT_ID,
   CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
+  MER3_PACKAGE_ID,
 } from "@/utils/constants";
 import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
@@ -60,7 +60,7 @@ export default function InventoryStakingInterface() {
     walletAddress: address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
+    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function InventoryStakingInterface() {
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"stake_creature_entry"}`,
+          target: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"stake_creature_entry"}`,
           arguments: [
             tx.object(CREATURE_COLLECTION_OBJECT_ID),
             tx.object(nftId),

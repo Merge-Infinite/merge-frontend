@@ -24,8 +24,8 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
   ELEMENT_NFT_MODULE_NAME,
+  MER3_PACKAGE_ID,
 } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
@@ -136,7 +136,7 @@ export const CreativeOnchainItem = React.memo(
             txb.object(id),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
+            `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
           ],
         });
         txb.moveCall({
@@ -148,7 +148,7 @@ export const CreativeOnchainItem = React.memo(
             txb.pure.u64(numericPrice * Number(MIST_PER_SUI)),
           ],
           typeArguments: [
-            `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
+            `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
           ],
         });
 
@@ -197,7 +197,7 @@ export const CreativeOnchainItem = React.memo(
 
         const txb = new Transaction();
         txb.moveCall({
-          target: `${CREATURE_NFT_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
+          target: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
           arguments: [txb.object(id)],
         });
         const response = await apiClient.callFunc<

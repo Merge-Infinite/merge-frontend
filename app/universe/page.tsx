@@ -17,7 +17,7 @@ import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_COLLECTION_OBJECT_ID,
   CREATURE_NFT_MODULE_NAME,
-  CREATURE_NFT_PACKAGE_ID,
+  MER3_PACKAGE_ID,
 } from "@/utils/constants";
 import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
@@ -451,7 +451,7 @@ const PetSlotCard = ({
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${CREATURE_NFT_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"unstake_creature_entry"}`,
+          target: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"unstake_creature_entry"}`,
           arguments: [
             tx.object(CREATURE_COLLECTION_OBJECT_ID),
             tx.object(stakeInfoId),
