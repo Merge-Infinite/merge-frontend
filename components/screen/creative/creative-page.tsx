@@ -48,6 +48,9 @@ import { useDebounce } from "use-debounce";
 interface RecipeItem {
   itemId: number;
   quantity: number;
+  availableAmount?: number;
+  itemHandle?: string;
+  itemEmoji?: string;
 }
 
 interface Recipe {
@@ -196,11 +199,12 @@ const CreatureCustomizer = () => {
           }
         } else {
           // Item not found in inventory
+          console.log("recipeItem", recipeItem);
           missingForFeature.push({
             ...recipeItem,
             availableAmount: 0,
-            itemHandle: `Item ${recipeItem.itemId}`,
-            itemEmoji: "❓",
+            itemHandle: undefined,
+            itemEmoji: undefined,
           });
           console.log(`Item ${recipeItem.itemId} not found in inventory`);
         }

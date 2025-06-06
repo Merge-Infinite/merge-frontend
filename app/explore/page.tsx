@@ -2,7 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePoolSystem } from "@/hooks/usePool";
 import { initBackButton } from "@telegram-apps/sdk";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -15,39 +17,12 @@ interface ExplorationArea {
   isEnabled: boolean;
 }
 
-const explorationAreas: ExplorationArea[] = [
-  {
-    id: "universe",
-    title: "Brainrot",
-    subtitle: "Universe 🛸",
-    description:
-      "Take your pet to explore 🧐 the Brainrot universe 🧭 and earn valuable rewards.",
-    icon: "🧠",
-    isEnabled: true,
-  },
-  {
-    id: "sky",
-    title: "Brainrot",
-    subtitle: "Sky ⚡",
-    description:
-      "Take your pet to explore the skies of Brainrot and earn rewards. Make sure it knows how to fly. 🤖🪽",
-    icon: "☁️",
-    isEnabled: false,
-  },
-  {
-    id: "seabed",
-    title: "Brainrot",
-    subtitle: "seabed 🪼",
-    description:
-      "Is your pet brave enough to explore the seas of Brainrot? Make sure it knows how to swim.🐙",
-    icon: "🐋",
-    isEnabled: false,
-  },
-];
-
 export default function BrainrotExplorer() {
   const [backButton] = initBackButton();
   const router = useRouter();
+  const { pools } = usePoolSystem({
+    refreshInterval: 30000,
+  });
   useEffect(() => {
     backButton.show();
 
@@ -55,10 +30,11 @@ export default function BrainrotExplorer() {
       router.back();
     });
   }, []);
+
   return (
     <div className="w-full h-full bg-black p-4">
       <div className="flex flex-col gap-2">
-        {explorationAreas.map((area) => (
+        {pools.map((area) => (
           <Card
             key={area.id}
             className="bg-neutral-950/60 rounded-2xl overflow-hidden outline "
@@ -66,18 +42,19 @@ export default function BrainrotExplorer() {
             <CardContent className="p-4 pb-6 pt-2 outline-[#1f1f1f]">
               <div className="flex gap-4">
                 {/* Icon */}
-                <div className="text-7xl leading-none font-normal font-sora uppercase text-white flex-shrink-0">
-                  {area.icon}
-                </div>
+                <Image
+                  src={area.imageUrl}
+                  alt={area.name}
+                  width={100}
+                  height={100}
+                />
 
                 {/* Content */}
                 <div className="flex-1 flex flex-col gap-2">
                   {/* Title and Description */}
                   <div className="flex flex-col">
                     <h2 className="text-white text-xl font-normal font-sora uppercase leading-7">
-                      {area.title}
-                      <br />
-                      {area.subtitle}
+                      {area.name}
                     </h2>
                     <p className="text-neutral-600 text-xs font-normal font-sora leading-none mt-1">
                       {area.description}
@@ -86,19 +63,19 @@ export default function BrainrotExplorer() {
 
                   {/* Button */}
                   <Button
-                    variant={area.isEnabled ? "secondary" : "ghost"}
+                    variant={area.isActive ? "secondary" : "ghost"}
                     size="sm"
-                    disabled={!area.isEnabled}
+                    disabled={!area.isActive}
                     className={`
                         w-14 h-auto px-3 py-1 rounded-3xl text-xs font-normal font-sora uppercase
                         ${
-                          area.isEnabled
+                          area.isActive
                             ? "bg-white text-black hover:bg-gray-200"
                             : "bg-neutral-800 text-neutral-700 cursor-not-allowed hover:bg-neutral-800"
                         }
                       `}
                     onClick={() => {
-                      router.push(`/universe`);
+                      router.push(`/universe?poolId=${area.id}`);
                     }}
                   >
                     Go

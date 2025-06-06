@@ -108,6 +108,7 @@ export const LeaderboardTab = () => {
               </Sheet>
             </div>
             <span className="text-purple-400 text-sm w-fit">
+              Ends in:{" "}
               {formatTimeRemaining(getLeaderboard?.data?.event.endDate)}
             </span>
           </div>

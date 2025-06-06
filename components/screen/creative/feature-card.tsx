@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,12 +13,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useUser } from "@/hooks/useUser";
 import userApi from "@/lib/api/user";
-import { QueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Info } from "lucide-react";
 import Image from "next/image";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface MissingItem {
   itemId: number;
@@ -26,7 +25,6 @@ interface MissingItem {
   itemHandle?: string;
   itemEmoji?: string;
 }
-const queryClient = new QueryClient();
 
 const FeatureCard = ({
   title,
@@ -47,7 +45,22 @@ const FeatureCard = ({
   removeElement: (title: string, index: number) => void;
   missingItems?: MissingItem[];
 }) => {
-  const { inventory } = useUser();
+  const [missingItemInfo, setMissingItemInfo] = useState<any[]>([]);
+  const fetchsAllMissingItems = useCallback(
+    async (missingItems: MissingItem[]) => {
+      const items = await userApi.getElements.mutationFn({
+        elementIds: missingItems.map((item) => item.itemId),
+      });
+      setMissingItemInfo(items as any);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (missingItems.length > 0) {
+      fetchsAllMissingItems(missingItems);
+    }
+  }, [missingItems]);
 
   return (
     <Card
@@ -120,7 +133,6 @@ const FeatureCard = ({
           </div>
         )}
 
-        {/* Display missing items */}
         {missingItems.length > 0 && (
           <div className="mb-2 p-2 bg-red-900/20 border border-red-500 rounded-lg">
             <div className="flex items-center gap-2 text-red-400 text-xs mb-1">
@@ -128,14 +140,13 @@ const FeatureCard = ({
               <span className="font-medium">Missing required items:</span>
             </div>
             <div className="space-y-1">
-              {missingItems.map(async (missingItem, idx) => {
-                let item = inventory?.find(
-                  (i) => i.itemId === missingItem.itemId
-                );
-                if (!item) {
-                  item = await userApi.getElement.fetcher({
-                    itemId: missingItem.itemId,
-                  });
+              {missingItems.map((item, idx) => {
+                if (!item.itemHandle) {
+                  const itemInfo = missingItemInfo.find(
+                    (i) => i.id === item.itemId
+                  );
+                  item.itemHandle = itemInfo?.handle;
+                  item.itemEmoji = itemInfo?.emoji;
                 }
                 return (
                   <div

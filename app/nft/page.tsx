@@ -14,16 +14,17 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
-  CREATURE_COLLECTION_OBJECT_ID,
   CREATURE_NFT_MODULE_NAME,
   MER3_PACKAGE_ID,
+  POOL_REWARDS_MODULE_NAME,
+  POOL_SYSTEM,
 } from "@/utils/constants";
 import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import { initBackButton } from "@telegram-apps/sdk";
 import { Search } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -35,6 +36,8 @@ interface InventoryItem {
 }
 
 export default function InventoryStakingInterface() {
+  const searchParams = useSearchParams();
+  const poolId = searchParams.get("poolId");
   const { isLoading, startLoading, stopLoading } = useLoading();
   const apiClient = useApiClient();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -87,11 +90,11 @@ export default function InventoryStakingInterface() {
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"stake_creature_entry"}`,
+          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::${"stake_nft"}`,
           arguments: [
-            tx.object(CREATURE_COLLECTION_OBJECT_ID),
+            tx.object(POOL_SYSTEM),
+            tx.object(poolId || ""),
             tx.object(nftId),
-            tx.pure.u8(0),
             tx.object("0x6"),
           ],
         });
@@ -169,7 +172,10 @@ export default function InventoryStakingInterface() {
             </TabsList>
 
             {/* All Items */}
-            <TabsContent value="all" className="flex-1 mt-4">
+            <TabsContent
+              value="all"
+              className="flex-1 mt-4 grid grid-cols-2 gap-4"
+            >
               {creatureNftsLoading ? (
                 <SkeletonCard />
               ) : (

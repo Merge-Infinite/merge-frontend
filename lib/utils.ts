@@ -160,7 +160,7 @@ export function formatTimeRemaining(endDateString: string): string {
   const minutes = Math.floor(timeDiff / (1000 * 60));
 
   // Format the string
-  return `Ends in: ${days}D ${hours}H ${minutes}M`;
+  return `${days}D ${hours}H ${minutes}M`;
 }
 
 export const suiClient = new SuiClient({

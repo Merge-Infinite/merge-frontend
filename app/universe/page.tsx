@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/hooks/useLoading";
+import { Pool, usePoolSystem } from "@/hooks/usePool";
 import { StakeInfo, useStakeInfoList } from "@/hooks/useStakeInfoList";
+import { formatTimeRemaining } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -15,15 +17,15 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
-  CREATURE_COLLECTION_OBJECT_ID,
-  CREATURE_NFT_MODULE_NAME,
   MER3_PACKAGE_ID,
+  POOL_REWARDS_MODULE_NAME,
+  POOL_SYSTEM,
 } from "@/utils/constants";
 import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import { initBackButton } from "@telegram-apps/sdk";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -50,19 +52,24 @@ const MAX_FREE_SLOTS = 3;
 const MAX_SUBSCRIPTION_SLOTS_PER_TIER = 3;
 
 export default function PetExplorerDashboard() {
+  const searchParams = useSearchParams();
+  const poolId = searchParams.get("poolId");
   const [backButton] = initBackButton();
   const router = useRouter();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const authed = useSelector((state: RootState) => state.appContext.authed);
+  const [pool, setPool] = useState<Pool | null>(null);
+  const { getPoolById, pools } = usePoolSystem({
+    refreshInterval: 30000,
+  });
 
-  const { stakeInfos, loading, error, getStakeStats, refresh } =
-    useStakeInfoList({
-      walletAddress: address,
-      includeNFTDetails: true,
-      refreshInterval: undefined,
-    });
+  const { stakeInfos, loading, error, stakeStats, refresh } = useStakeInfoList({
+    walletAddress: address,
+    includeNFTDetails: true,
+    refreshInterval: undefined,
+  });
 
   useEffect(() => {
     if (!authed) {
@@ -83,40 +90,42 @@ export default function PetExplorerDashboard() {
     });
   }, []);
 
-  // Get statistics from stake infos
-  const stats = useMemo(() => {
-    if (!stakeInfos.length) return getStakeStats();
-    return getStakeStats();
-  }, [stakeInfos, getStakeStats]);
+  useEffect(() => {
+    if (!pool && poolId) {
+      const foundPool = getPoolById(poolId);
+      if (foundPool) {
+        setPool(foundPool);
+      }
+    }
+  }, [pool, poolId, pools]);
 
-  // Calculate participation and reward stats
   const participationStats: StatsItem[] = [
     {
       icon: (
         <Image src="/images/friend.svg" alt="User" width={24} height={24} />
       ),
-      value: stats.totalStakingDays,
+      value: pool?.participantCount || 0,
     },
     {
       icon: <Image src="/images/nft.svg" alt="User" width={24} height={24} />,
-      value: stats.totalStakingDays,
+      value: pool?.totalStakedCount || 0,
     },
   ];
 
   const rewardStats: StatsItem[] = [
     {
       icon: <Image src="/images/sui.svg" alt="User" width={24} height={24} />,
-      value: stats.universeStakes,
+      value: stakeStats?.totalPendingSuiRewards || 0,
     },
     {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
-      value: stats.skyStakes,
+      value: stakeStats?.totalClaimedSuiRewards || 0,
     },
     {
       icon: (
         <Image src="/images/energy.svg" alt="User" width={24} height={24} />
       ),
-      value: stats.seabedStakes,
+      value: stakeStats?.totalEnergyEarned || 0,
     },
   ];
 
@@ -243,7 +252,7 @@ export default function PetExplorerDashboard() {
                     💰 Total Prize:
                   </span>
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
-                    $1,000
+                    {pool?.suiRewards} SUI
                   </span>
                 </div>
                 <div className="flex">
@@ -251,7 +260,7 @@ export default function PetExplorerDashboard() {
                     ⏳ Event time:
                   </span>
                   <span className="text-purple-400 text-xl font-normal font-sora uppercase leading-7">
-                    29d 22h
+                    {formatTimeRemaining(pool?.endTime)}
                   </span>
                 </div>
               </div>
@@ -306,7 +315,7 @@ export default function PetExplorerDashboard() {
                 value="nfts"
                 className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
               >
-                NFTs ({stats.totalStakes})
+                NFTs ({stakeStats?.totalStakes || 0})
               </TabsTrigger>
               <TabsTrigger
                 value="reward"
@@ -426,6 +435,8 @@ const PetSlotCard = ({
   slot: PetSlot;
   onRefresh: () => void;
 }) => {
+  const searchParams = useSearchParams();
+  const poolId = searchParams.get("poolId");
   const { isLoading, startLoading, stopLoading } = useLoading();
   const apiClient = useApiClient();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -435,7 +446,7 @@ const PetSlotCard = ({
   const { data: network } = useNetwork(appContext.networkId);
 
   const handleSlotClick = () => {
-    router.push(`/nft`);
+    router.push(`/nft?poolId=${poolId}`);
   };
 
   const handleUnstakeClick = useCallback(
@@ -451,9 +462,10 @@ const PetSlotCard = ({
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"unstake_creature_entry"}`,
+          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::${"unstake_nft"}`,
           arguments: [
-            tx.object(CREATURE_COLLECTION_OBJECT_ID),
+            tx.object(POOL_SYSTEM),
+            tx.object(poolId || ""),
             tx.object(stakeInfoId),
             tx.object("0x6"),
           ],

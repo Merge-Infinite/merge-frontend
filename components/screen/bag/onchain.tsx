@@ -65,7 +65,6 @@ export function OnchainBagScreen() {
     autoFetch: true,
     structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
-
   useEffect(() => {
     if (!authed) {
       setOpenAuthDialog(true);

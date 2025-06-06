@@ -34,6 +34,7 @@ export const MER3_PACKAGE_ID =
 export const CREATURE_COLLECTION_OBJECT_ID =
   "0xef67cb808cdcb01c8144c0b51d8628c1e5b78c95d4d7b803a9c64a428384f0ba";
 export const CREATURE_NFT_MODULE_NAME = "creature_nft";
+export const POOL_REWARDS_MODULE_NAME = "pool_rewards";
 export const CREATURE_NFT_ADMIN_CAP =
   "0x969ddfc9e4831ec44dfe0849518b645d0df4888173f44111f05da68840699e72";
 export const CREATURE_POLICY_ID =
