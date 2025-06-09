@@ -231,10 +231,11 @@ export const usePoolSystem = (
 
       const [poolResults] = await Promise.all([Promise.all(poolPromises)]);
 
+      console.log("poolResults", poolResults);
       // Filter out null results
       const validPools = poolResults.filter(
         (pool): pool is Pool =>
-          pool !== null && pool.isActive && pool.endTime > Date.now() / 1000
+          pool !== null && pool.isActive && pool.endTime > Date.now()
       );
 
       setPools(validPools);

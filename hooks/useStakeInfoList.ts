@@ -72,7 +72,7 @@ interface UseStakeInfoListOptions {
   refreshInterval?: number;
   autoFetch?: boolean;
   walletAddress?: string;
-  poolId?: string;
+  poolId?: string | null;
   includeNFTDetails?: boolean;
   enableRealTimeUpdates?: boolean;
   calculateRewards?: boolean; // New option to enable reward calculations

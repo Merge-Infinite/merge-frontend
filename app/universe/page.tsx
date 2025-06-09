@@ -67,6 +67,7 @@ export default function PetExplorerDashboard() {
 
   const { stakeInfos, loading, error, stakeStats, refresh } = useStakeInfoList({
     walletAddress: address,
+    poolId: poolId || undefined,
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
@@ -260,7 +261,7 @@ export default function PetExplorerDashboard() {
                     ⏳ Event time:
                   </span>
                   <span className="text-purple-400 text-xl font-normal font-sora uppercase leading-7">
-                    {formatTimeRemaining(pool?.endTime)}
+                    {pool?.endTime ? formatTimeRemaining(pool?.endTime) : "N/A"}
                   </span>
                 </div>
               </div>

@@ -135,7 +135,7 @@ if (
   };
 }
 
-export function formatTimeRemaining(endDateString: string): string {
+export function formatTimeRemaining(endDateString: string | number): string {
   // Parse the end date
   const endDate = new Date(endDateString);
 
