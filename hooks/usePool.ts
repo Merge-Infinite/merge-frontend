@@ -233,7 +233,8 @@ export const usePoolSystem = (
 
       // Filter out null results
       const validPools = poolResults.filter(
-        (pool): pool is Pool => pool !== null && pool.isActive
+        (pool): pool is Pool =>
+          pool !== null && pool.isActive && pool.endTime > Date.now()
       );
 
       setPools(validPools);
