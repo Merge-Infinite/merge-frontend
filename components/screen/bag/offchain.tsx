@@ -38,7 +38,7 @@ export function OffchainBagScreen() {
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [mintQuantity, setMintQuantity] = useState(1);
+  const [mintQuantity, setMintQuantity] = useState<number | null>(null);
   const [isMinting, setIsMinting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
@@ -86,7 +86,7 @@ export function OffchainBagScreen() {
     fetchItems();
   }, []);
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item: any) => {
     setSelectedItem(item);
     setMintQuantity(1);
   };
@@ -96,24 +96,20 @@ export function OffchainBagScreen() {
     setMintQuantity(1);
   };
 
-  const handleQuantityChange = (e) => {
-    const value = parseInt(e.target.value);
-    // Ensure the quantity is valid and within bounds
-    if (!isNaN(value)) {
-      if (value <= 0) {
-        setMintQuantity(1);
-      } else if (selectedItem && value > selectedItem.amount) {
-        setMintQuantity(selectedItem.amount);
-      } else {
-        setMintQuantity(value);
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const value = parseInt(e.target.value);
+      if (value > 0) {
+        if (selectedItem && value > (selectedItem as any).amount) {
+          setMintQuantity((selectedItem as any).amount);
+        } else {
+          setMintQuantity(value);
+        }
       }
-    } else {
-      setMintQuantity(1);
-    }
+    } catch (error) {}
   };
 
   const mintNFTs = useCallback(async () => {
-    console.log("mintNFTs", selectedItem, mintQuantity);
     if (!selectedItem || !mintQuantity || mintQuantity <= 0) {
       toast.error("Please select an item and enter a valid quantity");
       return null;
@@ -317,9 +313,9 @@ export function OffchainBagScreen() {
                           className="grow shrink basis-0 h-6 text-white text-sm font-normal font-['Sora'] leading-normal bg-transparent border-none focus:outline-none"
                           placeholder="Enter qty"
                           type="number"
-                          min="1"
-                          max={selectedItem.amount}
-                          value={mintQuantity}
+                          min={0}
+                          max={(selectedItem as any).amount || 1}
+                          value={mintQuantity || ""}
                           onChange={handleQuantityChange}
                           disabled={isMinting}
                         />
