@@ -71,7 +71,6 @@ export function useUser(inventorySearch?: string) {
     }
   }, []);
 
-  // User data management
   const getUser = useCallback(async () => {
     try {
       setIsLoading(true);
