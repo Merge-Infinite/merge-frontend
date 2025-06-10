@@ -72,7 +72,7 @@ const CreatureCustomizer = () => {
   const { data: network } = useNetwork(appContext.networkId);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const [selectedElement, setSelectedElement] = useState(null);
+  const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedFeature, setSelectedFeature] = useState("");
   const [elementDialog, setElementDialog] = useState(false);
   const [quantity, setQuantity] = useState("1");
@@ -160,6 +160,9 @@ const CreatureCustomizer = () => {
       environment: "Environment",
     };
 
+    // Track total usage across all features to prevent double allocation
+    const totalUsageTracker: { [itemId: number]: number } = {};
+
     Object.entries(recipe).forEach(([key, items]) => {
       const featureName = keyMapping[key as keyof typeof keyMapping];
       if (!featureName || !items) return;
@@ -170,8 +173,9 @@ const CreatureCustomizer = () => {
         const inventoryItem = findInventoryItem(recipeItem.itemId);
 
         if (inventoryItem) {
-          // Check if user has enough quantity
-          const availableAmount = inventoryItem.amount;
+          // Calculate how much is already allocated
+          const alreadyAllocated = totalUsageTracker[recipeItem.itemId] || 0;
+          const availableAmount = inventoryItem.amount - alreadyAllocated;
           const requestedAmount = recipeItem.quantity;
 
           if (availableAmount >= requestedAmount) {
@@ -182,11 +186,20 @@ const CreatureCustomizer = () => {
               displayQuantity: `(${requestedAmount})`,
             };
             newSelectedElements[featureName].push(elementToAdd);
+
+            // Track the allocation
+            totalUsageTracker[recipeItem.itemId] =
+              alreadyAllocated + requestedAmount;
+
             console.log(
-              `Added ${inventoryItem.handle} (${requestedAmount}) to ${featureName}`
+              `Added ${
+                inventoryItem.handle
+              } (${requestedAmount}) to ${featureName}. Total used: ${
+                totalUsageTracker[recipeItem.itemId]
+              }/${inventoryItem.amount}`
             );
           } else {
-            // User doesn't have enough, add to missing items
+            // User doesn't have enough after previous allocations
             missingForFeature.push({
               ...recipeItem,
               availableAmount,
@@ -194,12 +207,11 @@ const CreatureCustomizer = () => {
               itemEmoji: inventoryItem.emoji,
             });
             console.log(
-              `Missing ${inventoryItem.handle}: need ${requestedAmount}, have ${availableAmount}`
+              `Missing ${inventoryItem.handle}: need ${requestedAmount}, have ${availableAmount} (${inventoryItem.amount} total, ${alreadyAllocated} already allocated)`
             );
           }
         } else {
           // Item not found in inventory
-          console.log("recipeItem", recipeItem);
           missingForFeature.push({
             ...recipeItem,
             availableAmount: 0,
@@ -214,9 +226,6 @@ const CreatureCustomizer = () => {
         newMissingItems[featureName] = missingForFeature;
       }
     });
-
-    console.log("New selected elements:", newSelectedElements);
-    console.log("Missing items:", newMissingItems);
 
     setSelectedElements(newSelectedElements);
     setMissingItems(newMissingItems);
@@ -409,7 +418,6 @@ const CreatureCustomizer = () => {
   const handleMintClick = async () => {
     try {
       // Double-check validation before proceeding
-      console.log(selectedElements);
       const elementInfos = Object.values(selectedElements)
         .flat()
         .map((element) => ({
@@ -475,11 +483,12 @@ const CreatureCustomizer = () => {
     }
   };
 
-  const getTotalUsedAmount = (elementId: string) => {
+  const getTotalUsedAmount = (elementId: number) => {
     let totalUsed = 0;
     Object.values(selectedElements).forEach((featureElements) => {
       featureElements.forEach((element) => {
-        if (element.id === elementId) {
+        // Use itemId instead of id for comparison
+        if (element.itemId === elementId) {
           totalUsed += element.quantity || 1;
         }
       });
@@ -487,10 +496,12 @@ const CreatureCustomizer = () => {
     return totalUsed;
   };
 
+  // Fixed confirmElementSelection function
   const confirmElementSelection = () => {
     if (!selectedElement) return;
 
-    const totalUsed = getTotalUsedAmount(selectedElement.id);
+    // Use itemId instead of id
+    const totalUsed = getTotalUsedAmount(selectedElement.itemId);
     const requestedQuantity = parseInt(quantity);
     const availableAmount = selectedElement.amount - totalUsed;
 
@@ -559,7 +570,13 @@ const CreatureCustomizer = () => {
       <div className="w-full">
         <Select onValueChange={(value) => setTopic(value)} value={topic}>
           <SelectTrigger className="w-full bg-[#1f1f1f] text-white rounded-2xl border-none">
-            <SelectValue className="text-white" placeholder="Select Topic" />
+            <SelectValue
+              className="text-white"
+              placeholder="Select Topic"
+              style={{
+                color: "#fff",
+              }}
+            />
           </SelectTrigger>
           <SelectContent className="bg-[#1f1f1f] text-white border-[#333333]">
             <SelectItem value="brainrot">Brainrot</SelectItem>
@@ -861,7 +878,7 @@ const CreatureCustomizer = () => {
                     <div className="text-neutral-400 text-xs">
                       Available:{" "}
                       {selectedElement.amount -
-                        getTotalUsedAmount(selectedElement.id)}{" "}
+                        getTotalUsedAmount(selectedElement.itemId)}{" "}
                       / {selectedElement.amount}
                     </div>
                   </div>

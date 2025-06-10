@@ -123,7 +123,10 @@ export function useUser(inventorySearch?: string) {
   }, [address, user]);
 
   useEffect(() => {
-    getUser();
+    const token = localStorage.getItem("token");
+    if (initDataRaw && token) {
+      getUser();
+    }
   }, [initDataRaw]);
 
   const login = useCallback(async () => {
