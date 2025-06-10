@@ -99,6 +99,10 @@ export function OffchainBagScreen() {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const value = parseInt(e.target.value);
+      if (isNaN(value)) {
+        setMintQuantity(null);
+        return;
+      }
       if (value > 0) {
         if (selectedItem && value > (selectedItem as any).amount) {
           setMintQuantity((selectedItem as any).amount);
@@ -106,7 +110,10 @@ export function OffchainBagScreen() {
           setMintQuantity(value);
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log("error", error);
+      setMintQuantity(null);
+    }
   };
 
   const mintNFTs = useCallback(async () => {
@@ -357,7 +364,9 @@ export function OffchainBagScreen() {
                     Minting...
                   </>
                 ) : (
-                  `Mint ${mintQuantity} NFT${mintQuantity !== 1 ? "s" : ""}`
+                  `Mint ${mintQuantity || ""} NFT${
+                    mintQuantity !== 1 ? "s" : ""
+                  }`
                 )}
               </Button>
             </DialogFooter>
