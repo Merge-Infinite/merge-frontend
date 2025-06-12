@@ -290,7 +290,12 @@ export const CreativeOnchainItem = React.memo(
               />
 
               {/* Hash ID */}
-              <div className="text-emerald-300 text-sm font-normal underline leading-normal">
+              <div
+                className="text-emerald-300 text-sm font-normal underline leading-normal cursor-pointer"
+                onClick={() => {
+                  window.open(`https://suivision.xyz/object/${id}`, "_blank");
+                }}
+              >
                 #{formatAddress(id)}
               </div>
 

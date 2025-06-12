@@ -100,7 +100,7 @@ export const NFTMarket = () => {
   const {
     listings: marketplaceListings,
     loading,
-    refresh,
+    refresh: refreshElement,
   } = useKioskListings({
     kioskId: isOwned ? user?.kiosk?.objectId : undefined,
     nftType: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
@@ -269,7 +269,7 @@ export const NFTMarket = () => {
     listings.push(...elementListings, ...creatureListings);
 
     return listings;
-  }, [marketplaceListings, searchTerm]);
+  }, [marketplaceListings, marketplaceCreatureListings, searchTerm]);
 
   useEffect(() => {
     if (user && !user.kiosk && authed && address) {
@@ -453,7 +453,10 @@ export const NFTMarket = () => {
                       nftId={listing.objectId}
                       loading={purchaseLoading}
                       seller_kiosk={listing.kioskId}
-                      onSubmitOnchainComplete={refresh}
+                      onSubmitOnchainComplete={() => {
+                        refreshElement();
+                        refreshCreature();
+                      }}
                       isOwned={isOwned}
                       type={listing.type}
                     />
@@ -469,6 +472,10 @@ export const NFTMarket = () => {
       <PasscodeAuthDialog
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}
+        onSuccess={() => {
+          refreshElement();
+          refreshCreature();
+        }}
       />
     </div>
   );

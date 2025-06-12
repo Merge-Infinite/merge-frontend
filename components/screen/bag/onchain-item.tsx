@@ -319,7 +319,7 @@ export const CardItem = React.memo(
             />
 
             <div
-              className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline"
+              className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer"
               onClick={() => {
                 window.open(`https://suivision.xyz/object/${id}`, "_blank");
               }}
