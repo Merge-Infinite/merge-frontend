@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/hooks/useLoading";
 import { Pool, usePoolSystem } from "@/hooks/usePool";
 import { StakeInfo, useStakeInfoList } from "@/hooks/useStakeInfoList";
+import { useUser } from "@/hooks/useUser";
 import { formatTimeRemaining } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
@@ -53,6 +54,7 @@ const MAX_SUBSCRIPTION_SLOTS_PER_TIER = 3;
 
 export default function PetExplorerDashboard() {
   const searchParams = useSearchParams();
+  const { user } = useUser();
   const poolId = searchParams.get("poolId");
   const [backButton] = initBackButton();
   const router = useRouter();
@@ -148,10 +150,24 @@ export default function PetExplorerDashboard() {
     return slots;
   }, [stakeInfos]);
 
+  console.log(user);
+
   // Create subscription tier slots
   const subscriptionTiers: SubscriptionTier[] = useMemo(() => {
     const remainingStakes = stakeInfos.slice(MAX_FREE_SLOTS);
     let stakeIndex = 0;
+    const subscriptionEndDate =
+      user?.userBalance?.subscriptionEndDate &&
+      new Date(user?.userBalance?.subscriptionEndDate);
+
+    console.log(user?.userBalance?.subscriptionEndDate);
+
+    const subscriptionMonths =
+      subscriptionEndDate &&
+      Math.floor(
+        (subscriptionEndDate.getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24 * 30)
+      );
 
     return [
       {
@@ -164,7 +180,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `1m-${i + 1}`,
-              isEnabled: false, // Enable based on subscription status
+              isEnabled: subscriptionMonths >= 1,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex: MAX_FREE_SLOTS + i,
@@ -182,7 +198,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `3m-${i + 1}`,
-              isEnabled: false,
+              isEnabled: subscriptionMonths >= 3,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex: MAX_FREE_SLOTS + MAX_SUBSCRIPTION_SLOTS_PER_TIER + i,
@@ -200,7 +216,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `6m-${i + 1}`,
-              isEnabled: false,
+              isEnabled: subscriptionMonths >= 6,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex:
