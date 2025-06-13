@@ -42,3 +42,4 @@ export const POOL_SYSTEM =
   "0x41fce698233d9163d93754e76c8dc1c6c7c4b04231491f632aead72b5c0d2e01";
 export const POOL_SYSTEM_ADMIN_CAP =
   "0x417e3cdaaeb94175612918c7a8078453dcdf654440bbb0098e1764f5917bb848";
+export const POOL_REWARDS_MODULE_NAME = "pool_rewards";
