@@ -2,11 +2,12 @@ import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/hooks/useUser";
-import { mists_to_sui } from "@/lib/utils";
+import { formatSUI } from "@/lib/wallet/core";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
+import useSuiBalance from "@/lib/wallet/hooks/coin/useSuiBalance";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useFeatureFlags } from "@/lib/wallet/hooks/useFeatureFlags";
@@ -68,6 +69,7 @@ export const MarketItem = React.memo(
     const [copied, setCopied] = useState(false);
     const [openAuthDialog, setOpenAuthDialog] = useState(false);
     const router = useRouter();
+    const { data: balance } = useSuiBalance(address);
 
     const handleCopyId = () => {
       const currentNetworkConfig = featureFlags.networks[appContext.networkId];
@@ -83,7 +85,10 @@ export const MarketItem = React.memo(
     async function purchaseNFT(): Promise<void> {
       try {
         setLoading(true);
-
+        if (Number(balance?.balance) < Number(price)) {
+          toast.error("Insufficient balance");
+          return;
+        }
         // Show processing toast
         toast.info("Transaction in progress...");
 
@@ -226,6 +231,8 @@ export const MarketItem = React.memo(
       router.push(`/creative?recipe=${JSON.stringify(formattedRecipe)}`);
     };
 
+    console.log(balance);
+    console.log(price);
     return (
       <Card className="w-full sm:w-60 bg-transparent transition-all duration-300 gap-2 flex flex-col">
         <Image
@@ -268,7 +275,7 @@ export const MarketItem = React.memo(
                       width={16}
                       height={16}
                     />
-                    {mists_to_sui(Number(price))} SUI
+                    {formatSUI(Number(price))} SUI
                   </>
                 )}
               </div>
@@ -277,7 +284,7 @@ export const MarketItem = React.memo(
               <Button
                 className=" text-black w-fit uppercase rounded-3xl"
                 onClick={purchaseNFT}
-                disabled={loading}
+                disabled={loading || Number(balance?.balance) < Number(price)}
                 isLoading={loading}
                 size="sm"
               >
