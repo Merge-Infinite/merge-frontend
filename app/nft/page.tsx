@@ -120,6 +120,10 @@ export default function InventoryStakingInterface() {
           await refresh();
         }
       } catch (error: any) {
+        if (error.message.includes('Some("validate_nft_requirements") }, 12')) {
+          toast.error("NFT is not containing the required elements");
+          return;
+        }
         console.error("Error creating kiosk:", error);
         if (error.message === "Authentication required") {
           setOpenAuthDialog(true);
