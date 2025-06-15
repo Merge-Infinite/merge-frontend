@@ -236,7 +236,7 @@ export const MarketItem = React.memo(
     return (
       <Card className="w-full sm:w-60 bg-transparent transition-all duration-300 gap-2 flex flex-col">
         <Image
-          src={`https://cdn.tusky.io/${imageUrl}`}
+          src={`https://walrus.tusky.io/${imageUrl}`}
           alt={element}
           width={100}
           height={100}

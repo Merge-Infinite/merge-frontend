@@ -235,7 +235,7 @@ const ElementCard = ({
     <Card className="w-full h-32 border-neutral-800 rounded-2xl">
       <CardContent className="h-full flex flex-col justify-center items-center p-4">
         <Image
-          src={`https://cdn.tusky.io/${item.imageUrl}`}
+          src={`https://walrus.tusky.io/${item.imageUrl}`}
           alt={item.name}
           width={176}
           height={176}
@@ -277,7 +277,7 @@ const NFTCard = ({
       <CardContent className="p-0 h-full flex justify-center items-center">
         <Image
           className="w-44 h-44 object-cover"
-          src={`https://cdn.tusky.io/${item.imageUrl}`}
+          src={`https://walrus.tusky.io/${item.imageUrl}`}
           alt={item.name}
           width={176}
           height={176}

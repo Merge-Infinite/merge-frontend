@@ -282,7 +282,7 @@ export const CreativeOnchainItem = React.memo(
             <CardContent className="p-0 flex flex-col items-center gap-2">
               {/* Image Container */}
               <Image
-                src={`https://cdn.tusky.io/${imageUrl}`}
+                src={`https://walrus.tusky.io/${imageUrl}`}
                 alt="Project preview"
                 width={176}
                 height={176}
