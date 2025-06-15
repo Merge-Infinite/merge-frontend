@@ -311,7 +311,7 @@ export const CardItem = React.memo(
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <Card className="border-none gap-2 flex flex-col justify-between items-center hover:shadow-md transition-shadow duration-200">
             <Image
-              src={`https://wal.gg/${imageUrl}`}
+              src={`https://cdn.tusky.io/${imageUrl}`}
               alt="NFT"
               width={100}
               height={100}

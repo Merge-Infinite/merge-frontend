@@ -120,7 +120,7 @@ const CreatureCustomizer = () => {
                   <div className="w-44 h-44 bg-zinc-800 rounded-2xl flex justify-center items-center overflow-hidden">
                     {nft.blobId && (
                       <Image
-                        src={`https://wal.gg/${nft.blobId}`}
+                        src={`https://cdn.tusky.io/${nft.blobId}`}
                         alt={nft.name}
                         width={176}
                         height={176}
