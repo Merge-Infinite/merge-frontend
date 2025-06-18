@@ -1,5 +1,5 @@
 import { KioskClient, Network } from "@mysten/kiosk";
-import { SuiClient, getFullnodeUrl } from "@mysten/sui.js/client";
+import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { BigNumber as BN } from "bignumber.js";
 import { clsx, type ClassValue } from "clsx";

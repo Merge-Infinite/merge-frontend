@@ -1,5 +1,10 @@
 import { suiClient } from "@/lib/utils";
-import { MER3_PACKAGE_ID, POOL_SYSTEM } from "@/utils/constants";
+import {
+  MER3_PACKAGE_ID,
+  POOL_REWARDS_MODULE_NAME,
+  POOL_SYSTEM,
+} from "@/utils/constants";
+import { Transaction } from "@mysten/sui/transactions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -58,7 +63,6 @@ interface StakeStats {
 
 interface PoolStats {
   poolId: string;
-  poolName: string;
   nftCount: number;
   totalWeight: number;
   pendingSuiRewards: number;
@@ -361,29 +365,23 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   const getUserStakeInfoFromContract = useCallback(
     async (userAddress: string, poolId: string) => {
       try {
-        const result = await suiClient.devInspectTransactionBlock({
-          transactionBlock: {
-            kind: "programmableTransaction",
-            inputs: [
-              { type: "object", objectId: POOL_SYSTEM },
-              { type: "pure", valueType: "address", value: poolId },
-              { type: "pure", valueType: "address", value: userAddress },
-            ],
-            transactions: [
-              {
-                kind: "moveCall",
-                target: `${MER3_PACKAGE_ID}::pool_rewards::get_user_stake_info`,
-                arguments: [
-                  { kind: "input", index: 0 },
-                  { kind: "input", index: 1 },
-                  { kind: "input", index: 2 },
-                ],
-              },
-            ],
-          },
-          sender:
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
+        const tx = new Transaction();
+        tx.moveCall({
+          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details`,
+          arguments: [
+            tx.object(POOL_SYSTEM),
+            tx.pure.id(poolId),
+            tx.pure.address(userAddress),
+            tx.object("0x6"),
+          ],
         });
+
+        const result = await suiClient.devInspectTransactionBlock({
+          transactionBlock: tx,
+          sender: userAddress,
+        });
+
+        console.log("result get_user_stake_info", result);
 
         if (!result.results?.[0]?.returnValues) {
           return null;
@@ -393,11 +391,10 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           result.results[0].returnValues;
 
         return {
-          nftCount: Number(nftCount),
-          totalWeight: Number(totalWeight),
-          pendingSuiRewards:
-            Number(pendingSuiRewards) / Math.pow(10, SUI_DECIMALS),
-          lastRewardClaim: Number(lastRewardClaim),
+          nftCount: decodeU64(nftCount[0]),
+          totalWeight: decodeU64(totalWeight[0]),
+          pendingSuiRewards: decodeU64(pendingSuiRewards[0]),
+          lastRewardClaim: decodeU64(lastRewardClaim[0]),
         };
       } catch (error) {
         console.error(
@@ -409,44 +406,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     },
     []
   );
-
-  /**
-   * Get pool name from contract
-   */
-  const getPoolName = useCallback(async (poolId: string): Promise<string> => {
-    try {
-      const result = await suiClient.devInspectTransactionBlock({
-        transactionBlock: {
-          kind: "programmableTransaction",
-          inputs: [
-            { type: "object", objectId: POOL_SYSTEM },
-            { type: "pure", valueType: "address", value: poolId },
-          ],
-          transactions: [
-            {
-              kind: "moveCall",
-              target: `${MER3_PACKAGE_ID}::pool_rewards::get_pool_info`,
-              arguments: [
-                { kind: "input", index: 0 },
-                { kind: "input", index: 1 },
-              ],
-            },
-          ],
-        },
-        sender:
-          "0x0000000000000000000000000000000000000000000000000000000000000000",
-      });
-
-      if (!result.results?.[0]?.returnValues?.[0]) {
-        return `Pool ${poolId.slice(0, 8)}...`;
-      }
-
-      return String(result.results[0].returnValues[0]);
-    } catch (error) {
-      console.error(`Error fetching pool name for ${poolId}:`, error);
-      return `Pool ${poolId.slice(0, 8)}...`;
-    }
-  }, []);
 
   /**
    * Get claimed rewards for a specific pool from RewardsClaimed events
@@ -510,6 +469,15 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     []
   );
 
+  const decodeU64 = (bytes: number[]): number => {
+    if (!Array.isArray(bytes)) return 0;
+    let result = 0;
+    for (let i = 0; i < Math.min(bytes.length, 8); i++) {
+      result += bytes[i] * Math.pow(256, i);
+    }
+    return result;
+  };
+
   /**
    * Get reward stats for a specific pool
    */
@@ -520,9 +488,8 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       poolStakes: StakeInfo[]
     ): Promise<PoolStats> => {
       try {
-        const [userStakeInfo, poolName, claimedRewards] = await Promise.all([
+        const [userStakeInfo, claimedRewards] = await Promise.all([
           getUserStakeInfoFromContract(userAddress, poolId),
-          getPoolName(poolId),
           getClaimedRewardsForPool(userAddress, poolId),
         ]);
 
@@ -537,7 +504,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
         return {
           poolId,
-          poolName,
           nftCount: poolStakes.length,
           totalWeight: poolStakes.reduce((sum, stake) => sum + stake.weight, 0),
           pendingSuiRewards: userStakeInfo?.pendingSuiRewards || 0,
@@ -550,7 +516,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         console.error(`Error getting pool reward stats for ${poolId}:`, error);
         return {
           poolId,
-          poolName: `Pool ${poolId.slice(0, 8)}...`,
           nftCount: poolStakes.length,
           totalWeight: poolStakes.reduce((sum, stake) => sum + stake.weight, 0),
           pendingSuiRewards: 0,
@@ -563,7 +528,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     },
     [
       getUserStakeInfoFromContract,
-      getPoolName,
       getClaimedRewardsForPool,
       calculateEnergyEarned,
     ]

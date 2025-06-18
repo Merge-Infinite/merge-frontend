@@ -22,7 +22,7 @@ import {
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
-import { formatAddress } from "@mysten/sui.js";
+import { formatAddress, MIST_PER_SUI } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import { initBackButton } from "@telegram-apps/sdk";
 import Image from "next/image";
@@ -118,17 +118,39 @@ export default function PetExplorerDashboard() {
   const rewardStats: StatsItem[] = [
     {
       icon: <Image src="/images/sui.svg" alt="User" width={24} height={24} />,
-      value: stakeStats?.totalPendingSuiRewards || 0,
+      value:
+        (
+          (Number(stakeStats?.totalWeight) /
+            Number(pool?.totalStakedCount || 0)) *
+          ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78)
+        ).toFixed(4) || 0,
     },
     {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
-      value: stakeStats?.totalClaimedSuiRewards || 0,
+      value:
+        (
+          ((Number(stakeStats?.totalWeight) /
+            Number(pool?.totalStakedCount || 0)) *
+            ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
+              2.78 *
+              5 *
+              30)) /
+          100 /
+          0.03
+        ).toFixed(4) || 0,
     },
     {
       icon: (
         <Image src="/images/energy.svg" alt="User" width={24} height={24} />
       ),
-      value: stakeStats?.totalEnergyEarned || 0,
+      value:
+        (
+          ((Number(stakeStats?.totalWeight) /
+            Number(pool?.totalStakedCount || 0)) *
+            ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 5)) /
+          2 /
+          0.05
+        ).toFixed(4) || 0,
     },
   ];
 
@@ -150,8 +172,6 @@ export default function PetExplorerDashboard() {
     return slots;
   }, [stakeInfos]);
 
-  console.log(user);
-
   // Create subscription tier slots
   const subscriptionTiers: SubscriptionTier[] = useMemo(() => {
     const remainingStakes = stakeInfos.slice(MAX_FREE_SLOTS);
@@ -159,8 +179,6 @@ export default function PetExplorerDashboard() {
     const subscriptionEndDate =
       user?.userBalance?.subscriptionEndDate &&
       new Date(user?.userBalance?.subscriptionEndDate);
-
-    console.log(user?.userBalance?.subscriptionEndDate);
 
     const subscriptionMonths =
       subscriptionEndDate &&
@@ -269,7 +287,12 @@ export default function PetExplorerDashboard() {
                     💰 Total Prize:
                   </span>
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
-                    {pool?.suiRewards} SUI
+                    {(
+                      (Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
+                      2.78 *
+                      5
+                    ).toFixed(2)}
+                    $
                   </span>
                 </div>
                 <div className="flex">
