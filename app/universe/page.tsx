@@ -33,7 +33,7 @@ import { toast } from "sonner";
 
 interface StatsItem {
   icon: React.ReactNode;
-  value: number;
+  value: string | number;
 }
 
 interface PetSlot {
@@ -131,10 +131,9 @@ export default function PetExplorerDashboard() {
         (
           ((Number(stakeStats?.totalWeight) /
             Number(pool?.totalStakedCount || 0)) *
-            ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
-              2.78 *
-              5 *
-              30)) /
+            ((((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 10) /
+              3) *
+              20)) /
           100 /
           0.03
         ).toFixed(4) || 0,
@@ -147,7 +146,8 @@ export default function PetExplorerDashboard() {
         (
           ((Number(stakeStats?.totalWeight) /
             Number(pool?.totalStakedCount || 0)) *
-            ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 5)) /
+            (((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 10) /
+              3)) /
           2 /
           0.05
         ).toFixed(4) || 0,
@@ -288,9 +288,10 @@ export default function PetExplorerDashboard() {
                   </span>
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
                     {(
-                      (Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
-                      2.78 *
-                      5
+                      ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
+                        2.78 *
+                        10) /
+                      3
                     ).toFixed(2)}
                     $
                   </span>
