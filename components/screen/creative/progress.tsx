@@ -35,6 +35,7 @@ const mappingStatusToText = {
   [NFTGenerationJobStatus.MINTING]: "Minting",
   [NFTGenerationJobStatus.COMPLETED]: "Completed",
   [NFTGenerationJobStatus.FAILED]: "Failed",
+  [NFTGenerationJobStatus.DUPLICATE_NFT]: "Duplicate NFT",
 };
 
 const mappingStatusToBadgeColor = {
