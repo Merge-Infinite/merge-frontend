@@ -356,7 +356,7 @@ export default function PetExplorerDashboard() {
                 value="nfts"
                 className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
               >
-                NFTs ({stakeStats?.totalStakes || 0})
+                NFTs ({stakeStats?.nftCount || 0})
               </TabsTrigger>
               <TabsTrigger
                 value="reward"

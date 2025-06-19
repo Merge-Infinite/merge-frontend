@@ -921,13 +921,7 @@ const CreatureCustomizer = () => {
                 </div>
               </div>
 
-              <div className="flex-1 inline-flex flex-col justify-start items-start gap-4">
-                {/* Subscription info */}
-                <div className="self-stretch justify-start text-neutral-600 text-xs font-normal leading-none">
-                  Subscription accounts will get previews and 3 times
-                  re-generate images.
-                </div>
-              </div>
+              <div className="flex-1 inline-flex flex-col justify-start items-start gap-4"></div>
             </div>
 
             {/* Balance Section */}
