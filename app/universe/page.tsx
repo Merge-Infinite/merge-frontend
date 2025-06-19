@@ -122,7 +122,7 @@ export default function PetExplorerDashboard() {
         (
           (Number(stakeStats?.totalWeight) /
             Number(pool?.totalStakedCount || 0)) *
-          ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78)
+          (Number(pool?.suiRewards) / Number(MIST_PER_SUI))
         ).toFixed(4) || 0,
     },
     {
