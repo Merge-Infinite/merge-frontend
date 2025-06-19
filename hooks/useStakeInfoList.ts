@@ -1,11 +1,12 @@
 import { suiClient } from "@/lib/utils";
 import {
   MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Enhanced interfaces
@@ -65,11 +66,8 @@ interface PoolStats {
   poolId: string;
   nftCount: number;
   totalWeight: number;
+  totalPoolWeight: number;
   pendingSuiRewards: number;
-  claimedSuiRewards: number;
-  energyEarned: number;
-  canClaimNow: boolean;
-  timeUntilNextClaim: number;
 }
 
 interface UseStakeInfoListOptions {
@@ -367,7 +365,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       try {
         const tx = new Transaction();
         tx.moveCall({
-          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details`,
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.pure.id(poolId),
@@ -387,12 +385,18 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           return null;
         }
 
-        const [nftCount, totalWeight, pendingSuiRewards, lastRewardClaim] =
-          result.results[0].returnValues;
+        const [
+          userNftCount,
+          userWeight,
+          totalPoolWeight,
+          pendingSuiRewards,
+          lastRewardClaim,
+        ] = result.results[0].returnValues;
 
         return {
-          nftCount: decodeU64(nftCount[0]),
-          totalWeight: decodeU64(totalWeight[0]),
+          nftCount: decodeU64(userNftCount[0]),
+          totalWeight: decodeU64(userWeight[0]),
+          totalPoolWeight: decodeU64(totalPoolWeight[0]),
           pendingSuiRewards: decodeU64(pendingSuiRewards[0]),
           lastRewardClaim: decodeU64(lastRewardClaim[0]),
         };
@@ -482,18 +486,12 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
    * Get reward stats for a specific pool
    */
   const getPoolRewardStats = useCallback(
-    async (
-      userAddress: string,
-      poolId: string,
-      poolStakes: StakeInfo[]
-    ): Promise<PoolStats> => {
+    async (userAddress: string, poolId: string): Promise<PoolStats> => {
       try {
         const [userStakeInfo, claimedRewards] = await Promise.all([
           getUserStakeInfoFromContract(userAddress, poolId),
           getClaimedRewardsForPool(userAddress, poolId),
         ]);
-
-        const energyEarned = calculateEnergyEarned(poolStakes);
 
         const currentTime = Date.now();
         const lastClaimTime = userStakeInfo?.lastRewardClaim || 0;
@@ -504,25 +502,19 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
         return {
           poolId,
-          nftCount: poolStakes.length,
-          totalWeight: poolStakes.reduce((sum, stake) => sum + stake.weight, 0),
+          nftCount: userStakeInfo?.nftCount || 0,
+          totalWeight: userStakeInfo?.totalWeight || 0,
+          totalPoolWeight: userStakeInfo?.totalPoolWeight || 0,
           pendingSuiRewards: userStakeInfo?.pendingSuiRewards || 0,
-          claimedSuiRewards: claimedRewards,
-          energyEarned,
-          canClaimNow: timeUntilNextClaim === 0,
-          timeUntilNextClaim,
         };
       } catch (error) {
         console.error(`Error getting pool reward stats for ${poolId}:`, error);
         return {
           poolId,
-          nftCount: poolStakes.length,
-          totalWeight: poolStakes.reduce((sum, stake) => sum + stake.weight, 0),
+          nftCount: 0,
+          totalWeight: 0,
+          totalPoolWeight: 0,
           pendingSuiRewards: 0,
-          claimedSuiRewards: 0,
-          energyEarned: 0,
-          canClaimNow: false,
-          timeUntilNextClaim: 0,
         };
       }
     },
@@ -531,136 +523,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       getClaimedRewardsForPool,
       calculateEnergyEarned,
     ]
-  );
-
-  /**
-   * Calculate comprehensive stake statistics including SUI rewards
-   */
-  const calculateStakeStats = useCallback(
-    async (
-      userAddress: string,
-      stakeInfos: StakeInfo[]
-    ): Promise<StakeStats> => {
-      if (stakeInfos.length === 0) {
-        return {
-          totalStakes: 0,
-          totalStakingHours: 0,
-          avgStakingHours: 0,
-          totalWeight: 0,
-          totalPendingSuiRewards: 0,
-          totalClaimedSuiRewards: 0,
-          totalSuiEarned: 0,
-          totalEnergyEarned: 0,
-          dailyEnergyRate: 0,
-          poolBreakdown: [],
-        };
-      }
-
-      setRewardsLoading(true);
-
-      try {
-        // Basic staking stats
-        const totalStakes = stakeInfos.length;
-        const totalStakingHours = stakeInfos.reduce(
-          (sum, stake) => sum + stake.stakeDurationHours,
-          0
-        );
-        const totalWeight = stakeInfos.reduce(
-          (sum, stake) => sum + stake.weight,
-          0
-        );
-        const avgStakingHours = totalStakingHours / totalStakes;
-
-        // Time-based metrics
-        const stakeTimes = stakeInfos
-          .map((s) => s.stakeTime)
-          .sort((a, b) => a.getTime() - b.getTime());
-        const oldestStake = stakeTimes[0];
-        const newestStake = stakeTimes[stakeTimes.length - 1];
-
-        // Get unique pools and calculate pool-specific stats
-        const uniquePoolIds = [
-          ...new Set(stakeInfos.map((stake) => stake.poolId)),
-        ];
-
-        const poolBreakdownPromises = uniquePoolIds.map(async (poolId) => {
-          const poolStakes = stakeInfos.filter(
-            (stake) => stake.poolId === poolId
-          );
-          return await getPoolRewardStats(userAddress, poolId, poolStakes);
-        });
-
-        const poolBreakdown = await Promise.all(poolBreakdownPromises);
-
-        // Aggregate reward stats from all pools
-        const totalPendingSuiRewards = poolBreakdown.reduce(
-          (sum, pool) => sum + pool.pendingSuiRewards,
-          0
-        );
-        const totalClaimedSuiRewards = poolBreakdown.reduce(
-          (sum, pool) => sum + pool.claimedSuiRewards,
-          0
-        );
-        const totalSuiEarned = totalPendingSuiRewards + totalClaimedSuiRewards;
-
-        // Energy stats
-        const totalEnergyEarned = poolBreakdown.reduce(
-          (sum, pool) => sum + pool.energyEarned,
-          0
-        );
-        const dailyEnergyRate =
-          totalStakes > 0 ? totalEnergyEarned / (totalStakingHours / 24) : 0;
-
-        return {
-          totalStakes,
-          totalStakingHours,
-          avgStakingHours: Math.round(avgStakingHours * 100) / 100,
-          totalWeight,
-          oldestStake,
-          newestStake,
-          totalPendingSuiRewards,
-          totalClaimedSuiRewards,
-          totalSuiEarned,
-          totalEnergyEarned,
-          dailyEnergyRate: Math.round(dailyEnergyRate * 100) / 100,
-          poolBreakdown,
-        };
-      } catch (error) {
-        console.error("Error calculating stake stats:", error);
-        // Return basic stats without rewards on error
-        const totalStakes = stakeInfos.length;
-        const totalStakingHours = stakeInfos.reduce(
-          (sum, stake) => sum + stake.stakeDurationHours,
-          0
-        );
-        const totalWeight = stakeInfos.reduce(
-          (sum, stake) => sum + stake.weight,
-          0
-        );
-        const stakeTimes = stakeInfos
-          .map((s) => s.stakeTime)
-          .sort((a, b) => a.getTime() - b.getTime());
-
-        return {
-          totalStakes,
-          totalStakingHours,
-          avgStakingHours:
-            Math.round((totalStakingHours / totalStakes) * 100) / 100,
-          totalWeight,
-          oldestStake: stakeTimes[0],
-          newestStake: stakeTimes[stakeTimes.length - 1],
-          totalPendingSuiRewards: 0,
-          totalClaimedSuiRewards: 0,
-          totalSuiEarned: 0,
-          totalEnergyEarned: 0,
-          dailyEnergyRate: 0,
-          poolBreakdown: [],
-        };
-      } finally {
-        setRewardsLoading(false);
-      }
-    },
-    [getPoolRewardStats]
   );
 
   /**
@@ -676,7 +538,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       setLoading(true);
       setError(null);
 
-      const events = await fetchUserStakeEvents(walletAddress, poolId);
+      const events = await fetchUserStakeEvents(walletAddress, poolId!);
       const currentlyStakedMap = determineCurrentlyStakedNFTs(events);
       const stakeInfosList = await convertEventsToStakeInfos(
         currentlyStakedMap
@@ -713,7 +575,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         setLoading(true);
         setError(null);
 
-        const events = await fetchUserStakeEvents(address, poolId);
+        const events = await fetchUserStakeEvents(address, poolId!);
         const currentlyStakedMap = determineCurrentlyStakedNFTs(events);
         const result = await convertEventsToStakeInfos(currentlyStakedMap);
 
@@ -733,82 +595,27 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     ]
   );
 
-  // Computed values with useMemo for performance
-  const stakeStats = useMemo((): StakeStats | null => {
-    if (!calculateRewards || !walletAddress || stakeInfos.length === 0) {
-      // Return basic stats without rewards
-      if (stakeInfos.length === 0) {
-        return {
-          totalStakes: 0,
-          totalStakingHours: 0,
-          avgStakingHours: 0,
-          totalWeight: 0,
-          totalPendingSuiRewards: 0,
-          totalClaimedSuiRewards: 0,
-          totalSuiEarned: 0,
-          totalEnergyEarned: 0,
-          dailyEnergyRate: 0,
-          poolBreakdown: [],
-        };
-      }
-
-      const totalStakingHours = stakeInfos.reduce(
-        (sum, stake) => sum + stake.stakeDurationHours,
-        0
-      );
-      const totalWeight = stakeInfos.reduce(
-        (sum, stake) => sum + stake.weight,
-        0
-      );
-      const stakeTimes = stakeInfos
-        .map((s) => s.stakeTime)
-        .sort((a, b) => a.getTime() - b.getTime());
-
-      return {
-        totalStakes: stakeInfos.length,
-        totalStakingHours,
-        avgStakingHours:
-          Math.round((totalStakingHours / stakeInfos.length) * 100) / 100,
-        totalWeight,
-        oldestStake: stakeTimes[0],
-        newestStake: stakeTimes[stakeTimes.length - 1],
-        totalPendingSuiRewards: 0,
-        totalClaimedSuiRewards: 0,
-        totalSuiEarned: 0,
-        totalEnergyEarned: 0,
-        dailyEnergyRate: 0,
-        poolBreakdown: [],
-      };
-    }
-
-    return null; // Will be calculated separately with async function
-  }, [stakeInfos, calculateRewards, walletAddress]);
-
   // State for async calculated stats
-  const [calculatedStats, setCalculatedStats] = useState<StakeStats | null>(
+  const [calculatedStats, setCalculatedStats] = useState<PoolStats | null>(
     null
   );
 
   // Calculate stats when stakeInfos change and rewards are enabled
   useEffect(() => {
     if (calculateRewards && walletAddress && stakeInfos.length > 0) {
-      calculateStakeStats(walletAddress, stakeInfos)
-        .then(setCalculatedStats)
+      getPoolRewardStats(walletAddress, poolId!)
+        .then((stats) => {
+          setCalculatedStats(stats);
+        })
         .catch((error) => {
           console.error("Error calculating stake stats:", error);
           // Set basic stats on error
-          setCalculatedStats(stakeStats);
+          setCalculatedStats(null);
         });
     } else {
-      setCalculatedStats(stakeStats);
+      setCalculatedStats(null);
     }
-  }, [
-    stakeInfos,
-    calculateRewards,
-    walletAddress,
-    calculateStakeStats,
-    stakeStats,
-  ]);
+  }, [stakeInfos, calculateRewards, walletAddress]);
 
   // Utility functions
   const getStakeInfoById = useCallback(
@@ -876,29 +683,12 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     getStakeInfoByNftId,
     getStakesByPool,
 
-    // Additional utilities
-    isStakeInfoLoaded:
-      stakeInfos.length > 0 || (!loading && stakeInfos.length === 0),
-    hasError: !!error,
-    isEmpty: !loading && stakeInfos.length === 0,
-
-    // Reward-specific utilities
-    canClaimAnyRewards:
-      calculatedStats?.poolBreakdown.some((pool) => pool.canClaimNow) || false,
-    totalClaimableRewards:
-      calculatedStats?.poolBreakdown
-        .filter((pool) => pool.canClaimNow)
-        .reduce((sum, pool) => sum + pool.pendingSuiRewards, 0) || 0,
-
     // Manual refresh for rewards only
     refreshRewards: async () => {
       if (calculateRewards && walletAddress && stakeInfos.length > 0) {
         setRewardsLoading(true);
         try {
-          const rewardStats = await calculateStakeStats(
-            walletAddress,
-            stakeInfos
-          );
+          const rewardStats = await getPoolRewardStats(walletAddress, poolId!);
           setCalculatedStats(rewardStats);
         } catch (error) {
           console.error("Error refreshing rewards:", error);

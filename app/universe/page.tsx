@@ -115,21 +115,13 @@ export default function PetExplorerDashboard() {
     },
   ];
 
-  console.log(pool?.totalStakedCount);
-  console.log(stakeStats);
-  console.log(
-    Number(stakeStats?.totalStakes) / Number(pool?.totalStakedCount || 0)
-  );
-  console.log(
-    Number(stakeStats?.totalStakes) / Number(pool?.totalStakedCount || 0)
-  );
   const rewardStats: StatsItem[] = [
     {
       icon: <Image src="/images/sui.svg" alt="User" width={24} height={24} />,
       value:
         (
-          (Number(stakeStats?.totalStakes) /
-            Number(pool?.totalStakedCount || 0)) *
+          (Number(stakeStats?.totalWeight) /
+            Number(stakeStats?.totalPoolWeight || 0)) *
           (Number(pool?.suiRewards) / Number(MIST_PER_SUI))
         ).toFixed(4) || 0,
     },
@@ -137,8 +129,8 @@ export default function PetExplorerDashboard() {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
       value:
         (
-          ((Number(stakeStats?.totalStakes) /
-            Number(pool?.totalStakedCount || 0)) *
+          ((Number(stakeStats?.totalWeight) /
+            Number(stakeStats?.totalPoolWeight || 0)) *
             ((((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 10) /
               3) *
               20)) /
@@ -152,8 +144,8 @@ export default function PetExplorerDashboard() {
       ),
       value:
         (
-          ((Number(stakeStats?.totalStakes) /
-            Number(pool?.totalStakedCount || 0)) *
+          ((Number(stakeStats?.totalWeight) /
+            Number(stakeStats?.totalPoolWeight || 0)) *
             (((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 10) /
               3)) /
           2 /
