@@ -392,7 +392,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
       const stakedNftIds = await fetchUserStakedNftIds(poolId!, walletAddress);
       const stakeInfosList = await convertEventsToStakeInfos(stakedNftIds);
-      console.log("stakeInfosList", stakeInfosList);
 
       setStakeInfos(stakeInfosList);
       setLastFetchTime(new Date());
