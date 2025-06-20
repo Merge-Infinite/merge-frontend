@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/hooks/useLoading";
 import { useNFTList } from "@/hooks/useNFTList";
+import { useStakeInfoList } from "@/hooks/useStakeInfoList";
+import { useUser } from "@/hooks/useUser";
 import { SendAndExecuteTxParams, TxEssentials } from "@/lib/wallet/core";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
@@ -28,6 +30,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import {
+  MAX_FREE_SLOTS,
+  MAX_SUBSCRIPTION_SLOTS_PER_TIER,
+} from "../universe/page";
 
 interface InventoryItem {
   id: string;
@@ -47,13 +53,19 @@ export default function InventoryStakingInterface() {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const { data: network } = useNetwork(appContext.networkId);
-
+  const { stakeStats } = useStakeInfoList({
+    walletAddress: address,
+    poolId: poolId || undefined,
+    includeNFTDetails: true,
+    refreshInterval: undefined,
+  });
   useEffect(() => {
     backButton.show();
     backButton.on("click", () => {
       router.back();
     });
   }, []);
+  const { user } = useUser();
 
   const {
     nfts: creatureNfts,
@@ -78,11 +90,53 @@ export default function InventoryStakingInterface() {
     }
   }, [address, authed]);
 
+  function calculateAvailableSlots(
+    subscriptionMonths: number | null | undefined
+  ): number {
+    // Base free slots are always available
+    let totalSlots = MAX_FREE_SLOTS;
+
+    // If no subscription or invalid subscription months, return only free slots
+    if (!subscriptionMonths || subscriptionMonths <= 0) {
+      return totalSlots;
+    }
+
+    // Add slots based on subscription duration
+    if (subscriptionMonths >= 1) {
+      totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 1 Month tier
+    }
+
+    if (subscriptionMonths >= 3) {
+      totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 3 Month tier
+    }
+
+    if (subscriptionMonths >= 6) {
+      totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 6 Month tier
+    }
+
+    return totalSlots;
+  }
+
   const handleStakeNFT = useCallback(
     async (nftId: string) => {
       try {
         if (!address && authed) {
           toast.error("No address found");
+          return;
+        }
+        const subscriptionEndDate =
+          user?.userBalance?.subscriptionEndDate &&
+          new Date(user?.userBalance?.subscriptionEndDate);
+
+        const subscriptionMonths =
+          subscriptionEndDate &&
+          Math.floor(
+            (subscriptionEndDate.getTime() - new Date().getTime()) /
+              (1000 * 60 * 60 * 24 * 30)
+          );
+        const availableSlots = calculateAvailableSlots(subscriptionMonths);
+        if (availableSlots <= (stakeStats?.nftCount || 0)) {
+          toast.error("You have reached the maximum number of NFTs");
           return;
         }
         startLoading();

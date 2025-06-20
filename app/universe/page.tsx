@@ -49,8 +49,8 @@ interface SubscriptionTier {
   slots: PetSlot[];
 }
 
-const MAX_FREE_SLOTS = 3;
-const MAX_SUBSCRIPTION_SLOTS_PER_TIER = 3;
+export const MAX_FREE_SLOTS = 3;
+export const MAX_SUBSCRIPTION_SLOTS_PER_TIER = 3;
 
 export default function PetExplorerDashboard() {
   const searchParams = useSearchParams();
@@ -73,8 +73,6 @@ export default function PetExplorerDashboard() {
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
-
-  console.log(stakeInfos);
 
   useEffect(() => {
     if (!authed) {
