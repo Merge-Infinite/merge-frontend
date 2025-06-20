@@ -415,7 +415,7 @@ export default function PetExplorerDashboard() {
                   Staking Rewards Summary
                 </div>
 
-                {stakeInfos.length > 0 ? (
+                {/* {stakeInfos.length > 0 ? (
                   <div className="space-y-3">
                     {stakeInfos.map((stakeInfo) => (
                       <Card
@@ -453,7 +453,7 @@ export default function PetExplorerDashboard() {
                     No staked NFTs found. Stake some NFTs to start earning
                     rewards!
                   </div>
-                )}
+                )} */}
               </div>
             </TabsContent>
           </Tabs>
