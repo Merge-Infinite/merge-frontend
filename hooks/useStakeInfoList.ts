@@ -1,6 +1,5 @@
 import { suiClient } from "@/lib/utils";
 import {
-  MER3_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
@@ -15,12 +14,6 @@ export interface StakeInfo {
   nftId: string;
   owner: string;
   poolId: string;
-  stakeTime: Date;
-  weight: number;
-  stakeDurationMs: number;
-  stakeDurationHours: number;
-  lastEventTime: number;
-  eventType: "staked" | "unstaked";
   displayData?: {
     name?: string;
     image_uri?: string;
@@ -103,89 +96,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   const REWARD_UPDATE_INTERVAL = 21_600_000; // 6 hours
   const BASE_ENERGY_PER_HOUR = 10;
   const ENERGY_MULTIPLIER_PER_ITEM = 0.1;
-
-  /**
-   * Fetch all stake/unstake events for a user
-   */
-  const fetchUserStakeEvents = useCallback(
-    async (
-      userAddress: string,
-      targetPoolId?: string
-    ): Promise<NFTStakeEvent[]> => {
-      try {
-        const events: NFTStakeEvent[] = [];
-
-        // Query NFTStaked events
-        const stakedEvents = await suiClient.queryEvents({
-          query: {
-            MoveEventType: `${MER3_PACKAGE_ID}::pool_rewards::NFTStaked`,
-          },
-          limit: 1000,
-          order: "descending",
-        });
-
-        // Query NFTUnstaked events
-        const unstakedEvents = await suiClient.queryEvents({
-          query: {
-            MoveEventType: `${MER3_PACKAGE_ID}::pool_rewards::NFTUnstaked`,
-          },
-          limit: 1000,
-          order: "descending",
-        });
-
-        // Process staked events
-        for (const event of stakedEvents.data) {
-          if (event.parsedJson && typeof event.parsedJson === "object") {
-            const eventData = event.parsedJson as any;
-
-            if (
-              eventData.owner === userAddress &&
-              (!targetPoolId || eventData.pool_id === targetPoolId)
-            ) {
-              events.push({
-                nftId: eventData.nft_id,
-                poolId: eventData.pool_id,
-                owner: eventData.owner,
-                stakeTime: Number(eventData.stake_time),
-                eventTime: Number(event.timestampMs),
-                eventType: "staked",
-              });
-            }
-          }
-        }
-
-        // Process unstaked events
-        for (const event of unstakedEvents.data) {
-          if (event.parsedJson && typeof event.parsedJson === "object") {
-            const eventData = event.parsedJson as any;
-
-            if (
-              eventData.owner === userAddress &&
-              (!targetPoolId || eventData.pool_id === targetPoolId)
-            ) {
-              events.push({
-                nftId: eventData.nft_id,
-                poolId: eventData.pool_id,
-                owner: eventData.owner,
-                stakeTime: 0,
-                eventTime: Number(event.timestampMs),
-                eventType: "unstaked",
-                stakeDuration: Number(eventData.stake_duration || 0),
-                rewardsForfeited: Boolean(eventData.rewards_forfeited),
-              });
-            }
-          }
-        }
-
-        events.sort((a, b) => b.eventTime - a.eventTime);
-        return events;
-      } catch (error) {
-        console.error("Error fetching user stake events:", error);
-        throw new Error(`Failed to fetch stake events: ${error}`);
-      }
-    },
-    []
-  );
 
   /**
    * Determine currently staked NFTs from events
@@ -308,50 +218,34 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
    * Convert stake events to StakeInfo objects
    */
   const convertEventsToStakeInfos = useCallback(
-    async (
-      currentlyStakedMap: Map<string, NFTStakeEvent>
-    ): Promise<StakeInfo[]> => {
+    async (nftIds: string[]): Promise<StakeInfo[]> => {
+      if (!poolId || !walletAddress) {
+        return [];
+      }
       const stakeInfos: StakeInfo[] = [];
-      const currentTime = Date.now();
 
-      for (const [nftKey, stakeEvent] of currentlyStakedMap) {
+      for (const nftId of nftIds) {
         try {
-          const stakeDurationMs = currentTime - stakeEvent.stakeTime;
-          const stakeDurationHours = Math.floor(
-            stakeDurationMs / (1000 * 60 * 60)
-          );
-          const weight = stakeDurationHours > 0 ? stakeDurationHours : 1;
-
           let displayData;
           if (includeNFTDetails) {
-            displayData = await getStakedNFTData(
-              stakeEvent.poolId,
-              stakeEvent.nftId
-            );
+            displayData = await getStakedNFTData(poolId, nftId);
           }
 
           const stakeInfo: StakeInfo = {
-            id: stakeEvent.nftId,
-            nftId: stakeEvent.nftId,
-            owner: stakeEvent.owner,
-            poolId: stakeEvent.poolId,
-            stakeTime: new Date(stakeEvent.stakeTime),
-            weight,
-            stakeDurationMs,
-            stakeDurationHours,
-            lastEventTime: stakeEvent.eventTime,
-            eventType: stakeEvent.eventType,
+            id: nftId,
+            nftId: nftId,
+            owner: walletAddress,
+            poolId: poolId,
             displayData,
           };
 
           stakeInfos.push(stakeInfo);
         } catch (nftError) {
-          console.warn(`Error processing NFT ${stakeEvent.nftId}:`, nftError);
+          console.error(`Error processing NFT ${nftId}:`, nftError);
           continue;
         }
       }
 
-      stakeInfos.sort((a, b) => b.stakeTime.getTime() - a.stakeTime.getTime());
       return stakeInfos;
     },
     [includeNFTDetails, getStakedNFTData]
@@ -411,68 +305,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     []
   );
 
-  /**
-   * Get claimed rewards for a specific pool from RewardsClaimed events
-   */
-  const getClaimedRewardsForPool = useCallback(
-    async (userAddress: string, poolId: string): Promise<number> => {
-      try {
-        const claimEvents = await suiClient.queryEvents({
-          query: {
-            MoveEventType: `${MER3_PACKAGE_ID}::pool_rewards::RewardsClaimed`,
-          },
-          limit: 1000,
-          order: "descending",
-        });
-
-        let totalClaimed = 0;
-
-        for (const event of claimEvents.data) {
-          if (event.parsedJson && typeof event.parsedJson === "object") {
-            const eventData = event.parsedJson as any;
-
-            if (
-              eventData.user === userAddress &&
-              eventData.pool_id === poolId
-            ) {
-              totalClaimed +=
-                Number(eventData.sui_amount) / Math.pow(10, SUI_DECIMALS);
-            }
-          }
-        }
-
-        return totalClaimed;
-      } catch (error) {
-        console.error(
-          `Error fetching claimed rewards for pool ${poolId}:`,
-          error
-        );
-        return 0;
-      }
-    },
-    []
-  );
-
-  /**
-   * Calculate energy earned based on staking duration and NFT properties
-   */
-  const calculateEnergyEarned = useCallback(
-    (poolStakes: StakeInfo[]): number => {
-      let totalEnergy = 0;
-
-      for (const stake of poolStakes) {
-        const baseEnergy = BASE_ENERGY_PER_HOUR * stake.stakeDurationHours;
-        const itemCount = stake.displayData?.item_ids?.length || 0;
-        const multiplier = 1 + itemCount * ENERGY_MULTIPLIER_PER_ITEM;
-
-        totalEnergy += baseEnergy * multiplier;
-      }
-
-      return Math.floor(totalEnergy);
-    },
-    []
-  );
-
   const decodeU64 = (bytes: number[]): number => {
     if (!Array.isArray(bytes)) return 0;
     let result = 0;
@@ -488,16 +320,9 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   const getPoolRewardStats = useCallback(
     async (userAddress: string, poolId: string): Promise<PoolStats> => {
       try {
-        const [userStakeInfo, claimedRewards] = await Promise.all([
-          getUserStakeInfoFromContract(userAddress, poolId),
-          getClaimedRewardsForPool(userAddress, poolId),
-        ]);
-
-        const currentTime = Date.now();
-        const lastClaimTime = userStakeInfo?.lastRewardClaim || 0;
-        const timeUntilNextClaim = Math.max(
-          0,
-          REWARD_UPDATE_INTERVAL - (currentTime - lastClaimTime)
+        const userStakeInfo = await getUserStakeInfoFromContract(
+          userAddress,
+          poolId
         );
 
         return {
@@ -518,16 +343,43 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         };
       }
     },
-    [
-      getUserStakeInfoFromContract,
-      getClaimedRewardsForPool,
-      calculateEnergyEarned,
-    ]
+    [getUserStakeInfoFromContract]
   );
 
-  /**
-   * Main fetch function
-   */
+  const fetchUserStakedNftIds = useCallback(
+    async (poolId: string, userAddress: string): Promise<string[]> => {
+      try {
+        const tx = new Transaction();
+        tx.moveCall({
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_staked_nft_ids`,
+          arguments: [
+            tx.object(POOL_SYSTEM),
+            tx.pure.id(poolId),
+            tx.pure.address(userAddress),
+          ],
+        });
+
+        const result = await suiClient.devInspectTransactionBlock({
+          transactionBlock: tx,
+          sender: userAddress,
+        });
+
+        if (!result.results?.[0]?.returnValues) {
+          return [];
+        }
+
+        const returnValue = result.results[0].returnValues[0];
+        const nftIds: string[] = parseSuiVectorIds(returnValue[0]);
+
+        return nftIds;
+      } catch (error) {
+        console.error("Error fetching all staked NFT IDs:", error);
+        throw new Error(`Failed to fetch staked NFT IDs: ${error}`);
+      }
+    },
+    []
+  );
+
   const fetchStakeInfos = useCallback(async () => {
     if (!walletAddress) {
       setError(new Error("No wallet address available"));
@@ -538,11 +390,9 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       setLoading(true);
       setError(null);
 
-      const events = await fetchUserStakeEvents(walletAddress, poolId!);
-      const currentlyStakedMap = determineCurrentlyStakedNFTs(events);
-      const stakeInfosList = await convertEventsToStakeInfos(
-        currentlyStakedMap
-      );
+      const stakedNftIds = await fetchUserStakedNftIds(poolId!, walletAddress);
+      const stakeInfosList = await convertEventsToStakeInfos(stakedNftIds);
+      console.log("stakeInfosList", stakeInfosList);
 
       setStakeInfos(stakeInfosList);
       setLastFetchTime(new Date());
@@ -561,39 +411,9 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   }, [
     walletAddress,
     poolId,
-    fetchUserStakeEvents,
     determineCurrentlyStakedNFTs,
     convertEventsToStakeInfos,
   ]);
-
-  /**
-   * Fetch stake infos for a specific address
-   */
-  const fetchStakeInfosForAddress = useCallback(
-    async (address: string): Promise<StakeInfo[]> => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const events = await fetchUserStakeEvents(address, poolId!);
-        const currentlyStakedMap = determineCurrentlyStakedNFTs(events);
-        const result = await convertEventsToStakeInfos(currentlyStakedMap);
-
-        return result;
-      } catch (err) {
-        console.error("Error fetching stake infos for address:", err);
-        throw err instanceof Error ? err : new Error("Unknown error occurred");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [
-      poolId,
-      fetchUserStakeEvents,
-      determineCurrentlyStakedNFTs,
-      convertEventsToStakeInfos,
-    ]
-  );
 
   // State for async calculated stats
   const [calculatedStats, setCalculatedStats] = useState<PoolStats | null>(
@@ -602,7 +422,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
   // Calculate stats when stakeInfos change and rewards are enabled
   useEffect(() => {
-    if (calculateRewards && walletAddress && stakeInfos.length > 0) {
+    if (calculateRewards && walletAddress) {
       getPoolRewardStats(walletAddress, poolId!)
         .then((stats) => {
           setCalculatedStats(stats);
@@ -615,7 +435,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     } else {
       setCalculatedStats(null);
     }
-  }, [stakeInfos, calculateRewards, walletAddress]);
+  }, [calculateRewards, walletAddress]);
 
   // Utility functions
   const getStakeInfoById = useCallback(
@@ -641,10 +461,10 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
   // Auto-fetch when wallet changes
   useEffect(() => {
-    if (walletAddress && autoFetch) {
+    if (walletAddress) {
       fetchStakeInfos();
     }
-  }, [walletAddress, autoFetch, fetchStakeInfos]);
+  }, [walletAddress, fetchStakeInfos]);
 
   // Set up auto-refresh interval
   useEffect(() => {
@@ -675,7 +495,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
     // Actions
     fetchStakeInfos,
-    fetchStakeInfosForAddress,
     refresh: fetchStakeInfos,
 
     // Utility functions
@@ -699,4 +518,75 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       }
     },
   };
+}
+
+export function bytesToId(bytes: number[]): string {
+  return "0x" + bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export function parseSuiVectorIds(rawData: number[]): string[] {
+  console.log("=== PARSING SUI VECTOR IDS ===");
+  console.log("Raw data length:", rawData.length);
+  console.log("First few elements:", rawData.slice(0, 10));
+
+  if (!Array.isArray(rawData) || rawData.length < 1) {
+    console.warn("Invalid data format");
+    return [];
+  }
+
+  // First element is the count
+  const count = rawData[0];
+  console.log("Number of IDs:", count);
+
+  if (count === 0) {
+    console.log("No IDs to parse");
+    return [];
+  }
+
+  // Each ID is 32 bytes
+  const bytesPerID = 32;
+  const expectedTotalBytes = 1 + count * bytesPerID; // 1 for count + count * 32 bytes
+
+  console.log("Expected total bytes:", expectedTotalBytes);
+  console.log("Actual total bytes:", rawData.length);
+
+  if (rawData.length !== expectedTotalBytes) {
+    console.warn(
+      `Byte count mismatch. Expected: ${expectedTotalBytes}, Got: ${rawData.length}`
+    );
+  }
+
+  const ids: string[] = [];
+
+  // Parse each ID
+  for (let i = 0; i < count; i++) {
+    const startIndex = 1 + i * bytesPerID; // Skip count byte, then i * 32 bytes
+    const endIndex = startIndex + bytesPerID;
+
+    console.log(`\n--- Parsing ID ${i + 1} ---`);
+    console.log(`Bytes range: ${startIndex} to ${endIndex - 1}`);
+
+    if (endIndex > rawData.length) {
+      console.error(`Not enough bytes for ID ${i + 1}`);
+      break;
+    }
+
+    const idBytes = rawData.slice(startIndex, endIndex);
+    console.log(`ID ${i + 1} bytes:`, idBytes);
+    console.log(`ID ${i + 1} length:`, idBytes.length);
+
+    // Convert to hex
+    const hexString = idBytes
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+    const id = `0x${hexString}`;
+
+    console.log(`ID ${i + 1} result:`, id);
+    ids.push(id);
+  }
+
+  console.log("=== FINAL PARSED IDS ===");
+  console.log("All IDs:", ids);
+
+  return ids;
 }

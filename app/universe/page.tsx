@@ -74,6 +74,8 @@ export default function PetExplorerDashboard() {
     refreshInterval: undefined,
   });
 
+  console.log(stakeInfos);
+
   useEffect(() => {
     if (!authed) {
       setOpenAuthDialog(true);
