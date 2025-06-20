@@ -555,13 +555,15 @@ const PetSlotCard = ({
           style={{ height: 210 }}
         >
           <CardContent className="inline-flex flex-col justify-start gap-1 h-full w-full p-0">
-            <Image
-              className="w-full h-[100px] object-cover rounded-2xl"
-              src={`https://walrus.tusky.io/${slot.stakeInfo.displayData?.image_uri}`}
-              alt={slot.stakeInfo.displayData?.name || "NFT"}
-              width={112}
-              height={80}
-            />
+            {slot.stakeInfo.displayData?.image_uri && (
+              <Image
+                className="w-full h-[100px] object-cover rounded-2xl"
+                src={`https://walrus.tusky.io/${slot.stakeInfo.displayData?.image_uri}`}
+                alt={slot.stakeInfo.displayData?.name || "NFT"}
+                width={112}
+                height={112}
+              />
+            )}
 
             <div className="justify-start text-[#68ffd1] text-sm font-normal font-sora underline leading-normal">
               #{formatAddress(slot.stakeInfo.nftId)}

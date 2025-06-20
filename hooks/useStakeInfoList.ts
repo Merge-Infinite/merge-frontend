@@ -227,10 +227,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       for (const nftId of nftIds) {
         try {
           let displayData;
-          if (includeNFTDetails) {
-            displayData = await getStakedNFTData(poolId, nftId);
-          }
-
+          displayData = await getStakedNFTData(poolId, nftId);
           const stakeInfo: StakeInfo = {
             id: nftId,
             nftId: nftId,
@@ -248,7 +245,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
       return stakeInfos;
     },
-    [includeNFTDetails, getStakedNFTData]
+    [includeNFTDetails, getStakedNFTData, walletAddress, poolId]
   );
 
   /**
@@ -392,7 +389,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
       const stakedNftIds = await fetchUserStakedNftIds(poolId!, walletAddress);
       const stakeInfosList = await convertEventsToStakeInfos(stakedNftIds);
-
       setStakeInfos(stakeInfosList);
       setLastFetchTime(new Date());
 
