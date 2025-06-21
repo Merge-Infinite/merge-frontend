@@ -27,7 +27,7 @@ import { initBackButton } from "@telegram-apps/sdk";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
@@ -117,6 +117,20 @@ export default function InventoryStakingInterface() {
     return totalSlots;
   }
 
+  const availableSlots = useMemo(() => {
+    const subscriptionEndDate =
+      user?.userBalance?.subscriptionEndDate &&
+      new Date(user?.userBalance?.subscriptionEndDate);
+
+    const subscriptionMonths =
+      subscriptionEndDate &&
+      Math.floor(
+        (subscriptionEndDate.getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24 * 30)
+      );
+    return calculateAvailableSlots(subscriptionMonths);
+  }, [user]);
+
   const handleStakeNFT = useCallback(
     async (nftId: string) => {
       try {
@@ -124,19 +138,11 @@ export default function InventoryStakingInterface() {
           toast.error("No address found");
           return;
         }
-        const subscriptionEndDate =
-          user?.userBalance?.subscriptionEndDate &&
-          new Date(user?.userBalance?.subscriptionEndDate);
 
-        const subscriptionMonths =
-          subscriptionEndDate &&
-          Math.floor(
-            (subscriptionEndDate.getTime() - new Date().getTime()) /
-              (1000 * 60 * 60 * 24 * 30)
-          );
-        const availableSlots = calculateAvailableSlots(subscriptionMonths);
         if (availableSlots <= (stakeStats?.nftCount || 0)) {
-          toast.error("You have reached the maximum number of NFTs");
+          toast.error(
+            `You have reached the maximum number of NFTs. You can stake ${availableSlots} NFTs.`
+          );
           return;
         }
         startLoading();
@@ -188,7 +194,7 @@ export default function InventoryStakingInterface() {
         stopLoading();
       }
     },
-    [address, authed]
+    [address, authed, availableSlots, stakeStats?.nftCount]
   );
 
   return (
@@ -252,6 +258,8 @@ export default function InventoryStakingInterface() {
                       item={card}
                       handleStakeNFT={handleStakeNFT}
                       isLoading={isLoading}
+                      availableSlots={availableSlots}
+                      nftCount={stakeStats?.nftCount}
                     />
                   ))
               )}
@@ -321,10 +329,14 @@ const NFTCard = ({
   item,
   handleStakeNFT,
   isLoading,
+  availableSlots,
+  nftCount,
 }: {
   item: InventoryItem;
   handleStakeNFT: (id: string) => void;
   isLoading: boolean;
+  availableSlots: number;
+  nftCount: number | undefined;
 }) => (
   <div className="w-44 flex flex-col items-center gap-2">
     <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
@@ -352,7 +364,10 @@ const NFTCard = ({
       size="sm"
       className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
       onClick={() => handleStakeNFT(item.id)}
-      disabled={isLoading}
+      disabled={
+        isLoading ||
+        (availableSlots <= (nftCount || 0) && nftCount !== undefined)
+      }
       isLoading={isLoading}
     >
       Stake
