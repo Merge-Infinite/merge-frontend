@@ -260,8 +260,8 @@ export default function InventoryStakingInterface() {
                       item={card}
                       handleStakeNFT={handleStakeNFT}
                       isLoading={isLoading}
-                      availableSlots={availableSlots}
-                      nftCount={stakeStats?.nftCount}
+                      availableSlots={Number(availableSlots)}
+                      nftCount={Number(stakeStats?.nftCount)}
                     />
                   ))
               )}
