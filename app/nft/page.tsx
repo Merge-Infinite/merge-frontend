@@ -138,6 +138,8 @@ export default function InventoryStakingInterface() {
           toast.error("No address found");
           return;
         }
+        alert(`availableSlots: ${availableSlots}`);
+        alert(`stakeStats?.nftCount: ${stakeStats?.nftCount}`);
 
         if (availableSlots <= (stakeStats?.nftCount || 0)) {
           toast.error(
@@ -367,9 +369,9 @@ const NFTCard = ({
         onClick={() => handleStakeNFT(item.id)}
         disabled={
           isLoading ||
-          (nftCount !== undefined && availableSlots <= nftCount) ||
-          nftCount === undefined ||
-          availableSlots == 0
+          !nftCount ||
+          !availableSlots ||
+          (nftCount !== undefined && availableSlots <= nftCount)
         }
         isLoading={isLoading}
       >
