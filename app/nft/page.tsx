@@ -337,40 +337,43 @@ const NFTCard = ({
   isLoading: boolean;
   availableSlots: number;
   nftCount: number | undefined;
-}) => (
-  <div className="w-44 flex flex-col items-center gap-2">
-    <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
-      <CardContent className="p-0 h-full flex justify-center items-center">
-        <Image
-          className="w-44 h-44 object-cover"
-          src={`https://walrus.tusky.io/${item.imageUrl}`}
-          alt={item.name}
-          width={176}
-          height={176}
-        />
-      </CardContent>
-    </Card>
+}) => {
+  alert(nftCount);
+  alert(availableSlots);
+  return (
+    <div className="w-44 flex flex-col items-center gap-2">
+      <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
+        <CardContent className="p-0 h-full flex justify-center items-center">
+          <Image
+            className="w-44 h-44 object-cover"
+            src={`https://walrus.tusky.io/${item.imageUrl}`}
+            alt={item.name}
+            width={176}
+            height={176}
+          />
+        </CardContent>
+      </Card>
 
-    <div className="text-green-400 text-sm font-normal font-sora underline leading-normal">
-      #{formatAddress(item.id)}
+      <div className="text-green-400 text-sm font-normal font-sora underline leading-normal">
+        #{formatAddress(item.id)}
+      </div>
+
+      <div className="text-white text-sm font-normal font-sora leading-normal text-center">
+        {item.name}
+      </div>
+
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
+        onClick={() => handleStakeNFT(item.id)}
+        disabled={
+          isLoading || (nftCount !== undefined && availableSlots <= nftCount)
+        }
+        isLoading={isLoading}
+      >
+        Stake
+      </Button>
     </div>
-
-    <div className="text-white text-sm font-normal font-sora leading-normal text-center">
-      {item.name}
-    </div>
-
-    <Button
-      variant="secondary"
-      size="sm"
-      className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
-      onClick={() => handleStakeNFT(item.id)}
-      disabled={
-        isLoading ||
-        (availableSlots <= (nftCount || 0) && nftCount !== undefined)
-      }
-      isLoading={isLoading}
-    >
-      Stake
-    </Button>
-  </div>
-);
+  );
+};
