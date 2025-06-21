@@ -529,7 +529,7 @@ const PetSlotCard = ({
         );
 
         if (response && (response as any).digest) {
-          toast.success("NFT staked successfully!");
+          toast.success("NFT unstaked successfully!");
           await onRefresh();
         }
       } catch (error: any) {
