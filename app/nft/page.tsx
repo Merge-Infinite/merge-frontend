@@ -53,7 +53,7 @@ export default function InventoryStakingInterface() {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const { data: network } = useNetwork(appContext.networkId);
-  const { stakeStats } = useStakeInfoList({
+  const { stakeStats, refreshRewards } = useStakeInfoList({
     walletAddress: address,
     poolId: poolId || undefined,
     includeNFTDetails: true,
@@ -138,8 +138,6 @@ export default function InventoryStakingInterface() {
           toast.error("No address found");
           return;
         }
-        alert(`availableSlots: ${availableSlots}`);
-        alert(`stakeStats?.nftCount: ${stakeStats?.nftCount}`);
 
         if (availableSlots <= (stakeStats?.nftCount || 0)) {
           toast.error(
@@ -180,6 +178,7 @@ export default function InventoryStakingInterface() {
         if (response && (response as any).digest) {
           toast.success("NFT staked successfully!");
           await refresh();
+          await refreshRewards();
         }
       } catch (error: any) {
         if (error.message.includes('Some("validate_nft_requirements") }, 12')) {
@@ -286,47 +285,6 @@ export default function InventoryStakingInterface() {
   );
 }
 
-const ElementCard = ({
-  item,
-  handleStakeNFT,
-  isLoading,
-}: {
-  item: InventoryItem;
-  handleStakeNFT: (id: string) => void;
-  isLoading: boolean;
-}) => (
-  <div className="w-44 relative flex flex-col items-center gap-2">
-    <Card className="w-full h-32 border-neutral-800 rounded-2xl">
-      <CardContent className="h-full flex flex-col justify-center items-center p-4">
-        <Image
-          src={`https://walrus.tusky.io/${item.imageUrl}`}
-          alt={item.name}
-          width={176}
-          height={176}
-        />
-      </CardContent>
-    </Card>
-
-    <div className="text-green-400 text-sm font-normal font-sora underline leading-normal">
-      #{formatAddress(item.id)}
-    </div>
-
-    <Button
-      variant="secondary"
-      size="sm"
-      className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
-    >
-      Stake
-    </Button>
-
-    {/* Background decoration */}
-    <div className="w-28 h-28 absolute left-7 top-3 opacity-5 pointer-events-none">
-      <div className="w-24 h-11 absolute left-2 top-2 bg-white" />
-      <div className="w-24 h-11 absolute right-2 bottom-2 bg-white rotate-180" />
-    </div>
-  </div>
-);
-
 const NFTCard = ({
   item,
   handleStakeNFT,
@@ -375,7 +333,9 @@ const NFTCard = ({
         }
         isLoading={isLoading}
       >
-        Stake
+        {nftCount !== undefined && availableSlots <= nftCount
+          ? "Max Slots Reached"
+          : "Stake"}
       </Button>
     </div>
   );
