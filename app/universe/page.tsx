@@ -87,16 +87,16 @@ export default function PetExplorerDashboard() {
   });
 
   useEffect(() => {
-    if (!authed) {
+    if (!authed && isTelegram) {
       setOpenAuthDialog(true);
     }
-  }, [authed, appContext.accountId]);
+  }, [authed, appContext.accountId, isTelegram]);
 
   useEffect(() => {
-    if (!address && authed) {
+    if (!address && authed && isTelegram) {
       fetchAddressByAccountId(appContext.accountId);
     }
-  }, [address, authed]);
+  }, [address, authed, isTelegram]);
 
   useEffect(() => {
     if (!pool && poolId) {
