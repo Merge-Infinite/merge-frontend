@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import ElementItem from "@/components/common/ElementItem";
 import TagSkeleton from "@/components/common/ElementSkeleton";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
@@ -23,6 +24,11 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { FEE_ADDRESS, MINT_NFT_FEE } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { Loader2 } from "lucide-react";
@@ -32,6 +38,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 export function OffchainBagScreen() {
   const apiClient = useApiClient();
+  const { isTelegram } = useUniversalApp();
 
   const appContext = useSelector((state: RootState) => state.appContext);
   const { data: network } = useNetwork(appContext.networkId);
@@ -42,7 +49,10 @@ export function OffchainBagScreen() {
   const [isMinting, setIsMinting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const client = useSuiClient();
 
+  const account = useCurrentAccount();
+  const { mutateAsync: signTransaction } = useSignTransaction();
   const getUserBagApi = useApi({
     key: ["getUserBag"],
     method: "GET",
@@ -53,12 +63,6 @@ export function OffchainBagScreen() {
     key: ["mintNFTs"],
     method: "POST",
     url: "marketplace/mint",
-  }).post;
-
-  const minGasFee = useApi({
-    key: ["minGasFee"],
-    method: "POST",
-    url: "marketplace/mint-gas-fee",
   }).post;
 
   useEffect(() => {
@@ -122,7 +126,12 @@ export function OffchainBagScreen() {
       return null;
     }
 
-    if (!address) {
+    if (isTelegram && !address) {
+      toast.error("Please connect your wallet");
+      return null;
+    }
+
+    if (!isTelegram && !account?.address) {
       toast.error("Please connect your wallet");
       return null;
     }
@@ -143,26 +152,35 @@ export function OffchainBagScreen() {
 
       paymentTx.transferObjects([mintFeeAmount], FEE_ADDRESS);
 
-      const response = await apiClient.callFunc<
-        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-        undefined
-      >(
-        "txn",
-        "signTransactionBlock",
-        {
-          transactionBlock: paymentTx.serialize(),
-          context: {
-            network,
-            walletId: appContext.walletId,
-            accountId: appContext.accountId,
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signTransactionBlock",
+          {
+            transactionBlock: paymentTx.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
           },
-        },
-        { withAuth: true }
-      );
+          { withAuth: true }
+        );
+      } else {
+        response = await signTransaction({
+          transaction: paymentTx.serialize(),
+        });
+      }
 
+      console.log(response);
       if (response && (response as any).signature) {
         const result = await mintNFTsApi?.mutateAsync({
-          transactionBlockBytes: (response as any).transactionBlockBytes,
+          transactionBlockBytes:
+            (response as any).transactionBlockBytes || (response as any).bytes,
           signature: (response as any).signature,
           itemId: selectedItem.itemId,
           amount: mintQuantity,
@@ -282,10 +300,12 @@ export function OffchainBagScreen() {
           </div>
         )}
       </div>
-      <PasscodeAuthDialog
-        open={openAuthDialog}
-        setOpen={(open) => setOpenAuthDialog(open)}
-      />
+      {isTelegram && (
+        <PasscodeAuthDialog
+          open={openAuthDialog}
+          setOpen={(open) => setOpenAuthDialog(open)}
+        />
+      )}
       <Dialog
         open={!!selectedItem}
         onOpenChange={(open) => !open && handleCloseModal()}

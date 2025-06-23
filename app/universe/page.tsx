@@ -22,14 +22,15 @@ import {
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
-import { initBackButton } from "@telegram-apps/sdk";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { useUniversalApp } from "../context/UniversalAppContext";
 
 interface StatsItem {
   icon: React.ReactNode;
@@ -56,7 +57,6 @@ export default function PetExplorerDashboard() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const poolId = searchParams.get("poolId");
-  const [backButton] = initBackButton();
   const router = useRouter();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
@@ -67,6 +67,18 @@ export default function PetExplorerDashboard() {
     refreshInterval: 30000,
   });
 
+  const { backButton, isTelegram, isReady } = useUniversalApp();
+
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
   const { stakeInfos, loading, error, stakeStats, refresh } = useStakeInfoList({
     walletAddress: address,
     poolId: poolId || undefined,
@@ -85,13 +97,6 @@ export default function PetExplorerDashboard() {
       fetchAddressByAccountId(appContext.accountId);
     }
   }, [address, authed]);
-
-  useEffect(() => {
-    backButton.show();
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, []);
 
   useEffect(() => {
     if (!pool && poolId) {
@@ -476,6 +481,7 @@ const PetSlotCard = ({
   slot: PetSlot;
   onRefresh: () => void;
 }) => {
+  const { isTelegram } = useUniversalApp();
   const searchParams = useSearchParams();
   const poolId = searchParams.get("poolId");
   const { isLoading, startLoading, stopLoading } = useLoading();
@@ -485,7 +491,19 @@ const PetSlotCard = ({
   const router = useRouter();
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const { data: network } = useNetwork(appContext.networkId);
-
+  const client = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
   const handleSlotClick = () => {
     router.push(`/nft?poolId=${poolId}`);
   };
@@ -493,7 +511,7 @@ const PetSlotCard = ({
   const handleUnstakeClick = useCallback(
     async (stakeInfoId: string) => {
       try {
-        if (!address && authed) {
+        if (!address && authed && isTelegram) {
           toast.error("No address found");
           return;
         }
@@ -511,23 +529,29 @@ const PetSlotCard = ({
             tx.object("0x6"),
           ],
         });
-        const response = await apiClient.callFunc<
-          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-          undefined
-        >(
-          "txn",
-          "signAndExecuteTransactionBlock",
-          {
-            transactionBlock: tx.serialize(),
-            context: {
-              network,
-              walletId: appContext.walletId,
-              accountId: appContext.accountId,
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: tx.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
             },
-          },
-          { withAuth: true }
-        );
-
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: tx.serialize(),
+          });
+        }
         if (response && (response as any).digest) {
           toast.success("NFT unstaked successfully!");
           await onRefresh();

@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePoolSystem } from "@/hooks/usePool";
-import { initBackButton } from "@telegram-apps/sdk";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useUniversalApp } from "../context/UniversalAppContext";
 
 interface ExplorationArea {
   id: string;
@@ -18,18 +18,22 @@ interface ExplorationArea {
 }
 
 export default function BrainrotExplorer() {
-  const [backButton] = initBackButton();
   const router = useRouter();
   const { pools } = usePoolSystem({
     refreshInterval: 30000,
   });
-  useEffect(() => {
-    backButton.show();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
 
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, []);
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
   return (
     <div className="w-full h-full bg-black p-4">

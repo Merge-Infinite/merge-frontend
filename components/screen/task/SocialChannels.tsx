@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/collapsible";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-import { useUtils } from "@telegram-apps/sdk-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { UsernameDialog } from "./UsernameDialog";
@@ -80,7 +80,7 @@ const MiTask = ({ type }: { type: string }) => {
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState<any>(null);
   const [socialChannelsOpen, setSocialChannelsOpen] = useState(true);
-  const utils = useUtils();
+  const { utils } = useUniversalApp();
   const { refetch } = useUser();
 
   const taskList = useApi({

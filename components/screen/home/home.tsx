@@ -9,6 +9,7 @@ import {
   updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
+import { isTelegramEnvironment } from "@/utils/functions";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
@@ -35,16 +36,18 @@ export function HomeScreen() {
         >
           GAME
         </TabsTrigger>
-        <TabsTrigger
-          onClick={() => {
-            setAppMode(AppMode.WALLET);
-            router.push("/wallet");
-          }}
-          value="wallet"
-          className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 text-sm font-semibold px-4 py-2 rounded-none"
-        >
-          WALLET
-        </TabsTrigger>
+        {isTelegramEnvironment() && (
+          <TabsTrigger
+            onClick={() => {
+              setAppMode(AppMode.WALLET);
+              router.push("/wallet");
+            }}
+            value="wallet"
+            className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 text-sm font-semibold px-4 py-2 rounded-none"
+          >
+            WALLET
+          </TabsTrigger>
+        )}
       </TabsList>
       <TabsContent value="game">
         <GameScreen />

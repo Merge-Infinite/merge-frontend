@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { initBackButton } from "@telegram-apps/sdk";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import ElementItem from "@/components/common/ElementItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,6 @@ export const RecipeList = ({
 }: {
   onItemClick: (item: any) => void;
 }) => {
-  const [backButton] = initBackButton();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const { user } = useUser();
@@ -33,13 +32,18 @@ export const RecipeList = ({
   const [debouncedText] = useDebounce(search, 1000);
   const selectedItemRef = useRef<any>(null);
 
-  useEffect(() => {
-    backButton.show();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
 
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, []);
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
   const searchRecipeApi = useApi({
     key: ["search-recipe"],

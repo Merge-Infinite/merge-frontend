@@ -11,10 +11,40 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useApi from "./useApi";
 
+import { isTelegramEnvironment } from "@/utils/functions";
+import {
+  useCurrentAccount,
+  useCurrentWallet,
+  useSignPersonalMessage,
+} from "@mysten/dapp-kit";
+import { SLUSH_WALLET_NAME } from "@mysten/slush-wallet";
+import { useSearchParams } from "next/navigation";
+
+// Web user data structure (you might need to adjust this based on your needs)
+interface WebUserData {
+  id: string;
+  address: string;
+  // Add other fields as needed
+}
+
 export function useUser(inventorySearch?: string) {
-  // Constants and state
-  const { initDataRaw, initData } = retrieveLaunchParams();
-  const lp = useLaunchParams();
+  // Environment detection
+  const [isTelegram, setIsTelegram] = useState<boolean | null>(null);
+
+  // Telegram-specific data
+  const { initDataRaw, initData } = isTelegram
+    ? retrieveLaunchParams()
+    : { initDataRaw: null, initData: null };
+  const lp = isTelegram ? useLaunchParams() : null;
+  const params = useSearchParams();
+  const referralCode = params.get("referralCode");
+
+  // Web-specific data (Slush Wallet)
+  const { currentWallet } = useCurrentWallet();
+  const isSlushWallet = currentWallet?.name === SLUSH_WALLET_NAME;
+  const account = useCurrentAccount();
+
+  // Common state and selectors
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address } = useAccount(appContext.accountId);
   const user = useSelector((state: RootState) => state.user);
@@ -22,11 +52,24 @@ export function useUser(inventorySearch?: string) {
   const [error, setError] = useState<Error | null>(null);
   const isLoggedInRef = useRef(false);
   const dispatch = useDispatch<AppDispatch>();
-  // API endpoints
-  const authApi = useApi({
-    key: ["auth"],
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+
+  // Determine environment on mount
+  useEffect(() => {
+    setIsTelegram(isTelegramEnvironment());
+  }, []);
+
+  // API endpoints (you might need to adjust these for web authentication)
+  const telegramAuthApi = useApi({
+    key: ["auth", "telegram"],
     method: "POST",
     url: "auth/telegram",
+  }).post;
+
+  const webAuthApi = useApi({
+    key: ["auth", "web"],
+    method: "POST",
+    url: "auth/sui", // Assuming you have a web auth endpoint
   }).post;
 
   const getMe = useApi({
@@ -87,7 +130,7 @@ export function useUser(inventorySearch?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [getMe, setLocalStorage, user]);
+  }, []);
 
   const getUserInventory = useCallback(async () => {
     try {
@@ -100,14 +143,17 @@ export function useUser(inventorySearch?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [userInventory?.data]);
+  }, [userInventory]);
 
   const saveAddress = useCallback(async () => {
-    if (!address) return null;
+    // Get address from appropriate source
+    const currentAddress = isTelegram ? address : account?.address;
+
+    if (!currentAddress) return null;
 
     try {
       setIsLoading(true);
-      await saveAddressApi?.mutateAsync({ address });
+      await saveAddressApi?.mutateAsync({ address: currentAddress });
       const response = await getMe?.refetch();
       if (response?.data) {
         dispatch(updateUserProfile(response.data));
@@ -120,16 +166,10 @@ export function useUser(inventorySearch?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [address, user]);
+  }, [address, isTelegram, saveAddressApi, account]);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (initDataRaw && token) {
-      getUser();
-    }
-  }, [initDataRaw]);
-
-  const login = useCallback(async () => {
+  // Telegram login logic
+  const telegramLogin = useCallback(async () => {
     if (!initDataRaw || isLoggedInRef.current) return;
 
     isLoggedInRef.current = true;
@@ -149,12 +189,13 @@ export function useUser(inventorySearch?: string) {
           localStorage.clear();
         }
       }
+
       // Handle authentication token only if not already authenticated
       const token = localStorage.getItem("token");
       if (!token) {
-        const response = await authApi?.mutateAsync({
+        const response = await telegramAuthApi?.mutateAsync({
           initData: initDataRaw,
-          referralCode: lp.startParam,
+          referralCode: lp?.startParam,
         });
         if (response?.accessToken) {
           localStorage.setItem("token", response.accessToken);
@@ -164,14 +205,92 @@ export function useUser(inventorySearch?: string) {
       }
       await getUserInventory();
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Telegram login error:", error);
       setError(error instanceof Error ? error : new Error(String(error)));
     } finally {
       isLoggedInRef.current = false;
-
       setIsLoading(false);
     }
-  }, [lp.startParam]);
+  }, [initDataRaw, initData, lp?.startParam, telegramAuthApi]);
+
+  // Web login logic
+  const webLogin = useCallback(async () => {
+    if (isLoggedInRef.current || !account || !isSlushWallet) return;
+
+    try {
+      const storedUser = getLocalStorage("user");
+      const currentAddress = account?.address;
+
+      if (!currentAddress) {
+        throw new Error("No wallet address available");
+      }
+
+      if (storedUser && storedUser.address === currentAddress) {
+        dispatch(updateUserProfile(storedUser));
+      }
+
+      // Handle authentication token only if not already authenticated
+      const token = localStorage.getItem("token");
+      if (!token) {
+        const message = `Login to Merge Infinity with wallet: ${currentAddress} at ${new Date().getTime()}`;
+        const messageEncoded = new TextEncoder().encode(message);
+        const signature = await signPersonalMessage({
+          message: messageEncoded,
+          account: account!,
+        });
+
+        const response = await webAuthApi?.mutateAsync({
+          walletAddress: currentAddress,
+          signature: signature,
+          message: message.toString(),
+          referralCode: referralCode,
+        });
+        console.log(response);
+        if (response?.accessToken) {
+          localStorage.setItem("token", response.accessToken);
+          await Promise.all([getUser(), getUserInventory()]);
+          return;
+        }
+      }
+      await getUserInventory();
+    } catch (error) {
+      console.error("Web login error:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      isLoggedInRef.current = false;
+      setIsLoading(false);
+    }
+  }, [account, isSlushWallet, isLoggedInRef.current, isSlushWallet]);
+
+  // Universal login function
+  const login = useCallback(async () => {
+    if (isTelegram === null) return;
+    if (isTelegram) {
+      await telegramLogin();
+    } else {
+      await webLogin();
+    }
+  }, [isTelegram, account]);
+
+  // Auto-login effect for Telegram
+  useEffect(() => {
+    if (isTelegram && initDataRaw) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        getUser();
+      }
+    }
+  }, [isTelegram, initDataRaw]);
+
+  // Auto-login effect for Web (when wallet connects)
+  useEffect(() => {
+    if (!isTelegram && account && isSlushWallet) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        getUser();
+      }
+    }
+  }, [isTelegram, account, isSlushWallet]);
 
   return {
     user: user.profile,
@@ -180,7 +299,11 @@ export function useUser(inventorySearch?: string) {
     refetch: getUser,
     login,
     saveAddress,
+    webLogin,
     isLoading,
     error,
+
+    isTelegram,
+    webWallet: !isTelegram ? currentWallet : null,
   };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,11 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { SELLER_ADDRESS } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { initInvoice } from "@telegram-apps/sdk";
@@ -35,10 +41,12 @@ import { toast } from "sonner";
 export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const apiClient = useApiClient();
   const { user, refetch } = useUser();
-  const invoice = initInvoice();
+  const { isTelegram, suiBalance } = useUniversalApp();
+  const invoice = isTelegram ? initInvoice() : null;
   const appContext = useSelector((state: RootState) => state.appContext);
   const { data: network } = useNetwork(appContext.networkId);
   const { address } = useAccount(appContext.accountId);
+  const account = useCurrentAccount();
   const { data: balance } = useSuiBalance(address);
   const [isLoading, setIsLoading] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
@@ -64,6 +72,19 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
     url: "shop/process-sui-transaction",
     method: "POST",
   }).post;
+  const client = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
 
   const onBuy = useCallback(
     async (item: any) => {
@@ -102,22 +123,29 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
       // Transfer the split coin to the recipient address
       txb.transferObjects([coinToTransfer], txb.pure.address(SELLER_ADDRESS));
 
-      const response = await apiClient.callFunc<
-        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-        undefined
-      >(
-        "txn",
-        "signAndExecuteTransactionBlock",
-        {
-          transactionBlock: txb.serialize(),
-          context: {
-            network,
-            walletId: appContext.walletId,
-            accountId: appContext.accountId,
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: txb.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
           },
-        },
-        { withAuth: true }
-      );
+          { withAuth: true }
+        );
+      } else {
+        response = await signAndExecuteTransaction({
+          transaction: txb.serialize(),
+        });
+      }
 
       if (response && response.digest) {
         // Sync with backend
@@ -175,7 +203,9 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
               data-type="Secondary"
               className="px-3 py-1 bg-white rounded-3xl flex justify-center items-center gap-2"
             >
-              <div>{formatAddress(address)}</div>
+              <div>
+                {formatAddress(isTelegram ? address : account?.address || "")}
+              </div>
               <Image
                 src="/images/remove.svg"
                 alt="copy"
@@ -186,7 +216,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
             <div className="flex justify-start items-center">
               <Image src="/images/sui.svg" alt="copy" width={24} height={24} />
               <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                {formatSUI(balance.balance)} SUI
+                {formatSUI(isTelegram ? balance.balance : suiBalance || 0)} SUI
               </div>
             </div>
           </div>

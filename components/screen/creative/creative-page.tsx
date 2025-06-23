@@ -1,4 +1,5 @@
 "use client";
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import ElementItem from "@/components/common/ElementItem";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import FeatureCard from "@/components/screen/creative/feature-card";
@@ -34,6 +35,11 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { AlertTriangle, Search } from "lucide-react";
@@ -89,10 +95,10 @@ const CreatureCustomizer = () => {
   const [filteredElements, setFilteredElements] = useState<any[]>([]);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const { data: balance } = useSuiBalance(address);
-
+  const account = useCurrentAccount();
   // Get inventory data from useUser hook
   const { inventory } = useUser(debouncedText);
-
+  const { isTelegram, suiBalance } = useUniversalApp();
   // Track selected elements for each feature with restrictions
   const [selectedElements, setSelectedElements] = useState<{
     [key: string]: any[];
@@ -105,6 +111,19 @@ const CreatureCustomizer = () => {
     Leg: [], // Max: 2 (host + accessory)
     Environment: [], // Max: 1
   });
+  const client = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
 
   const { mutateAsync: mint, isPending } = creativeApi.mint.useMutation();
 
@@ -439,22 +458,29 @@ const CreatureCustomizer = () => {
       ]);
 
       paymentTx.transferObjects([mintFeeAmount], FEE_ADDRESS);
-      const response = await apiClient.callFunc<
-        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-        undefined
-      >(
-        "txn",
-        "signTransactionBlock",
-        {
-          transactionBlock: paymentTx.serialize(),
-          context: {
-            network,
-            walletId: appContext.walletId,
-            accountId: appContext.accountId,
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signTransactionBlock",
+          {
+            transactionBlock: paymentTx.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
           },
-        },
-        { withAuth: true }
-      );
+          { withAuth: true }
+        );
+      } else {
+        response = await signAndExecuteTransaction({
+          transaction: paymentTx.serialize(),
+        });
+      }
       if (response && (response as any).signature) {
         await mint({
           topic: topic,
@@ -937,7 +963,9 @@ const CreatureCustomizer = () => {
                   className="px-3 py-1 bg-white rounded-3xl flex justify-center items-center gap-2"
                 >
                   <div className="justify-start text-black text-xs font-normal uppercase leading-normal">
-                    {formatAddress(address)}
+                    {formatAddress(
+                      isTelegram ? address : account?.address || ""
+                    )}
                   </div>
                 </Button>
                 <div className="flex justify-start items-center">
@@ -948,7 +976,8 @@ const CreatureCustomizer = () => {
                     height={24}
                   />
                   <div className="justify-start text-white text-sm font-normal leading-normal">
-                    {formatSUI(balance.balance)} SUI
+                    {formatSUI(isTelegram ? balance.balance : suiBalance || 0)}{" "}
+                    SUI
                   </div>
                 </div>
               </div>

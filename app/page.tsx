@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import SplashScreen from "@/components/common/Spash";
+import SplashScreen from "@/components/common/Splash";
 import { BagScreen } from "@/components/screen/bag/bag";
 import { HomeScreen } from "@/components/screen/home/home";
 import { Leaderboard } from "@/components/screen/leaderboard/leaderboard";
@@ -8,8 +8,6 @@ import { NFTMarket } from "@/components/screen/market/market";
 import { Shop } from "@/components/screen/shop/shop";
 import TaskScreen from "@/components/screen/task/Task";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUser } from "@/hooks/useUser";
-import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
   AppMode,
@@ -17,65 +15,41 @@ import {
   updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
-import { initBackButton, retrieveLaunchParams } from "@telegram-apps/sdk";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useUniversalApp } from "./context/UniversalAppContext";
 export default function Home() {
-  const [backButton] = initBackButton();
-  const user = useSelector((state: RootState) => state.user);
-  const { initDataRaw } = retrieveLaunchParams();
-
-  const authed = useSelector((state: RootState) => state.appContext.authed);
-  const appMode = useSelector((state: RootState) => state.appContext.appMode);
-  const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
-  const accountId = useSelector(
-    (state: RootState) => state.appContext.accountId
-  );
-  const { saveAddress, login } = useUser();
-  const { address } = useAccount(accountId);
-  const initialized = useSelector(
-    (state: RootState) => state.appContext.initialized
-  );
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  useEffect(() => {
-    backButton.hide();
-    dispatch(updateAppMode(AppMode.GAMES));
-  }, []);
+  const { user, backButton, isTelegram, isReady, login } = useUniversalApp();
 
   useEffect(() => {
-    if (initDataRaw) {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.hide();
+      }
+      dispatch(updateAppMode(AppMode.GAMES));
+    }
+  }, [isReady, isTelegram, backButton, dispatch]);
+
+  useEffect(() => {
+    if (isReady) {
       login();
     }
-  }, [initDataRaw]);
+  }, [isReady]);
 
-  useEffect(() => {
-    if (address) {
-      saveAddress();
-    }
-  }, [address]);
-
-  // useEffect(() => {
-  //   if (!authed && initialized) {
-  //     const loginInterval = setInterval(async () => {
-  //       try {
-  //         await apiClient.callFunc<string, string>("auth", "login", "123456");
-  //         dispatch(updateAuthed(true));
-  //         clearInterval(loginInterval);
-  //       } catch (e) {}
-  //     }, 3000);
-
-  //     return () => {
-  //       clearInterval(loginInterval);
-  //     };
-  //   }
-  // }, [authed, initialized]);
+  const appMode = useSelector((state: RootState) => state.appContext.appMode);
+  const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
 
   return (
-    <div className="flex flex-col items-center h-full w-full p-4">
-      {!user.profile ? (
+    <div
+      className={`flex flex-col items-center h-full w-full p-4 ${
+        !isTelegram && "h-screen "
+      }`}
+    >
+      {!user ? (
         <SplashScreen />
       ) : (
         <Tabs
@@ -85,9 +59,9 @@ export default function Home() {
           onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
         >
           <TabsList
-            className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8 bg-black z-10 ${
-              appMode !== AppMode.GAMES ? "hidden" : ""
-            }`}
+            className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed ${
+              isTelegram ? "right-8 left-8" : "w-2/5"
+            }  bg-black z-10 ${appMode !== AppMode.GAMES ? "hidden" : ""}`}
             style={{
               bottom: 40,
             }}

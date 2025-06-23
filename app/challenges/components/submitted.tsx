@@ -1,24 +1,27 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import useApi from "@/hooks/useApi";
-import { initBackButton } from "@telegram-apps/sdk";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { ChallengeItem } from "./item";
 
 export const SubmittedTab = () => {
-  const [backButton] = initBackButton();
   const router = useRouter();
 
+  const { backButton, isTelegram, isReady } = useUniversalApp();
+
   useEffect(() => {
-    backButton.show();
-
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, [backButton, router]);
-
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
   const fetchSubmittedItems = useApi({
     key: ["submitted-items"],
     method: "GET",

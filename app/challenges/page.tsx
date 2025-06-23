@@ -1,11 +1,10 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { initBackButton } from "@telegram-apps/sdk";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUser } from "@/hooks/useUser";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { useUniversalApp } from "../context/UniversalAppContext";
 import { ChallengeTab } from "./components/challenges";
 import { RewardTab } from "./components/reward";
 import { SubmittedTab } from "./components/submitted";
@@ -13,8 +12,6 @@ export default function Challenge() {
   const searchParams = useSearchParams();
   const day = searchParams.get("day");
   const type = searchParams.get("type");
-  const [backButton] = initBackButton();
-  const { user } = useUser();
   const router = useRouter();
   useEffect(() => {
     backButton.show();
@@ -23,6 +20,19 @@ export default function Challenge() {
       router.back();
     });
   }, []);
+
+  const { backButton, isTelegram, isReady } = useUniversalApp();
+
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.hide();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full p-4">

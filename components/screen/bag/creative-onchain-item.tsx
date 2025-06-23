@@ -1,3 +1,4 @@
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,11 @@ import {
   ELEMENT_NFT_MODULE_NAME,
   MER3_PACKAGE_ID,
 } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { Loader2 } from "lucide-react";
@@ -59,7 +65,7 @@ export const CreativeOnchainItem = React.memo(
       method: "POST",
       url: "marketplace/use-nft",
     }).post;
-
+    const { isTelegram } = useUniversalApp();
     const appContext = useSelector((state: RootState) => state.appContext);
     const { data: network } = useNetwork(appContext.networkId);
     const { user } = useUser();
@@ -72,8 +78,22 @@ export const CreativeOnchainItem = React.memo(
     const [transactionDigest, setTransactionDigest] = useState<string | null>(
       null
     );
+    const account = useCurrentAccount();
     const [priceError, setPriceError] = useState<string>("");
     const [openAuthDialog, setOpenAuthDialog] = useState(false);
+    const client = useSuiClient();
+    const { mutateAsync: signAndExecuteTransaction } =
+      useSignAndExecuteTransaction({
+        execute: async ({ bytes, signature }) =>
+          await client.executeTransactionBlock({
+            transactionBlock: bytes,
+            signature,
+            options: {
+              showRawEffects: true,
+              showObjectChanges: true,
+            },
+          }),
+      });
     // Reset states when dialog closes
     useEffect(() => {
       if (!dialogOpen) {
@@ -152,22 +172,29 @@ export const CreativeOnchainItem = React.memo(
           ],
         });
 
-        const response = await apiClient.callFunc<
-          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-          undefined
-        >(
-          "txn",
-          "signAndExecuteTransactionBlock",
-          {
-            transactionBlock: txb.serialize(),
-            context: {
-              network,
-              walletId: appContext.walletId,
-              accountId: appContext.accountId,
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: txb.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
             },
-          },
-          { withAuth: true }
-        );
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: txb.serialize(),
+          });
+        }
 
         if (response && response.digest) {
           setTransactionStatus("success");
@@ -200,22 +227,29 @@ export const CreativeOnchainItem = React.memo(
           target: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
           arguments: [txb.object(id)],
         });
-        const response = await apiClient.callFunc<
-          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-          undefined
-        >(
-          "txn",
-          "signAndExecuteTransactionBlock",
-          {
-            transactionBlock: txb.serialize(),
-            context: {
-              network,
-              walletId: appContext.walletId,
-              accountId: appContext.accountId,
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: txb.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
             },
-          },
-          { withAuth: true }
-        );
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: txb.serialize(),
+          });
+        }
 
         if (response && response.digest) {
           setTransactionDigest(response.digest);
@@ -224,11 +258,11 @@ export const CreativeOnchainItem = React.memo(
           // Sync with backend
           try {
             await burnNFT?.mutateAsync({
-              itemId: Number(itemId),
+              itemId: Number(id),
               nftId: id,
               transactionDigest: response.digest,
-              ownerAddress: address,
-              amount: Number(amount),
+              ownerAddress: isTelegram ? address : account?.address || "",
+              amount: Number(1),
             });
 
             setTransactionStatus("success");

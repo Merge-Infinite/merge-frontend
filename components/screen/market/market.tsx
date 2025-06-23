@@ -1,7 +1,9 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Input } from "@/components/ui/input";
@@ -28,6 +30,11 @@ import {
   ELEMENT_NFT_MODULE_NAME,
   MER3_PACKAGE_ID,
 } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { SearchIcon, ShoppingCart } from "lucide-react";
@@ -74,6 +81,7 @@ const MarketplaceSkeleton = () => (
 
 // Main NFT Marketplace Component
 export const NFTMarket = () => {
+  const { isTelegram, suiBalance } = useUniversalApp();
   const { user, refetch: refetchUser } = useUser();
   const apiClient = useApiClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -88,7 +96,22 @@ export const NFTMarket = () => {
   );
   const [isOwned, setIsOwned] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const account = useCurrentAccount();
   const dispatch = useDispatch();
+  const client = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
+
   const [loadingClaim, setLoadingClaim] = useState(false);
   const { profit, refetchProfit } = useMarketPlace(
     isOwned ? user?.kiosk?.objectId : undefined,
@@ -128,24 +151,22 @@ export const NFTMarket = () => {
   }, [user]);
 
   useEffect(() => {
-    if (!authed) {
+    if (!authed && isTelegram) {
       setOpenAuthDialog(true);
     }
-  }, [authed, appContext.accountId]);
+  }, [authed, appContext.accountId, isTelegram]);
 
   useEffect(() => {
-    if (!address && authed) {
+    if (!address && authed && isTelegram) {
       fetchAddressByAccountId(appContext.accountId);
     }
-  }, [address, authed]);
+  }, [address, authed, isTelegram]);
 
   const createKioskApi = useApi({
     key: ["create-kiosk"],
     method: "POST",
     url: "marketplace/kiosk/create",
   }).post;
-
-  console.log("marketplaceCreatureListings", marketplaceCreatureListings);
 
   const handleCreateKiosk = useCallback(async () => {
     try {
@@ -154,28 +175,38 @@ export const NFTMarket = () => {
         target: "0x2::kiosk::new",
       });
 
-      tx.transferObjects([kioskOwnerCap], tx.pure.address(address));
+      tx.transferObjects(
+        [kioskOwnerCap],
+        tx.pure.address(isTelegram ? address : account?.address || "")
+      );
       tx.moveCall({
         target: "0x2::transfer::public_share_object",
         arguments: [kiosk],
         typeArguments: ["0x2::kiosk::Kiosk"],
       });
-      const response = await apiClient.callFunc<
-        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-        undefined
-      >(
-        "txn",
-        "signAndExecuteTransactionBlock",
-        {
-          transactionBlock: tx.serialize(),
-          context: {
-            network,
-            walletId: appContext.walletId,
-            accountId: appContext.accountId,
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: tx.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
           },
-        },
-        { withAuth: true }
-      );
+          { withAuth: true }
+        );
+      } else {
+        response = await signAndExecuteTransaction({
+          transaction: tx.serialize(),
+        });
+      }
       if (response && (response as any).digest) {
         const createdObjects = (response as any).objectChanges?.filter(
           (change: any) => change.type === "created"
@@ -220,7 +251,7 @@ export const NFTMarket = () => {
         );
       }
     }
-  }, [address, authed]);
+  }, [address, authed, isTelegram]);
 
   const filteredListings = React.useMemo(() => {
     const listings = [];
@@ -272,10 +303,14 @@ export const NFTMarket = () => {
   }, [marketplaceListings, marketplaceCreatureListings, searchTerm]);
 
   useEffect(() => {
-    if (user && !user.kiosk && authed && address) {
+    if (
+      user &&
+      !user.kiosk &&
+      ((authed && address) || (!isTelegram && account?.address))
+    ) {
       handleCreateKiosk();
     }
-  }, [user, authed, address]);
+  }, [user, authed, address, isTelegram, account?.address]);
 
   async function claimProfit(): Promise<void> {
     try {
@@ -300,22 +335,29 @@ export const NFTMarket = () => {
       });
       txb.transferObjects([coin], txb.pure.address(address));
 
-      const response = await apiClient.callFunc<
-        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-        undefined
-      >(
-        "txn",
-        "signAndExecuteTransactionBlock",
-        {
-          transactionBlock: txb.serialize(),
-          context: {
-            network,
-            walletId: appContext.walletId,
-            accountId: appContext.accountId,
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: txb.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
           },
-        },
-        { withAuth: true }
-      );
+          { withAuth: true }
+        );
+      } else {
+        response = await signAndExecuteTransaction({
+          transaction: txb.serialize(),
+        });
+      }
 
       if (response && response.digest) {
         // Sync with backend
@@ -344,7 +386,11 @@ export const NFTMarket = () => {
 
   return (
     <div className="w-full h-full flex flex-col gap-4">
-      <div className="flex flex-col gap-4 fixed top-4 left-4 right-4 bg-black  z-10">
+      <div
+        className={`flex flex-col gap-4 fixed ${
+          isTelegram ? " top-4 left-4 right-4 bg-black  z-10" : "w-2/5"
+        }`}
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Badge
@@ -352,7 +398,7 @@ export const NFTMarket = () => {
               className="px-3 py-1 bg-white text-black rounded-3xl"
             >
               <span className="text-xs font-normal font-['Sora'] uppercase">
-                {formatAddress(address)}
+                {formatAddress(isTelegram ? address : account?.address || "")}
               </span>
             </Badge>
 
@@ -365,7 +411,7 @@ export const NFTMarket = () => {
                 height={16}
               />
               <span className="text-white text-sm font-normal font-['Sora']">
-                {formatSUI(balance.balance)}
+                {formatSUI(isTelegram ? balance.balance : suiBalance || 0)}
               </span>
             </div>
           </div>
@@ -426,7 +472,7 @@ export const NFTMarket = () => {
         </div>
       </div>
       <div className="flex flex-1 h-full mt-10">
-        {!initialized ? (
+        {!initialized && isTelegram ? (
           <CreateWallet />
         ) : user && !user.kiosk ? (
           <div className="flex flex-col gap-4 w-full h-full mt-4 ">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useUtils } from "@telegram-apps/sdk-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
@@ -28,7 +28,7 @@ export function UsernameDialog({
   answerType,
 }: UsernameDialogProps) {
   const [username, setUsername] = useState("");
-  const utils = useUtils();
+  const { utils } = useUniversalApp();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

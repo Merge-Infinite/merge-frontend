@@ -1,3 +1,4 @@
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import {
   FEE_ADDRESS,
   MER3_PACKAGE_ID,
 } from "@/utils/constants";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
@@ -56,6 +58,7 @@ export const MarketItem = React.memo(
     onSubmitOnchainComplete?: () => void;
     type: string;
   }) => {
+    const { isTelegram, suiBalance } = useUniversalApp();
     const featureFlags = useFeatureFlags();
     const apiClient = useApiClient();
     const { user } = useUser();
@@ -70,7 +73,19 @@ export const MarketItem = React.memo(
     const [openAuthDialog, setOpenAuthDialog] = useState(false);
     const router = useRouter();
     const { data: balance } = useSuiBalance(address);
-
+    const client = useSuiClient();
+    const { mutateAsync: signAndExecuteTransaction } =
+      useSignAndExecuteTransaction({
+        execute: async ({ bytes, signature }) =>
+          await client.executeTransactionBlock({
+            transactionBlock: bytes,
+            signature,
+            options: {
+              showRawEffects: true,
+              showObjectChanges: true,
+            },
+          }),
+      });
     const handleCopyId = () => {
       const currentNetworkConfig = featureFlags.networks[appContext.networkId];
       window.open(
@@ -85,7 +100,9 @@ export const MarketItem = React.memo(
     async function purchaseNFT(): Promise<void> {
       try {
         setLoading(true);
-        if (Number(balance?.balance) < Number(price)) {
+        if (
+          Number(isTelegram ? balance.balance : suiBalance || 0) < Number(price)
+        ) {
           toast.error("Insufficient balance");
           return;
         }
@@ -118,22 +135,29 @@ export const MarketItem = React.memo(
 
         txb.transferObjects([feeCoin], txb.pure.address(platformOwnerAddress));
 
-        const response = await apiClient.callFunc<
-          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-          undefined
-        >(
-          "txn",
-          "signAndExecuteTransactionBlock",
-          {
-            transactionBlock: txb.serialize(),
-            context: {
-              network,
-              walletId: appContext.walletId,
-              accountId: appContext.accountId,
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: txb.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
             },
-          },
-          { withAuth: true }
-        );
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: txb.serialize(),
+          });
+        }
 
         if (response && response.digest) {
           toast.success(`You are now the owner of ${element} ${emoji}`);
@@ -231,8 +255,6 @@ export const MarketItem = React.memo(
       router.push(`/creative?recipe=${JSON.stringify(formattedRecipe)}`);
     };
 
-    console.log(balance);
-    console.log(price);
     return (
       <Card className="w-full sm:w-60 bg-transparent transition-all duration-300 gap-2 flex flex-col">
         <Image
@@ -284,7 +306,11 @@ export const MarketItem = React.memo(
               <Button
                 className=" text-black w-fit uppercase rounded-3xl"
                 onClick={purchaseNFT}
-                disabled={loading || Number(balance?.balance) < Number(price)}
+                disabled={
+                  loading ||
+                  Number(isTelegram ? balance.balance : suiBalance || 0) <
+                    Number(price)
+                }
                 isLoading={loading}
                 size="sm"
               >

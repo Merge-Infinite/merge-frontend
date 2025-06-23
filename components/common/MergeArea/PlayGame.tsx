@@ -21,7 +21,6 @@ import { SearchIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import GamePlayInfo from "../../common/play-info";
-import TagSkeleton from "../ElementSkeleton";
 import Emoji from "../Emoji";
 import DraggableBox from "./DragItem";
 import { adjustPositionWithinBounds, createUniqueId } from "./dragUtilities";
@@ -57,7 +56,6 @@ export default function PlayGame({}: PlayGameProps) {
   const [debouncedText] = useDebounce(search, 1000);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<BoxItem | null>(null);
-  // Track current mouse/touch position for accurate drop positioning
   const [currentPointer, setCurrentPointer] = useState<{
     x: number;
     y: number;
@@ -371,14 +369,7 @@ export default function PlayGame({}: PlayGameProps) {
         });
       }
     },
-    [
-      mergingBoxes,
-      inventory,
-      instanceCounter,
-      mergeApi,
-      refetchInventory,
-      refetch,
-    ]
+    [mergingBoxes, inventory, instanceCounter]
   );
 
   const handleDrop = useCallback(
@@ -486,6 +477,8 @@ export default function PlayGame({}: PlayGameProps) {
     [inventory]
   );
 
+  console.log("render");
+
   return (
     <div className="w-full h-full">
       <GamePlayInfo />
@@ -495,7 +488,6 @@ export default function PlayGame({}: PlayGameProps) {
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
-        // Optimize measuring strategy
         measuring={{
           droppable: {
             strategy: MeasuringStrategy.BeforeDragging,
@@ -542,7 +534,7 @@ export default function PlayGame({}: PlayGameProps) {
             </div>
             <div className="flex justify-start items-start gap-2 flex-wrap overflow-y-auto h-[170px] sm:h-[150px] md:h-[170px] lg:h-[200px] xl:h-[230px]">
               {isLoading ? (
-                <TagSkeleton />
+                <div />
               ) : (
                 craftedElements.map((element: any) => {
                   // Count how many of this item are currently in use

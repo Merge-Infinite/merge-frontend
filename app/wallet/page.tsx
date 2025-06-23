@@ -1,6 +1,5 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { initBackButton } from "@telegram-apps/sdk";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppDispatch } from "@/lib/wallet/store";
@@ -9,14 +8,13 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { useUniversalApp } from "../context/UniversalAppContext";
 
 // Import the wallet app with ssr: false
 const WalletAppComponent = dynamic(() => import("@/lib/wallet"), {
   ssr: false,
 });
 export default function Wallet() {
-  const [backButton] = initBackButton();
-
   const dispatch = useDispatch<AppDispatch>();
   const setAppMode = useCallback(
     (mode: AppMode) => {
@@ -25,13 +23,19 @@ export default function Wallet() {
     [dispatch]
   );
   const router = useRouter();
-  useEffect(() => {
-    backButton.show();
 
-    backButton.on("click", () => {
-      router.push("/");
-    });
-  }, []);
+  const { backButton, isTelegram, isReady } = useUniversalApp();
+
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.push("/");
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
   return (
     <div className="flex flex-col items-center  h-full ">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
@@ -21,15 +22,21 @@ import {
   ELEMENT_NFT_MODULE_NAME,
   MER3_PACKAGE_ID,
 } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { CreativeOnchainItem } from "./creative-onchain-item";
 import { CardItem } from "./onchain-item";
 
 export function OnchainBagScreen() {
+  const { isTelegram } = useUniversalApp();
   const apiClient = useApiClient();
   const { user, refetch } = useUser();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -41,41 +48,58 @@ export function OnchainBagScreen() {
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
   );
+  const client = useSuiClient();
+
+  const account = useCurrentAccount();
+  const callingKiosk = useRef(false);
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
+
   const {
     nfts,
     loading,
     error,
     refresh: nftsRefresh,
   } = useNFTList({
-    walletAddress: address,
+    walletAddress: isTelegram ? address : account?.address,
     refreshInterval: undefined,
     autoFetch: true,
     structType: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"CreativeElementNFT"}`,
   });
 
-  console.log(nfts);
   const {
     nfts: creatureNfts,
     loading: creatureNftsLoading,
     error: creatureNftsError,
     refresh: creatureNftsRefresh,
   } = useNFTList({
-    walletAddress: address,
+    walletAddress: isTelegram ? address : account?.address,
     refreshInterval: undefined,
     autoFetch: true,
     structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
-  useEffect(() => {
-    if (!authed) {
-      setOpenAuthDialog(true);
-    }
-  }, [authed, appContext.accountId]);
 
   useEffect(() => {
-    if (!address && authed) {
+    if (isTelegram && !authed) {
+      setOpenAuthDialog(true);
+    }
+  }, [authed, appContext.accountId, isTelegram]);
+
+  useEffect(() => {
+    if (isTelegram && !address && authed) {
       fetchAddressByAccountId(appContext.accountId);
     }
-  }, [address, authed]);
+  }, [address, authed, isTelegram]);
 
   const createKioskApi = useApi({
     key: ["create-kiosk"],
@@ -84,9 +108,15 @@ export function OnchainBagScreen() {
   }).post;
 
   const handleCreateKiosk = useCallback(async () => {
+    if (callingKiosk.current) return;
+    callingKiosk.current = true;
     try {
-      if (!address && authed) {
+      if (isTelegram && !address && authed) {
         toast.error("No address found");
+        return;
+      }
+      if (!account?.address) {
+        toast.error("wallet is not connected");
         return;
       }
 
@@ -95,28 +125,39 @@ export function OnchainBagScreen() {
         target: "0x2::kiosk::new",
       });
 
-      tx.transferObjects([kioskOwnerCap], tx.pure.address(address));
+      tx.transferObjects(
+        [kioskOwnerCap],
+        tx.pure.address(isTelegram ? address : account?.address)
+      );
       tx.moveCall({
         target: "0x2::transfer::public_share_object",
         arguments: [kiosk],
         typeArguments: ["0x2::kiosk::Kiosk"],
       });
-      const response = await apiClient.callFunc<
-        SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-        undefined
-      >(
-        "txn",
-        "signAndExecuteTransactionBlock",
-        {
-          transactionBlock: tx.serialize(),
-          context: {
-            network,
-            walletId: appContext.walletId,
-            accountId: appContext.accountId,
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: tx.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
           },
-        },
-        { withAuth: true }
-      );
+          { withAuth: true }
+        );
+      } else {
+        response = await signAndExecuteTransaction({
+          transaction: tx.serialize(),
+        });
+        console.log(response);
+      }
       if (response && (response as any).digest) {
         const createdObjects = (response as any).objectChanges?.filter(
           (change: any) => change.type === "created"
@@ -156,18 +197,24 @@ export function OnchainBagScreen() {
       } else {
         toast.error(error.message || "Error creating kiosk");
       }
+    } finally {
+      callingKiosk.current = false;
     }
-  }, [address, authed]);
+  }, [address, authed, isTelegram, account?.address]);
 
   useEffect(() => {
-    if (user && !user.kiosk && authed && address) {
+    if (
+      user &&
+      !user.kiosk &&
+      ((authed && address) || (!isTelegram && account?.address))
+    ) {
       handleCreateKiosk();
     }
-  }, [user, authed, address]);
+  }, [user, authed, address, isTelegram, account?.address]);
 
   return (
     <div className="flex flex-col gap-4 w-full h-full">
-      {!initialized ? (
+      {!initialized && isTelegram ? (
         <CreateWallet />
       ) : user && !user.kiosk ? (
         <div className="flex flex-col gap-4 w-full h-full">
@@ -247,14 +294,16 @@ export function OnchainBagScreen() {
           </div>
         </div>
       )}
-      <PasscodeAuthDialog
-        open={openAuthDialog}
-        setOpen={(open) => setOpenAuthDialog(open)}
-        onSuccess={async () => {
-          await refresh();
-          await creatureNftsRefresh();
-        }}
-      />
+      {isTelegram && (
+        <PasscodeAuthDialog
+          open={openAuthDialog}
+          setOpen={(open) => setOpenAuthDialog(open)}
+          onSuccess={async () => {
+            await nftsRefresh();
+            await creatureNftsRefresh();
+          }}
+        />
+      )}
     </div>
   );
 }

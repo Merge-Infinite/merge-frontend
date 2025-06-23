@@ -1,6 +1,5 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { initBackButton } from "@telegram-apps/sdk";
 
 import ElementItem from "@/components/common/ElementItem";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
@@ -19,12 +18,12 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useUniversalApp } from "../context/UniversalAppContext";
 
 export default function SubmitItem() {
   const searchParams = useSearchParams();
   const itemChallengeId = searchParams.get("itemChallengeId");
   const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
-  const [backButton] = initBackButton();
   const router = useRouter();
   const { user } = useUser();
   const fetchItemChallenge = useApi({
@@ -46,14 +45,19 @@ export default function SubmitItem() {
     validateParams: () => !!fetchItemChallenge?.data?.item?.id,
   }).get;
 
-  useEffect(() => {
-    backButton.show();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
 
-    backButton.on("click", () => {
-      router.back();
-    });
-    fetchItemChallenge?.refetch();
-  }, []);
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+      fetchItemChallenge?.refetch();
+    }
+  }, [isReady, isTelegram, backButton]);
 
   useEffect(() => {
     if (fetchItemChallenge?.data?.item?.id) {

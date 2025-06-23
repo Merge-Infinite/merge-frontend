@@ -2,19 +2,23 @@
 import CreativeCustomizer from "@/components/screen/creative/creative-page";
 import Progress from "@/components/screen/creative/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { initBackButton } from "@telegram-apps/sdk";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
+import { useUniversalApp } from "../context/UniversalAppContext";
 export const Creative = () => {
-  const [backButton] = initBackButton();
   const router = useRouter();
-  useEffect(() => {
-    backButton.show();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
 
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, []);
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
   return (
     <div
       className="flex flex-col items-center justify-start p-4"

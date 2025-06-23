@@ -42,9 +42,6 @@ export default function ChallengeGrid({ category }: { category: string }) {
 
   return (
     <>
-      <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
-        {category}
-      </div>
       <div className="flex flex-row sm:flex-row gap-2 w-full">
         {/* Explore Card */}
         <Card className="w-full  bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">

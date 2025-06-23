@@ -2,29 +2,28 @@
 import { Button } from "@/components/ui/button";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { initBackButton } from "@telegram-apps/sdk";
-import { useUtils } from "@telegram-apps/sdk-react";
 import Image from "next/image";
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { useUniversalApp } from "../context/UniversalAppContext";
 
 export default function SubmitItem() {
-  const [backButton] = initBackButton();
   const router = useRouter();
   const { user, refetch } = useUser();
-  const utils = useUtils();
+  const { backButton, isTelegram, isReady, utils } = useUniversalApp();
+
   useEffect(() => {
-    backButton.show();
-
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, []);
-
-  console.log(user);
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
   const claimEnergy = useApi({
     key: ["claim-energy"],

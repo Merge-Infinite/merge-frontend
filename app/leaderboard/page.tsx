@@ -5,22 +5,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LeaderboardTab from "@/components/screen/leaderboard/leaderboard-tab";
 import { AppDispatch } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
-import { initBackButton } from "@telegram-apps/sdk";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { useUniversalApp } from "../context/UniversalAppContext";
 export const Leaderboard = () => {
-  const [backButton] = initBackButton();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  useEffect(() => {
-    backButton.show();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
 
-    backButton.on("click", () => {
-      router.back();
-      dispatch(updateTabMode(TabMode.HOME));
-    });
-  }, []);
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+          dispatch(updateTabMode(TabMode.HOME));
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
+
   return (
     <div
       className="flex flex-col items-center justify-start p-4"

@@ -21,15 +21,20 @@ import {
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
-import { initBackButton } from "@telegram-apps/sdk";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { useUniversalApp } from "../context/UniversalAppContext";
 import {
   MAX_FREE_SLOTS,
   MAX_SUBSCRIPTION_SLOTS_PER_TIER,
@@ -48,7 +53,6 @@ export default function InventoryStakingInterface() {
   const apiClient = useApiClient();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
-  const [backButton] = initBackButton();
   const router = useRouter();
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const authed = useSelector((state: RootState) => state.appContext.authed);
@@ -59,14 +63,33 @@ export default function InventoryStakingInterface() {
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
+  const { backButton, isTelegram, isReady } = useUniversalApp();
+  const account = useCurrentAccount();
   useEffect(() => {
-    backButton.show();
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, []);
-  const { user } = useUser();
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
+  const { user } = useUser();
+  const client = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
   const {
     nfts: creatureNfts,
     loading: creatureNftsLoading,
@@ -79,16 +102,16 @@ export default function InventoryStakingInterface() {
   });
 
   useEffect(() => {
-    if (!authed) {
+    if (!authed && isTelegram) {
       setOpenAuthDialog(true);
     }
-  }, [authed, appContext.accountId]);
+  }, [authed, appContext.accountId, isTelegram]);
 
   useEffect(() => {
-    if (!address && authed) {
+    if (!address && authed && isTelegram) {
       fetchAddressByAccountId(appContext.accountId);
     }
-  }, [address, authed]);
+  }, [address, authed, isTelegram]);
 
   function calculateAvailableSlots(
     subscriptionMonths: number | null | undefined
@@ -134,7 +157,11 @@ export default function InventoryStakingInterface() {
   const handleStakeNFT = useCallback(
     async (nftId: string) => {
       try {
-        if (!address && authed) {
+        if (!address && authed && isTelegram) {
+          toast.error("No address found");
+          return;
+        }
+        if (!isTelegram && !account?.address) {
           toast.error("No address found");
           return;
         }
@@ -158,22 +185,29 @@ export default function InventoryStakingInterface() {
             tx.object("0x6"),
           ],
         });
-        const response = await apiClient.callFunc<
-          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-          undefined
-        >(
-          "txn",
-          "signAndExecuteTransactionBlock",
-          {
-            transactionBlock: tx.serialize(),
-            context: {
-              network,
-              walletId: appContext.walletId,
-              accountId: appContext.accountId,
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: tx.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
             },
-          },
-          { withAuth: true }
-        );
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: tx.serialize(),
+          });
+        }
 
         if (response && (response as any).digest) {
           toast.success("NFT staked successfully!");
@@ -195,7 +229,14 @@ export default function InventoryStakingInterface() {
         stopLoading();
       }
     },
-    [address, authed, availableSlots, stakeStats?.nftCount]
+    [
+      address,
+      authed,
+      availableSlots,
+      stakeStats?.nftCount,
+      isTelegram,
+      account?.address,
+    ]
   );
 
   return (

@@ -1,26 +1,30 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useApi from "@/hooks/useApi";
-import { initBackButton } from "@telegram-apps/sdk";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export const RewardTab = () => {
-  const [backButton] = initBackButton();
   const router = useRouter();
   const [activeValue, setActiveValue] = useState(10);
 
-  useEffect(() => {
-    backButton.show();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
 
-    backButton.on("click", () => {
-      router.back();
-    });
-  }, [backButton, router]);
+  useEffect(() => {
+    if (isReady) {
+      if (isTelegram && backButton) {
+        backButton.show();
+        backButton.on("click", () => {
+          router.back();
+        });
+      }
+    }
+  }, [isReady, isTelegram, backButton]);
 
   const fetchTotalElements = useApi({
     key: ["total-elements"],
