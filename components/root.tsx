@@ -130,12 +130,7 @@ function WebApp(props: PropsWithChildren) {
           }}
         >
           <UniversalAppProvider>
-            <div
-              className=" min-h-screen flex  justify-center"
-              style={{
-                width: "40%",
-              }}
-            >
+            <div className=" min-h-screen flex  justify-center w-full">
               {props.children}
             </div>
             <Toaster />

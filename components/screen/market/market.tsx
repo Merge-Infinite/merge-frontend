@@ -388,7 +388,7 @@ export const NFTMarket = () => {
     <div className="w-full h-full flex flex-col gap-4">
       <div
         className={`flex flex-col gap-4 fixed ${
-          isTelegram ? " top-4 left-4 right-4 bg-black  z-10" : "w-2/5"
+          isTelegram ? " top-4 left-4 right-4 bg-black  z-10" : ""
         }`}
       >
         <div className="flex items-center justify-between gap-2">

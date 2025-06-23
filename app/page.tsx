@@ -60,7 +60,7 @@ export default function Home() {
         >
           <TabsList
             className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed ${
-              isTelegram ? "right-8 left-8" : "w-2/5"
+              isTelegram ? "right-8 left-8" : ""
             }  bg-black z-10 ${appMode !== AppMode.GAMES ? "hidden" : ""}`}
             style={{
               bottom: 40,
