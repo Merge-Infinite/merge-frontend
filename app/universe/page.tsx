@@ -22,7 +22,11 @@ import {
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import Image from "next/image";
@@ -67,6 +71,7 @@ export default function PetExplorerDashboard() {
     refreshInterval: 30000,
   });
 
+  const account = useCurrentAccount();
   const { backButton, isTelegram, isReady } = useUniversalApp();
 
   useEffect(() => {
@@ -80,7 +85,7 @@ export default function PetExplorerDashboard() {
     }
   }, [isReady, isTelegram, backButton]);
   const { stakeInfos, loading, error, stakeStats, refresh } = useStakeInfoList({
-    walletAddress: address,
+    walletAddress: isTelegram ? address : account?.address || "",
     poolId: poolId || undefined,
     includeNFTDetails: true,
     refreshInterval: undefined,
@@ -483,6 +488,7 @@ const PetSlotCard = ({
 }) => {
   const { isTelegram } = useUniversalApp();
   const searchParams = useSearchParams();
+  const account = useCurrentAccount();
   const poolId = searchParams.get("poolId");
   const { isLoading, startLoading, stopLoading } = useLoading();
   const apiClient = useApiClient();
@@ -512,6 +518,11 @@ const PetSlotCard = ({
     async (stakeInfoId: string) => {
       try {
         if (!address && authed && isTelegram) {
+          toast.error("No address found");
+          return;
+        }
+
+        if (isTelegram && !account?.address) {
           toast.error("No address found");
           return;
         }
@@ -566,7 +577,7 @@ const PetSlotCard = ({
         stopLoading();
       }
     },
-    [address, authed]
+    [address, authed, isTelegram, account?.address]
   );
 
   return (

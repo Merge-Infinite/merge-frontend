@@ -334,16 +334,16 @@ const CreatureCustomizer = () => {
   };
 
   useEffect(() => {
-    if (!address && appContext.authed) {
+    if (!address && appContext.authed && isTelegram) {
       fetchAddressByAccountId(appContext.accountId);
     }
-  }, [address, appContext.accountId, appContext.authed]);
+  }, [address, appContext.accountId, appContext.authed, isTelegram]);
 
   useEffect(() => {
-    if (!appContext.authed) {
+    if (!appContext.authed && isTelegram) {
       setOpenAuthDialog(true);
     }
-  }, [appContext.authed]);
+  }, [appContext.authed, isTelegram]);
 
   // Filter elements based on search text
   useEffect(() => {

@@ -57,14 +57,14 @@ export default function InventoryStakingInterface() {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const { data: network } = useNetwork(appContext.networkId);
+  const account = useCurrentAccount();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
   const { stakeStats, refreshRewards } = useStakeInfoList({
-    walletAddress: address,
+    walletAddress: isTelegram ? address : account?.address || "",
     poolId: poolId || undefined,
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
-  const { backButton, isTelegram, isReady } = useUniversalApp();
-  const account = useCurrentAccount();
   useEffect(() => {
     if (isReady) {
       if (isTelegram && backButton) {
@@ -95,7 +95,7 @@ export default function InventoryStakingInterface() {
     loading: creatureNftsLoading,
     refresh,
   } = useNFTList({
-    walletAddress: address,
+    walletAddress: isTelegram ? address : account?.address || "",
     refreshInterval: undefined,
     autoFetch: true,
     structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
