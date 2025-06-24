@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { initBackButton, retrieveLaunchParams } from "@telegram-apps/sdk";
+import { initBackButton } from "@telegram-apps/sdk";
 import React, {
   createContext,
   useCallback,
@@ -26,8 +26,7 @@ interface UniversalAppContextType {
 
   // Telegram specific
   backButton: any;
-  initDataRaw: string | null;
-  initData: any;
+
   suiBalance: number | null;
   // Wallet info
   wallet: {
@@ -81,10 +80,6 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
   // Telegram specific state
   const [backButton, setBackButton] = useState<any>(null);
-  const [telegramData, setTelegramData] = useState<{
-    initDataRaw: string | undefined;
-    initData: any;
-  }>({ initDataRaw: undefined, initData: undefined });
 
   // Redux selectors
   const accountId = useSelector(
@@ -97,7 +92,8 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
   try {
     utils = useUtils();
   } catch (error) {
-    console.warn("Failed to initialize Telegram features:", error);
+    console.debug("useUtils failed (expected if not in Telegram):", error);
+    utils = null;
   }
   const account = useCurrentAccount();
   // User hook
@@ -121,22 +117,13 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
         const [bb] = initBackButton();
         setBackButton(bb);
         bb.hide();
-
-        const launchParams = retrieveLaunchParams();
-        setTelegramData({
-          initDataRaw: launchParams.initDataRaw,
-          initData: launchParams.initData,
-        });
       } catch (error) {
         console.warn("Failed to initialize Telegram features:", error);
-        setTelegramData({ initDataRaw: undefined, initData: undefined });
       }
     }
 
     setIsLoading(false);
   }, [isTelegram]);
-
-  console.log("checkEnvironment outside isTelegram", isTelegram);
 
   useEffect(() => {
     checkEnvironment();
@@ -144,7 +131,6 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
   const checkEnvironment = async () => {
     const isTelegramResult = await isTelegramEnvironment();
-    console.log("checkEnvironment isTelegramResult", isTelegramResult);
     setIsTelegram(isTelegramResult);
   };
 
@@ -180,10 +166,10 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
   // Auto-login for Telegram
   useEffect(() => {
-    if (isTelegram && telegramData.initDataRaw && isReady) {
+    if (isTelegram && isReady) {
       login();
     }
-  }, [isTelegram, telegramData.initDataRaw, isReady, login]);
+  }, [isTelegram, isReady, login]);
 
   // Auto-login for Web when wallet connects
   useEffect(() => {
@@ -225,12 +211,9 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
     // Telegram specific
     backButton,
-    initDataRaw: telegramData.initDataRaw || null,
-    initData: telegramData.initData,
 
     wallet: getWalletInfo(),
-    utils,
-    // User data
+    utils: isTelegram ? utils : null,
     user,
     inventory: inventory || [],
 

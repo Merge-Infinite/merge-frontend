@@ -6,7 +6,6 @@ import {
   updateUserProfile,
 } from "@/lib/wallet/store/user";
 import { retrieveLaunchParams } from "@telegram-apps/sdk";
-import { useLaunchParams } from "@telegram-apps/sdk-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useApi from "./useApi";
@@ -29,22 +28,15 @@ interface WebUserData {
 
 export function useUser(inventorySearch?: string) {
   // Environment detection
-  const [isTelegram, setIsTelegram] = useState<boolean | null>(null);
+  const [isTelegram, setIsTelegram] = useState<boolean>(false);
 
   // Telegram-specific data
-  const { initDataRaw, initData } = isTelegram
-    ? retrieveLaunchParams()
-    : { initDataRaw: null, initData: null };
-  let lp: any = null;
-  try {
-    lp = useLaunchParams(true);
-  } catch (error) {
-    // If we're not in Telegram environment, this will fail - that's ok
-    console.debug(
-      "useLaunchParams failed (expected if not in Telegram):",
-      error
-    );
-  }
+  const [telegramData, setTelegramData] = useState<{
+    initDataRaw: string | null;
+    initData: any;
+    startParam: string | null;
+  }>({ initDataRaw: null, initData: null, startParam: null });
+
   const params = useSearchParams();
   const referralCode = params.get("referralCode");
 
@@ -64,9 +56,31 @@ export function useUser(inventorySearch?: string) {
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
 
   // Determine environment on mount
+
   useEffect(() => {
-    isTelegramEnvironment().then((isTelegram) => {
-      setIsTelegram(isTelegram);
+    isTelegramEnvironment().then((result) => {
+      setIsTelegram(result);
+
+      // Only try to get Telegram data if we're in Telegram
+      if (result) {
+        try {
+          const launchParams = retrieveLaunchParams();
+          const startParam = launchParams.initData?.startParam || null;
+
+          setTelegramData({
+            initDataRaw: launchParams.initDataRaw || null,
+            initData: launchParams.initData,
+            startParam: startParam,
+          });
+        } catch (error) {
+          console.warn("Failed to retrieve Telegram launch params:", error);
+          setTelegramData({
+            initDataRaw: null,
+            initData: null,
+            startParam: null,
+          });
+        }
+      }
     });
   }, []);
 
@@ -181,7 +195,7 @@ export function useUser(inventorySearch?: string) {
 
   // Telegram login logic
   const telegramLogin = useCallback(async () => {
-    if (!initDataRaw || isLoggedInRef.current) return;
+    if (!telegramData.initDataRaw || isLoggedInRef.current) return;
 
     isLoggedInRef.current = true;
     setIsLoading(true);
@@ -193,7 +207,8 @@ export function useUser(inventorySearch?: string) {
       if (storedUser) {
         const telegramIdMatches =
           storedUser?.id &&
-          Number(initData?.user?.id) === Number(storedUser?.telegramId);
+          Number(telegramData.initData?.user?.id) ===
+            Number(storedUser?.telegramId);
         if (telegramIdMatches) {
           dispatch(updateUserProfile(storedUser));
         } else {
@@ -205,8 +220,8 @@ export function useUser(inventorySearch?: string) {
       const token = localStorage.getItem("token");
       if (!token) {
         const response = await telegramAuthApi?.mutateAsync({
-          initData: initDataRaw,
-          referralCode: lp?.startParam,
+          initData: telegramData.initDataRaw,
+          referralCode: telegramData?.startParam,
         });
         if (response?.accessToken) {
           localStorage.setItem("token", response.accessToken);
@@ -222,7 +237,12 @@ export function useUser(inventorySearch?: string) {
       isLoggedInRef.current = false;
       setIsLoading(false);
     }
-  }, [initDataRaw, initData, lp?.startParam, telegramAuthApi]);
+  }, [
+    telegramData.initDataRaw,
+    telegramData.initData,
+    telegramData.startParam,
+    telegramAuthApi,
+  ]);
 
   // Web login logic
   const webLogin = useCallback(async () => {
@@ -285,13 +305,13 @@ export function useUser(inventorySearch?: string) {
 
   // Auto-login effect for Telegram
   useEffect(() => {
-    if (isTelegram && initDataRaw) {
+    if (isTelegram && telegramData.initDataRaw) {
       const token = localStorage.getItem("token");
       if (token) {
         getUser();
       }
     }
-  }, [isTelegram, initDataRaw]);
+  }, [isTelegram, telegramData.initDataRaw]);
 
   // Auto-login effect for Web (when wallet connects)
   useEffect(() => {
