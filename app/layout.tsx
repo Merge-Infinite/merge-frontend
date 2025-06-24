@@ -33,7 +33,7 @@ export default function RootLayout({
       <body
         className={`${
           sora.variable
-        } flex flex-1 ${"h-screen w-full h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)] justify-center"}`}
+        } flex bg-black flex-1 ${"h-screen w-full h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)] justify-center"}`}
       >
         <Root>{children}</Root>
         <GoogleAnalytics gaId="G-GWY1MVJVZK" />
