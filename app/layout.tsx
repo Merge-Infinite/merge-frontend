@@ -1,5 +1,4 @@
 import { Root } from "@/components/root";
-import { isTelegramEnvironment } from "@/utils/functions";
 import "@mysten/dapp-kit/dist/index.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
@@ -32,11 +31,9 @@ export default function RootLayout({
         type="text/javascript"
       />
       <body
-        className={`${sora.variable} flex flex-1 ${
-          isTelegramEnvironment()
-            ? "h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)]"
-            : "h-screen w-full justify-center"
-        }`}
+        className={`${
+          sora.variable
+        } flex flex-1 ${"h-screen w-full h-[var(--tg-viewport-height)] w-[var(--tg-viewport-width)] justify-center"}`}
       >
         <Root>{children}</Root>
         <GoogleAnalytics gaId="G-GWY1MVJVZK" />

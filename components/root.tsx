@@ -17,7 +17,6 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ErrorPage } from "@/components/common/ErrorPage";
 import { useDidMount } from "@/hooks/useDidMount";
 
-import { AuthProvider } from "@/app/context/AuthContext";
 import { UniversalAppProvider } from "@/app/context/UniversalAppContext";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -48,7 +47,6 @@ registerSlushWallet("Merge Infinity");
 const { networkConfig } = createNetworkConfig({
   mainnet: { url: getFullnodeUrl("mainnet") },
 });
-const queryClient = new QueryClient();
 
 // Telegram Mini App Component
 function TelegramApp(props: PropsWithChildren) {
@@ -86,19 +84,31 @@ function TelegramApp(props: PropsWithChildren) {
   }
 
   return (
-    <ApolloProvider client={apolloClient}>
-      <AuthProvider>
-        <AppRoot
-          appearance={themeParams.isDark ? "dark" : "light"}
-          platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
-          className="w-full h-full"
-        >
-          {props.children}
-        </AppRoot>
-        <Toaster />
-        <SonnerToaster />
-      </AuthProvider>
-    </ApolloProvider>
+    <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
+      <WalletProvider
+        autoConnect={true}
+        walletFilter={(wallet) => {
+          return wallet.name === SLUSH_WALLET_NAME;
+        }}
+        slushWallet={{
+          name: "Merge Infinity",
+        }}
+      >
+        <ApolloProvider client={apolloClient}>
+          <UniversalAppProvider>
+            <AppRoot
+              appearance={themeParams.isDark ? "dark" : "light"}
+              platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
+              className="w-full h-full"
+            >
+              {props.children}
+            </AppRoot>
+            <Toaster />
+            <SonnerToaster />
+          </UniversalAppProvider>
+        </ApolloProvider>
+      </WalletProvider>
+    </SuiClientProvider>
   );
 }
 
@@ -148,7 +158,9 @@ function App(props: PropsWithChildren) {
 
   useEffect(() => {
     // Only check environment on client side
-    setIsTelegram(isTelegramEnvironment());
+    isTelegramEnvironment().then((isTelegram) => {
+      setIsTelegram(isTelegram);
+    });
   }, []);
 
   // Show loading while determining environment

@@ -35,7 +35,16 @@ export function useUser(inventorySearch?: string) {
   const { initDataRaw, initData } = isTelegram
     ? retrieveLaunchParams()
     : { initDataRaw: null, initData: null };
-  const lp = isTelegram ? useLaunchParams() : null;
+  let lp: any = null;
+  try {
+    lp = useLaunchParams(true);
+  } catch (error) {
+    // If we're not in Telegram environment, this will fail - that's ok
+    console.debug(
+      "useLaunchParams failed (expected if not in Telegram):",
+      error
+    );
+  }
   const params = useSearchParams();
   const referralCode = params.get("referralCode");
 
@@ -56,7 +65,9 @@ export function useUser(inventorySearch?: string) {
 
   // Determine environment on mount
   useEffect(() => {
-    setIsTelegram(isTelegramEnvironment());
+    isTelegramEnvironment().then((isTelegram) => {
+      setIsTelegram(isTelegram);
+    });
   }, []);
 
   // API endpoints (you might need to adjust these for web authentication)

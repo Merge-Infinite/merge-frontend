@@ -1,13 +1,6 @@
-// Utility function to detect if running in Telegram
-export function isTelegramEnvironment(): boolean {
-  if (typeof window === "undefined") return false;
+import { isTMA } from "@tma.js/sdk";
 
-  // Check for Telegram WebApp
-  return !!(
-    (window as any).Telegram?.WebApp ||
-    window.navigator.userAgent.includes("Telegram") ||
-    window.location.search.includes("tgWebAppPlatform") ||
-    // Check for Telegram-specific parameters
-    new URLSearchParams(window.location.search).has("tgWebAppStartParam")
-  );
+export async function isTelegramEnvironment(): Promise<boolean> {
+  const isTMAResult = await isTMA();
+  return isTMAResult;
 }

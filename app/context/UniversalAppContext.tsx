@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { useUser } from "@/hooks/useUser";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
+import { isTelegramEnvironment } from "@/utils/functions";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useUtils } from "@telegram-apps/sdk-react";
 
@@ -53,18 +54,6 @@ interface UniversalAppContextType {
   isReady: boolean; // true when environment is detected and basic setup is complete
 }
 
-// Utility function to detect if running in Telegram
-function isTelegramEnvironment(): boolean {
-  if (typeof window === "undefined") return false;
-
-  return !!(
-    window.Telegram?.WebApp ||
-    window.navigator.userAgent.includes("Telegram") ||
-    window.location.search.includes("tgWebAppPlatform") ||
-    new URLSearchParams(window.location.search).has("tgWebAppStartParam")
-  );
-}
-
 // Create context
 const UniversalAppContext = createContext<UniversalAppContextType | null>(null);
 
@@ -84,7 +73,7 @@ interface UniversalAppProviderProps {
 
 export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
   // Environment state
-  const [isTelegram, setIsTelegram] = useState<boolean | null>(null);
+  const [isTelegram, setIsTelegram] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
@@ -104,7 +93,12 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
   // Hooks - only call when appropriate
   const { address: telegramAddress } = useAccount(accountId);
-  const utils = isTelegram ? useUtils() : null;
+  let utils: any = null;
+  try {
+    utils = useUtils();
+  } catch (error) {
+    console.warn("Failed to initialize Telegram features:", error);
+  }
   const account = useCurrentAccount();
   // User hook
   const {
@@ -121,10 +115,7 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
   // Initialize environment detection
   useEffect(() => {
-    const telegramEnv = isTelegramEnvironment();
-    setIsTelegram(telegramEnv);
-
-    if (telegramEnv) {
+    if (isTelegram) {
       // Initialize Telegram-specific features
       try {
         const [bb] = initBackButton();
@@ -143,7 +134,19 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
     }
 
     setIsLoading(false);
+  }, [isTelegram]);
+
+  console.log("checkEnvironment outside isTelegram", isTelegram);
+
+  useEffect(() => {
+    checkEnvironment();
   }, []);
+
+  const checkEnvironment = async () => {
+    const isTelegramResult = await isTelegramEnvironment();
+    console.log("checkEnvironment isTelegramResult", isTelegramResult);
+    setIsTelegram(isTelegramResult);
+  };
 
   useEffect(() => {
     if (!isTelegram && account?.address) {

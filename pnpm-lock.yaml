@@ -152,6 +152,9 @@ importers:
       '@telegram-apps/telegram-ui':
         specifier: ^2.1.5
         version: 2.1.8(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@tma.js/sdk':
+        specifier: ^2.7.0
+        version: 2.7.0
       '@tremor/react':
         specifier: ^3.4.1
         version: 3.18.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -3574,6 +3577,10 @@ packages:
 
   '@telegram-apps/types@1.2.1':
     resolution: {integrity: sha512-so4HLh7clur0YyMthi9KVIgWoGpZdXlFOuQjk3+Q5NAvJZ11nAheBSwPlGw/Ko92+zwvrSBE/lQyN2+p17RP+w==}
+
+  '@tma.js/sdk@2.7.0':
+    resolution: {integrity: sha512-LRuJdoEbAqKmSYccvXx5emSnye2je8oIbBVPtV+BmcNoa/dCZ0gFVkaeuyBqzroGtfGDyGO/WebU54ie5MKmCQ==}
+    deprecated: This package is not supported anymore. Use @telegram-apps/sdk instead.
 
   '@tremor/react@3.18.7':
     resolution: {integrity: sha512-nmqvf/1m0GB4LXc7v2ftdfSLoZhy5WLrhV6HNf0SOriE6/l8WkYeWuhQq8QsBjRi94mUIKLJ/VC3/Y/pj6VubQ==}
@@ -12026,6 +12033,8 @@ snapshots:
       '@telegram-apps/types': 1.2.1
 
   '@telegram-apps/types@1.2.1': {}
+
+  '@tma.js/sdk@2.7.0': {}
 
   '@tremor/react@3.18.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:

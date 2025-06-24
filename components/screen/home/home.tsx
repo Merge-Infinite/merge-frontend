@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { GameScreen } from "@/components/screen/home/game";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppDispatch } from "@/lib/wallet/store";
@@ -9,12 +10,12 @@ import {
   updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
-import { isTelegramEnvironment } from "@/utils/functions";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 export function HomeScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const { isTelegram } = useUniversalApp();
   const router = useRouter();
   const setAppMode = useCallback(
     (mode: AppMode) => {
@@ -36,7 +37,7 @@ export function HomeScreen() {
         >
           GAME
         </TabsTrigger>
-        {isTelegramEnvironment() && (
+        {isTelegram && (
           <TabsTrigger
             onClick={() => {
               setAppMode(AppMode.WALLET);
