@@ -48,9 +48,8 @@ export function OnchainBagScreen() {
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
   );
-  const client = useSuiClient();
-
   const account = useCurrentAccount();
+  const client = useSuiClient();
   const callingKiosk = useRef(false);
   const { mutateAsync: signAndExecuteTransaction } =
     useSignAndExecuteTransaction({
