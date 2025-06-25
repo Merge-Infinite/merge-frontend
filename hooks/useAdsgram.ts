@@ -1,4 +1,5 @@
 "use client";
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AdController, ShowPromiseResult } from "../adsgram";
@@ -20,6 +21,7 @@ export function useAdsgram({
   onReward,
   onError,
 }: UseAdsgramParams): UseAdsgramReturn {
+  const { isTelegram } = useUniversalApp();
   const AdControllerRef = useRef<AdController | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -65,12 +67,13 @@ export function useAdsgram({
       try {
         await adStartedApi?.mutateAsync({
           sessionId: sid,
+          isTelegram,
         });
       } catch (error) {
         console.error("Failed to record ad start:", error);
       }
     },
-    [adStartedApi]
+    [adStartedApi, isTelegram]
   );
 
   const showAd = useCallback(async () => {
@@ -86,16 +89,24 @@ export function useAdsgram({
       if (AdControllerRef.current) {
         // Record ad start
         await recordAdStart(sid);
-
-        // Show the ad
-        AdControllerRef.current
-          .show()
-          .then((result: ShowPromiseResult) => {
-            onReward(sid, result);
-          })
-          .catch((result: ShowPromiseResult) => {
-            onError?.(result);
+        if (isTelegram) {
+          // Show the ad
+          AdControllerRef.current
+            .show()
+            .then((result: ShowPromiseResult) => {
+              onReward(sid, result);
+            })
+            .catch((result: ShowPromiseResult) => {
+              onError?.(result);
+            });
+        } else {
+          onReward(sid, {
+            error: false,
+            done: true,
+            state: "load",
+            description: "Ad shown",
           });
+        }
       } else {
         onError?.({
           error: true,
@@ -111,7 +122,14 @@ export function useAdsgram({
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, createAdSession, recordAdStart, onReward, onError]);
+  }, [
+    isLoading,
+    createAdSession,
+    recordAdStart,
+    onReward,
+    onError,
+    isTelegram,
+  ]);
 
   return {
     showAd,
