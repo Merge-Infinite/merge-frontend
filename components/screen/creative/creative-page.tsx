@@ -82,7 +82,7 @@ const CreatureCustomizer = () => {
   const [selectedFeature, setSelectedFeature] = useState("");
   const [elementDialog, setElementDialog] = useState(false);
   const [quantity, setQuantity] = useState("1");
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState("all");
   const [creatureName, setCreatureName] = useState("");
   const [searchText, setSearchText] = useState("");
   const [debouncedText] = useDebounce(searchText, 500);
@@ -605,7 +605,6 @@ const CreatureCustomizer = () => {
             />
           </SelectTrigger>
           <SelectContent className="bg-[#1f1f1f] text-white border-[#333333]">
-            <SelectItem value="brainrot">Brainrot</SelectItem>
             <SelectItem value="all">All</SelectItem>
           </SelectContent>
         </Select>
