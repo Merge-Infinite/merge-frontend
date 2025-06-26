@@ -936,8 +936,7 @@ const CreatureCustomizer = () => {
           <div className="w-full px-4 pt-4 pb-10 bg-[#141414] rounded-tl-3xl rounded-tr-3xl inline-flex flex-col justify-start items-center gap-4">
             <div className="w-12 h-1 bg-[#1f1f1f] rounded-sm" />
 
-            {/* Preview Section */}
-            <div className="self-stretch p-4 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#1f1f1f] inline-flex justify-start items-start gap-4">
+            {/* <div className="self-stretch p-4 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#1f1f1f] inline-flex justify-start items-start gap-4">
               <div className="w-40 h-40 relative bg-[#1f1f1f] rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
                 <div className="w-40 h-40" alt="creature preview" />
                 <div className="left-[129px] top-[129px] absolute rounded-lg flex justify-start items-start gap-2">
@@ -948,7 +947,7 @@ const CreatureCustomizer = () => {
               </div>
 
               <div className="flex-1 inline-flex flex-col justify-start items-start gap-4"></div>
-            </div>
+            </div> */}
 
             {/* Balance Section */}
             <div className="self-stretch p-4 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#1f1f1f] flex flex-col justify-start items-start gap-2">
