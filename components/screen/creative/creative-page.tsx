@@ -35,11 +35,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
-import {
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-  useSuiClient,
-} from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { AlertTriangle, Search } from "lucide-react";
@@ -111,19 +107,7 @@ const CreatureCustomizer = () => {
     Leg: [], // Max: 2 (host + accessory)
     Environment: [], // Max: 1
   });
-  const client = useSuiClient();
-  const { mutateAsync: signAndExecuteTransaction } =
-    useSignAndExecuteTransaction({
-      execute: async ({ bytes, signature }) =>
-        await client.executeTransactionBlock({
-          transactionBlock: bytes,
-          signature,
-          options: {
-            showRawEffects: true,
-            showObjectChanges: true,
-          },
-        }),
-    });
+  const { mutateAsync: signTransaction } = useSignTransaction();
 
   const { mutateAsync: mint, isPending } = creativeApi.mint.useMutation();
 
@@ -477,7 +461,7 @@ const CreatureCustomizer = () => {
           { withAuth: true }
         );
       } else {
-        response = await signAndExecuteTransaction({
+        response = await signTransaction({
           transaction: paymentTx.serialize(),
         });
       }
@@ -488,7 +472,9 @@ const CreatureCustomizer = () => {
           selectedElements: selectedElements,
           elementInfos,
           data: {
-            transactionBlockBytes: (response as any).transactionBlockBytes,
+            transactionBlockBytes:
+              (response as any).transactionBlockBytes ||
+              (response as any).bytes,
             signature: (response as any).signature,
           },
         }).then(() => {
