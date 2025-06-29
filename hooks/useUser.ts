@@ -258,6 +258,8 @@ export function useUser(inventorySearch?: string) {
 
       if (storedUser && storedUser.address === currentAddress) {
         dispatch(updateUserProfile(storedUser));
+      } else {
+        localStorage.clear();
       }
 
       // Handle authentication token only if not already authenticated

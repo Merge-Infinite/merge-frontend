@@ -44,9 +44,15 @@ export default function SubmitItem() {
 
   const onCopy = async () => {
     try {
-      navigator.clipboard.writeText(
-        `${process.env.NEXT_PUBLIC_TELEGRAM_APP}?startapp=${user?.referralCode}`
-      );
+      if (isTelegram) {
+        navigator.clipboard.writeText(
+          `${process.env.NEXT_PUBLIC_TELEGRAM_APP}?startapp=${user?.referralCode}`
+        );
+      } else {
+        navigator.clipboard.writeText(
+          `${process.env.NEXT_PUBLIC_APP_URL}?referralCode=${user?.referralCode}`
+        );
+      }
       toast("Copied to clipboard");
     } catch (error) {
       console.log(error);
@@ -100,14 +106,16 @@ export default function SubmitItem() {
         </span>
       </div>
       <div className="self-stretch justify-start items-start gap-2 inline-flex">
-        <Button
-          onClick={onShare}
-          className="grow shrink basis-0 h-8 px-3 py-1 bg-[#a668ff] rounded-3xl justify-center items-center gap-2 flex"
-        >
-          <div className="text-center text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
-            Invite Friends
-          </div>
-        </Button>
+        {isTelegram && (
+          <Button
+            onClick={onShare}
+            className="grow shrink basis-0 h-8 px-3 py-1 bg-[#a668ff] rounded-3xl justify-center items-center gap-2 flex"
+          >
+            <div className="text-center text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
+              Invite Friends
+            </div>
+          </Button>
+        )}
         <Button
           onClick={onCopy}
           className="grow shrink basis-0 h-8 px-3 py-1 bg-white rounded-3xl justify-center items-center gap-2 flex"
