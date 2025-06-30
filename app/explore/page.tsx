@@ -9,15 +9,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useUniversalApp } from "../context/UniversalAppContext";
 
-interface ExplorationArea {
-  id: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  icon: string;
-  isEnabled: boolean;
-}
-
 export default function BrainrotExplorer() {
   const router = useRouter();
   const { pools } = usePoolSystem({

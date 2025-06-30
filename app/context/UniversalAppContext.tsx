@@ -166,17 +166,10 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
   // Auto-login for Telegram
   useEffect(() => {
-    if (isTelegram && isReady) {
+    if (isReady) {
       login();
     }
-  }, [isTelegram, isReady, login]);
-
-  // Auto-login for Web when wallet connects
-  useEffect(() => {
-    if (!isTelegram && isReady) {
-      login();
-    }
-  }, [isTelegram, isReady, login]);
+  }, [isReady]);
 
   // Auto-save address when available
   useEffect(() => {

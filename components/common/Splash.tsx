@@ -8,8 +8,6 @@ const SplashScreen: React.FC = () => {
   const { isTelegram, isReady } = useUniversalApp();
   const { currentWallet } = useCurrentWallet();
 
-  console.log("isTelegram", isTelegram);
-
   if (!isReady) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-black">
