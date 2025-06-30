@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { useUser } from "@/hooks/useUser";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
@@ -8,10 +9,13 @@ import {
   updateInitialized,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
+import { updateUserProfile } from "@/lib/wallet/store/user";
+import { useDisconnectWallet } from "@mysten/dapp-kit";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
+import { Button } from "../ui/button";
 interface GamePlayInfoProps {
   explore?: number;
   reward?: number;
@@ -25,13 +29,15 @@ export default function UserInfo({}: GamePlayInfoProps) {
   const { user } = useUser();
   const userStore = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
+  const { isTelegram } = useUniversalApp();
+  const { mutate: disconnect } = useDisconnectWallet();
+
   const clearData = async () => {
     // Clear localStorage
 
     // Clear IndexedDB
     const databases = await indexedDB.databases();
     for (const db of databases) {
-      console.log("db", db);
       if (db.name) {
         indexedDB.deleteDatabase(db.name);
         localStorage.clear();
@@ -43,19 +49,33 @@ export default function UserInfo({}: GamePlayInfoProps) {
     toast.success("Data cleared");
   };
 
+  const disconnectWallet = async () => {
+    try {
+      disconnect();
+      localStorage.clear();
+      dispatch(updateUserProfile(null));
+    } catch (error) {
+      toast.error("Failed to disconnect");
+      console.error("Disconnect error:", error);
+    }
+  };
+
   return (
     <div className="w-full px-4 py-2 bg-neutral-950/60 rounded-2xl border border-[#1f1f1f] flex-col justify-start items-start gap-2 inline-flex">
       <div className="self-stretch justify-center items-center gap-2 inline-flex">
         <div className="grow shrink basis-0 text-white text-base font-bold font-['Sora'] leading-normal capitalize">
           Hi {user?.username}!!!
         </div>
-        {/* <Button
-          className="w-fit px-2 py-1 rounded-full"
-          size="sm"
-          onClick={clearData}
-        >
-          Clear data
-        </Button> */}
+        {!isTelegram && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-fit px-3 py-1 rounded-full bg-red-950/20 text-red-400 hover:bg-red-950/40 hover:text-red-300 text-xs"
+            onClick={disconnectWallet}
+          >
+            Disconnect wallet
+          </Button>
+        )}
       </div>
       <div className="self-stretch justify-start items-center gap-6 inline-flex">
         <div

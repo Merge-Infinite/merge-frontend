@@ -44,13 +44,7 @@ export default function Home() {
   }, [isReady, isTelegram, backButton, dispatch]);
 
   useEffect(() => {
-    if (
-      !isTelegram &&
-      isReady &&
-      account &&
-      user.address &&
-      user.address !== account?.address
-    ) {
+    if (!isTelegram && isReady && account && !user) {
       login();
     }
   }, [isReady, account, user, isTelegram]);
