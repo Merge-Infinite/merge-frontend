@@ -15,12 +15,7 @@ import {
   updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
-import {
-  useConnectWallet,
-  useCurrentAccount,
-  useWallets,
-} from "@mysten/dapp-kit";
-import { SLUSH_WALLET_NAME } from "@mysten/slush-wallet";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -31,8 +26,6 @@ export default function Home() {
   const router = useRouter();
   const { user, backButton, isTelegram, isReady, login } = useUniversalApp();
   const account = useCurrentAccount();
-  const wallets = useWallets();
-  const { mutate: connect } = useConnectWallet();
 
   useEffect(() => {
     if (isReady) {
@@ -48,17 +41,6 @@ export default function Home() {
       login();
     }
   }, [isReady, account, user, isTelegram]);
-
-  useEffect(() => {
-    if (wallets.length > 0 && !account) {
-      const slushWallet = wallets.find(
-        (wallet) => wallet.name === SLUSH_WALLET_NAME
-      );
-      if (slushWallet) {
-        connect({ wallet: slushWallet });
-      }
-    }
-  }, [wallets, connect]);
 
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
   const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
