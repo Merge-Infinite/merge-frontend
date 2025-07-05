@@ -137,7 +137,7 @@ export const RecipeList = ({
       <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
         Recipe:
       </div>
-      <div className="flex justify-start items-center gap-2 flex-wrap content-center overflow-y-auto w-full h-full">
+      <div className="flex justify-start  gap-2 flex-wrap  overflow-y-auto w-full max-h-[50%]">
         {searchRecipeApi?.isPending ? (
           <div className="flex flex-col items-center justify-center w-full h-full">
             <Loader2 className="h-8 w-8 animate-spin text-[#68ffd1] mb-2" />
@@ -146,14 +146,14 @@ export const RecipeList = ({
         ) : searchRecipeApi?.data &&
           searchRecipeApi?.data?.length > 0 &&
           !searchRecipeApi.isPending ? (
-          <div className="flex flex-wrap gap-2 w-full h-full">
+          <div className="flex flex-wrap gap-2 w-full justify-start items-start  ">
             {searchRecipeApi?.data?.map((item, index) => (
               <div
                 key={index}
                 onClick={() => handleItemClick(item)}
                 className={`h-fit cursor-pointer transition-transform hover:scale-105 ${
                   selectedItem?.id === item?.id && isLoading
-                    ? "opacity-50 px-10 py-1 rounded-3xl justify-center items-center gap-2 inline-flex rounded-3xl border border-white text-white "
+                    ? "opacity-50 px-10 py-1 rounded-3xl justify-center items-center gap-2 rounded-3xl border border-white text-white "
                     : ""
                 }`}
               >
@@ -164,12 +164,15 @@ export const RecipeList = ({
                     {...item}
                     customIcon={
                       !user?.userBalance?.subscriptionEndDate && (
-                        <Image
-                          src="/images/ad.svg"
-                          alt="subscription"
-                          width={24}
-                          height={24}
-                        />
+                        <div className="flex items-center gap-1">
+                          -1
+                          <Image
+                            src="/images/energy.svg"
+                            alt="subscription"
+                            width={12}
+                            height={12}
+                          />
+                        </div>
                       )
                     }
                   />

@@ -88,7 +88,7 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
   };
 
   return (
-    <div className="w-full justify-between items-center inline-flex p-4">
+    <div className="w-full justify-between items-center inline-flex py-4">
       <div className="justify-start items-center gap-2 flex">
         <div className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex">
           <div className="justify-start items-center flex">

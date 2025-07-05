@@ -65,7 +65,7 @@ export function useAdsgram({
   const recordAdStart = useCallback(
     async (sid: string) => {
       try {
-        await adStartedApi?.mutateAsync({
+        return await adStartedApi?.mutateAsync({
           sessionId: sid,
           isTelegram,
         });
@@ -88,8 +88,8 @@ export function useAdsgram({
       // Step 2: Show ad
       if (AdControllerRef.current) {
         // Record ad start
-        await recordAdStart(sid);
-        if (isTelegram) {
+        const { success } = await recordAdStart(sid);
+        if (isTelegram && success) {
           // Show the ad
           AdControllerRef.current
             .show()
@@ -99,7 +99,7 @@ export function useAdsgram({
             .catch((result: ShowPromiseResult) => {
               onError?.(result);
             });
-        } else {
+        } else if (success) {
           onReward(sid, {
             error: false,
             done: true,
