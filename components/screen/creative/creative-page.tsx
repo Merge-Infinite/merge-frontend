@@ -3,7 +3,9 @@ import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import ElementItem from "@/components/common/ElementItem";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import FeatureCard from "@/components/screen/creative/feature-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,14 +14,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { useLoading } from "@/hooks/useLoading";
 import { useUser } from "@/hooks/useUser";
 import creativeApi from "@/lib/api/creative";
@@ -38,10 +36,10 @@ import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
 import { useCurrentAccount, useSignTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
-import { AlertTriangle, Search } from "lucide-react";
+import { AlertTriangle, Plus, Search, X } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
@@ -110,6 +108,83 @@ const CreatureCustomizer = () => {
   const { mutateAsync: signTransaction } = useSignTransaction();
 
   const { mutateAsync: mint, isPending } = creativeApi.mint.useMutation();
+
+  const [contentParts, setContentParts] = useState<any[]>([]);
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const contentRef = useRef(null);
+  const [creationMethod, setCreationMethod] = useState("manual");
+  // Insert element at cursor position
+  const insertElement = (element: any, qty = 1) => {
+    const newElement = { ...element, quantity: qty };
+
+    if (cursorPosition !== null) {
+      const newParts = [...contentParts];
+      newParts.splice(cursorPosition, 0, {
+        type: "element",
+        element: newElement,
+      });
+      setContentParts(newParts);
+      setCursorPosition(cursorPosition + 1);
+    } else {
+      setContentParts((prev) => [
+        ...prev,
+        { type: "element", element: newElement },
+      ]);
+    }
+
+    setSelectedElement(null);
+    setQuantity("1");
+  };
+
+  // Remove element
+  const removePromptElement = (index: number) => {
+    const newParts = contentParts.filter((_, i) => i !== index);
+    setContentParts(newParts);
+  };
+
+  // Handle text editing
+  const startEditingText = (index: number, currentText: string) => {
+    setEditingIndex(index);
+    setEditingText(currentText);
+  };
+
+  const saveTextEdit = () => {
+    if (editingIndex !== null) {
+      const newParts = [...contentParts];
+      newParts[editingIndex] = { type: "text", content: editingText };
+      setContentParts(newParts);
+      setEditingIndex(null);
+      setEditingText("");
+    }
+  };
+
+  const cancelTextEdit = () => {
+    setEditingIndex(null);
+    setEditingText("");
+  };
+
+  // Add text at cursor position
+  const addTextAtCursor = () => {
+    if (cursorPosition !== null) {
+      const newParts = [...contentParts];
+      newParts.splice(cursorPosition, 0, { type: "text", content: " " });
+      setContentParts(newParts);
+      setCursorPosition(cursorPosition + 1);
+      startEditingText(cursorPosition, " ");
+    } else {
+      const newIndex = contentParts.length;
+      setContentParts((prev) => [...prev, { type: "text", content: " " }]);
+      startEditingText(newIndex, " ");
+    }
+  };
+
+  const getAllElements = () => {
+    return contentParts
+      .filter((part) => part.type === "element")
+      .map((part) => part.element);
+  };
 
   // Parse recipe from URL parameter
   useEffect(() => {
@@ -193,14 +268,6 @@ const CreatureCustomizer = () => {
             // Track the allocation
             totalUsageTracker[recipeItem.itemId] =
               alreadyAllocated + requestedAmount;
-
-            console.log(
-              `Added ${
-                inventoryItem.handle
-              } (${requestedAmount}) to ${featureName}. Total used: ${
-                totalUsageTracker[recipeItem.itemId]
-              }/${inventoryItem.amount}`
-            );
           } else {
             // User doesn't have enough after previous allocations
             missingForFeature.push({
@@ -307,7 +374,10 @@ const CreatureCustomizer = () => {
 
   // Check if mint button should be enabled
   const isMintEnabled = () => {
-    const validation = validateMintRequirements();
+    const validation =
+      creationMethod === "manual"
+        ? validateMintRequirements()
+        : { isValid: true, missingFields: [] };
     const hasMissingItems = Object.keys(missingItems).length > 0;
     return validation.isValid && !isLoading && !isPending && !hasMissingItems;
   };
@@ -400,7 +470,10 @@ const CreatureCustomizer = () => {
 
   // Handle mint button click with validation
   const handleMintButtonClick = () => {
-    const validation = validateMintRequirements();
+    const validation =
+      creationMethod === "manual"
+        ? validateMintRequirements()
+        : { isValid: true, missingFields: [] };
 
     if (!validation.isValid) {
       const missingText = validation.missingFields.join(", ");
@@ -421,13 +494,27 @@ const CreatureCustomizer = () => {
   const handleMintClick = async () => {
     try {
       // Double-check validation before proceeding
-      const elementInfos = Object.values(selectedElements)
+      const selectedElementsCopy =
+        creationMethod === "manual"
+          ? selectedElements
+          : {
+              material: contentParts
+                .filter((part) => part.type === "element")
+                .map((part) => ({
+                  itemId: part.element.id,
+                  amount: part.element.quantity,
+                })),
+            };
+      const elementInfos = Object.values(selectedElementsCopy)
         .flat()
         .map((element) => ({
           itemId: element.itemId,
           amount: element.quantity,
         }));
-      const validation = validateMintRequirements();
+      const validation =
+        creationMethod === "manual"
+          ? validateMintRequirements()
+          : { isValid: true, missingFields: [] };
       if (!validation.isValid) {
         const missingText = validation.missingFields.join(", ");
         toast.error(`Please complete the following: ${missingText}`);
@@ -469,8 +556,9 @@ const CreatureCustomizer = () => {
         await mint({
           topic: topic,
           creatureName: creatureName,
-          selectedElements: selectedElements,
+          selectedElements: selectedElementsCopy,
           elementInfos,
+          prompt: creationMethod === "prompt" ? contentParts : "",
           data: {
             transactionBlockBytes:
               (response as any).transactionBlockBytes ||
@@ -579,23 +667,6 @@ const CreatureCustomizer = () => {
         </div>
       )}
 
-      <div className="w-full">
-        <Select onValueChange={(value) => setTopic(value)} value={topic}>
-          <SelectTrigger className="w-full bg-[#1f1f1f] text-white rounded-2xl border-none">
-            <SelectValue
-              className="text-white"
-              placeholder="Select Topic"
-              style={{
-                color: "#fff",
-              }}
-            />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1f1f1f] text-white border-[#333333]">
-            <SelectItem value="all">All</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Name Input */}
       <Input
         value={creatureName}
@@ -604,100 +675,241 @@ const CreatureCustomizer = () => {
         className="bg-[#141414] text-white border-[#333333] rounded-[32px] font-bold"
       />
 
-      {/* Feature Cards - Row 1 */}
-      <div className="w-full flex gap-2">
-        {/* Style Card */}
-        <FeatureCard
-          title="Style"
-          emoji="👽👾🤖"
-          description="Add the style you want (only 1)"
-          onAddClick={() => openElementSelection("Style")}
-          disableAddButton={getRemainingSlots("Style") <= 0}
-          selectedItems={selectedElements.Style}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Style")}
-        />
-
-        {/* Material Card */}
-        <FeatureCard
-          title="Material"
-          emoji="🪵"
-          description="Choose the material (only 1)"
-          onAddClick={() => openElementSelection("Material")}
-          disableAddButton={getRemainingSlots("Material") <= 0}
-          selectedItems={selectedElements.Material}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Material")}
-        />
+      <div className="w-full space-y-3 ">
+        <RadioGroup
+          value={creationMethod}
+          onValueChange={setCreationMethod}
+          className="flex flex-row justify-start items-center"
+        >
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="manual" id="manual" />
+            <Label htmlFor="manual" className="text-white text-sm">
+              Manual
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="prompt" id="prompt" />
+            <Label htmlFor="prompt" className="text-white text-sm">
+              Prompt
+            </Label>
+          </div>
+        </RadioGroup>
       </div>
 
-      {/* Feature Cards - Row 2 */}
-      <div className="w-full flex gap-2">
-        {/* Head Card */}
-        <FeatureCard
-          title="Head"
-          emoji="🦈"
-          description="What would the creature's head look like? 🤔"
-          onAddClick={() => openElementSelection("Head")}
-          disableAddButton={getRemainingSlots("Head") <= 0}
-          selectedItems={selectedElements.Head}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Head")}
-        />
+      {creationMethod === "manual" && (
+        <div className="w-full flex flex-col gap-2">
+          <div className="w-full flex gap-2">
+            {/* Style Card */}
+            <FeatureCard
+              title="Style"
+              emoji="👽👾🤖"
+              description="Add the style you want (only 1)"
+              onAddClick={() => openElementSelection("Style")}
+              disableAddButton={getRemainingSlots("Style") <= 0}
+              selectedItems={selectedElements.Style}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Style")}
+            />
 
-        {/* Body Card */}
-        <FeatureCard
-          title="Body"
-          emoji="🦖"
-          description="What would the creature's body look like? 🤔"
-          onAddClick={() => openElementSelection("Body")}
-          disableAddButton={getRemainingSlots("Body") <= 0}
-          selectedItems={selectedElements.Body}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Body")}
-        />
-      </div>
+            {/* Material Card */}
+            <FeatureCard
+              title="Material"
+              emoji="🪵"
+              description="Choose the material (only 1)"
+              onAddClick={() => openElementSelection("Material")}
+              disableAddButton={getRemainingSlots("Material") <= 0}
+              selectedItems={selectedElements.Material}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Material")}
+            />
+          </div>
 
-      {/* Feature Cards - Row 3 */}
-      <div className="w-full flex gap-2">
-        {/* Hand Card */}
-        <FeatureCard
-          title="Hand"
-          emoji="✌️"
-          description="What would the creature's hand look like? 🤔"
-          onAddClick={() => openElementSelection("Hand")}
-          disableAddButton={getRemainingSlots("Hand") <= 0}
-          selectedItems={selectedElements.Hand}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Hand")}
-        />
+          {/* Feature Cards - Row 2 */}
+          <div className="w-full flex gap-2">
+            {/* Head Card */}
+            <FeatureCard
+              title="Head"
+              emoji="🦈"
+              description="What would the creature's head look like? 🤔"
+              onAddClick={() => openElementSelection("Head")}
+              disableAddButton={getRemainingSlots("Head") <= 0}
+              selectedItems={selectedElements.Head}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Head")}
+            />
 
-        {/* Leg Card */}
-        <FeatureCard
-          title="Leg"
-          emoji="🦿"
-          description="What would the creature's leg look like? 🤔"
-          onAddClick={() => openElementSelection("Leg")}
-          disableAddButton={getRemainingSlots("Leg") <= 0}
-          selectedItems={selectedElements.Leg}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Leg")}
-        />
-      </div>
+            {/* Body Card */}
+            <FeatureCard
+              title="Body"
+              emoji="🦖"
+              description="What would the creature's body look like? 🤔"
+              onAddClick={() => openElementSelection("Body")}
+              disableAddButton={getRemainingSlots("Body") <= 0}
+              selectedItems={selectedElements.Body}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Body")}
+            />
+          </div>
 
-      {/* Environment Card - Full Width */}
-      <div className="w-full">
-        <FeatureCard
-          title="Environment"
-          emoji="🏞️"
-          description="What will the environment look like? (only 1)"
-          onAddClick={() => openElementSelection("Environment")}
-          disableAddButton={getRemainingSlots("Environment") <= 0}
-          selectedItems={selectedElements.Environment}
-          removeElement={removeElement}
-          missingItems={getMissingItemsForFeature("Environment")}
-        />
-      </div>
+          {/* Feature Cards - Row 3 */}
+          <div className="w-full flex gap-2">
+            {/* Hand Card */}
+            <FeatureCard
+              title="Hand"
+              emoji="✌️"
+              description="What would the creature's hand look like? 🤔"
+              onAddClick={() => openElementSelection("Hand")}
+              disableAddButton={getRemainingSlots("Hand") <= 0}
+              selectedItems={selectedElements.Hand}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Hand")}
+            />
+
+            {/* Leg Card */}
+            <FeatureCard
+              title="Leg"
+              emoji="🦿"
+              description="What would the creature's leg look like? 🤔"
+              onAddClick={() => openElementSelection("Leg")}
+              disableAddButton={getRemainingSlots("Leg") <= 0}
+              selectedItems={selectedElements.Leg}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Leg")}
+            />
+          </div>
+
+          {/* Environment Card - Full Width */}
+          <div className="w-full">
+            <FeatureCard
+              title="Environment"
+              emoji="🏞️"
+              description="What will the environment look like? (only 1)"
+              onAddClick={() => openElementSelection("Environment")}
+              disableAddButton={getRemainingSlots("Environment") <= 0}
+              selectedItems={selectedElements.Environment}
+              removeElement={removeElement}
+              missingItems={getMissingItemsForFeature("Environment")}
+            />
+          </div>
+        </div>
+      )}
+
+      {creationMethod === "prompt" && (
+        <Card className="rounded-2xl border-[#1f1f1f] w-full">
+          <CardContent className="space-y-4 w-full p-3">
+            <div
+              ref={contentRef}
+              className="min-h-[120px] w-[300px] bg-muted/30 rounded-lg  border-dashed border-muted-foreground/20 cursor-text hover:border-muted-foreground/40 transition-colors w-full"
+              onClick={() => setCursorPosition(contentParts.length)}
+            >
+              <div className="flex flex-wrap items-start gap-1 leading-relaxed break-words">
+                {cursorPosition === 0 && (
+                  <div className="w-0.5 h-6 bg-primary animate-pulse flex-shrink-0"></div>
+                )}
+
+                {contentParts.map((part: any, index: number) => (
+                  <React.Fragment key={index}>
+                    {part.type === "text" ? (
+                      editingIndex === index ? (
+                        <Textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          onBlur={saveTextEdit}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" && saveTextEdit()
+                          }
+                          onKeyDown={(e) =>
+                            e.key === "Escape" && cancelTextEdit()
+                          }
+                          className="inline-block resize-none border-0 border-b-2 border-primary bg-transparent focus-visible:ring-0 focus:outline-none p-1 w-32 min-h-[24px] text-sm leading-tight overflow-hidden break-words text-white"
+                          autoFocus
+                          rows={1}
+                        />
+                      ) : (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditingText(index, part.content);
+                          }}
+                          className="hover:bg-muted/50 px-1 rounded cursor-text transition-colors inline-block break-words max-w-full text-white"
+                        >
+                          {part.content || "\u00A0"}
+                        </span>
+                      )
+                    ) : (
+                      <Badge
+                        variant="default"
+                        className="inline-flex items-center gap-2 mx-1 rounded-2xl bg-transparent border border-white px-4 py-1"
+                      >
+                        {part.element?.emoji}
+                        <span className="text-xs font-medium text-white">
+                          {part.element.handle}
+                        </span>
+                        {part.element.quantity > 1 && (
+                          <span className="text-xs opacity-80">
+                            ({part.element.quantity})
+                          </span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 p-0 bg-white rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removePromptElement(index);
+                          }}
+                        >
+                          <X className="h-3 w-3 text-black" />
+                        </Button>
+                      </Badge>
+                    )}
+
+                    {/* Cursor after each element */}
+                    {cursorPosition === index + 1 && (
+                      <div
+                        className="w-0.5 h-6 bg-primary animate-pulse mx-1 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      ></div>
+                    )}
+                  </React.Fragment>
+                ))}
+
+                {contentParts.length === 0 && (
+                  <div className="w-0.5 h-6 bg-primary animate-pulse"></div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addTextAtCursor}
+                className="flex items-center gap-1 rounded-2xl"
+              >
+                <Plus className="h-4 w-4" />
+                Text
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  setBottomSheetOpen(true);
+                }}
+                className="flex items-center gap-1 rounded-2xl"
+              >
+                <Plus className="h-4 w-4" />
+                Element
+              </Button>
+              <div className="flex-1"></div>
+              <Badge variant="secondary" className="text-xs">
+                {getAllElements().length} elements
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Mint Button */}
       <Button
@@ -721,11 +933,17 @@ const CreatureCustomizer = () => {
           <div className="self-stretch p-4 flex flex-col justify-start items-start gap-2">
             {/* Selection title */}
             <div className="flex w-full justify-between">
-              <div className="text-white text-base font-semibold">
-                {`Select elements for ${selectedFeature} (${getRemainingSlots(
-                  selectedFeature
-                )} left)`}
-              </div>
+              {creationMethod === "manual" ? (
+                <div className="text-white text-base font-semibold">
+                  {`Select elements for ${selectedFeature} (${getRemainingSlots(
+                    selectedFeature
+                  )} left)`}
+                </div>
+              ) : (
+                <div className="text-white text-base font-semibold">
+                  {`Select elements`}
+                </div>
+              )}
             </div>
 
             {/* Search input */}
@@ -793,7 +1011,9 @@ const CreatureCustomizer = () => {
         <DialogContent className="bg-[#1f1f1f] text-white border-none rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-white">
-              {`Add Element to ${selectedFeature}`}
+              {creationMethod === "manual"
+                ? `Add Element to ${selectedFeature}`
+                : `Add Element`}
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2">
@@ -899,7 +1119,14 @@ const CreatureCustomizer = () => {
           </div>
           <DialogFooter className="flex gap-2 flex-row">
             <Button
-              onClick={confirmElementSelection}
+              onClick={() => {
+                if (creationMethod === "manual") {
+                  confirmElementSelection();
+                } else {
+                  insertElement(selectedElement, 1);
+                  setElementDialog(false);
+                }
+              }}
               className="flex-1 bg-[#a668ff] text-neutral-950 rounded-3xl uppercase text-white"
             >
               Confirm

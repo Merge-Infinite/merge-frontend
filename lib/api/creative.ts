@@ -12,6 +12,7 @@ const creativeApi = router("creative", {
         itemId: string;
         amount: number;
       }[];
+      prompt: any;
       data: {
         transactionBlockBytes: string;
         signature: string;
