@@ -114,7 +114,9 @@ const CreatureCustomizer = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
   const contentRef = useRef(null);
-  const [creationMethod, setCreationMethod] = useState("manual");
+  const [creationMethod, setCreationMethod] = useState("prompt");
+  const [textInputDialog, setTextInputDialog] = useState(false);
+  const [pendingTextInput, setPendingTextInput] = useState("");
   // Insert element at cursor position
   const insertElement = (element: any, qty = 1) => {
     const newElement = { ...element, quantity: qty };
@@ -167,17 +169,8 @@ const CreatureCustomizer = () => {
 
   // Add text at cursor position
   const addTextAtCursor = () => {
-    if (cursorPosition !== null) {
-      const newParts = [...contentParts];
-      newParts.splice(cursorPosition, 0, { type: "text", content: " " });
-      setContentParts(newParts);
-      setCursorPosition(cursorPosition + 1);
-      startEditingText(cursorPosition, " ");
-    } else {
-      const newIndex = contentParts.length;
-      setContentParts((prev) => [...prev, { type: "text", content: " " }]);
-      startEditingText(newIndex, " ");
-    }
+    setPendingTextInput(""); // Reset the input
+    setTextInputDialog(true); // Open the dialog
   };
 
   const getAllElements = () => {
@@ -631,6 +624,31 @@ const CreatureCustomizer = () => {
     setElementDialog(false);
   };
 
+  const confirmTextAddition = () => {
+    if (pendingTextInput.trim() === "") {
+      toast.error("Please enter some text");
+      return;
+    }
+
+    if (cursorPosition !== null) {
+      const newParts = [...contentParts];
+      newParts.splice(cursorPosition, 0, {
+        type: "text",
+        content: pendingTextInput,
+      });
+      setContentParts(newParts);
+      setCursorPosition(cursorPosition + 1);
+    } else {
+      setContentParts((prev) => [
+        ...prev,
+        { type: "text", content: pendingTextInput },
+      ]);
+    }
+
+    setTextInputDialog(false);
+    setPendingTextInput("");
+  };
+
   return (
     <div className="w-full flex flex-col gap-2 relative bg-black">
       <PasscodeAuthDialog
@@ -1005,6 +1023,47 @@ const CreatureCustomizer = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={textInputDialog} onOpenChange={setTextInputDialog}>
+        <DialogContent className="bg-[#1f1f1f] text-white border-none rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Add Text</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="text-white text-sm">Enter text to add:</div>
+            <Textarea
+              value={pendingTextInput}
+              onChange={(e) => setPendingTextInput(e.target.value)}
+              placeholder="Type your text here..."
+              className="bg-[#141414] text-white border-[#333333] rounded-lg min-h-[100px]"
+              autoFocus
+            />
+            <div className="text-neutral-400 text-xs">
+              This text will be added to your prompt at the current cursor
+              position.
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 flex-row">
+            <Button
+              onClick={confirmTextAddition}
+              className="flex-1 bg-[#a668ff] text-neutral-950 rounded-3xl uppercase text-white"
+              disabled={pendingTextInput.trim() === ""}
+            >
+              Add Text
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setTextInputDialog(false);
+                setPendingTextInput("");
+              }}
+              className="flex-1 bg-white text-black rounded-3xl uppercase"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Element Dialog */}
       <Dialog open={elementDialog} onOpenChange={setElementDialog}>
