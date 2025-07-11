@@ -820,7 +820,7 @@ const CreatureCustomizer = () => {
               className="min-h-[120px] w-[300px] max-w-[400px] bg-muted/30 rounded-lg  border-dashed border-muted-foreground/20 cursor-text hover:border-muted-foreground/40 transition-colors w-full"
               onClick={() => setCursorPosition(contentParts.length)}
             >
-              <div className="flex flex-wrap items-start gap-1 leading-relaxed break-words w-full">
+              <div className="flex flex-wrap items-start gap-1 leading-relaxed break-words w-fulls">
                 {cursorPosition === 0 && (
                   <div className="w-0.5 h-6 bg-primary animate-pulse flex-shrink-0"></div>
                 )}
