@@ -47,7 +47,7 @@ export default function Home() {
     if (!token) {
       login();
     }
-  }, []);
+  }, [user]);
 
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
   const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
