@@ -42,6 +42,13 @@ export default function Home() {
     }
   }, [isReady, account, user, isTelegram]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      login();
+    }
+  }, []);
+
   const appMode = useSelector((state: RootState) => state.appContext.appMode);
   const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
 
