@@ -15,6 +15,7 @@ import {
   updateAppMode,
   updateTabMode,
 } from "@/lib/wallet/store/app-context";
+import { clearUser } from "@/lib/wallet/store/user";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -44,7 +45,9 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     if (!token) {
+      dispatch(clearUser());
       login();
     }
   }, [user]);
