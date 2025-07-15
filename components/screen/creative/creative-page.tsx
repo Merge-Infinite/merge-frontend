@@ -466,6 +466,8 @@ const CreatureCustomizer = () => {
     const validation =
       creationMethod === "manual"
         ? validateMintRequirements()
+        : creatureName.trim() === ""
+        ? { isValid: false, missingFields: ["Creature Name"] }
         : { isValid: true, missingFields: [] };
 
     if (!validation.isValid) {
@@ -494,16 +496,26 @@ const CreatureCustomizer = () => {
               material: contentParts
                 .filter((part) => part.type === "element")
                 .map((part) => ({
-                  itemId: part.element.id,
+                  itemId: part.element.itemId,
                   amount: part.element.quantity,
                 })),
             };
-      const elementInfos = Object.values(selectedElementsCopy)
-        .flat()
-        .map((element) => ({
-          itemId: element.itemId,
-          amount: element.quantity,
-        }));
+      const elementInfos =
+        creationMethod === "manual"
+          ? Object.values(selectedElementsCopy)
+              .flat()
+              .map((element) => ({
+                itemId: element.itemId,
+                itemName: element.handle,
+                amount: element.quantity || 0,
+              }))
+          : contentParts
+              .filter((part) => part.type === "element")
+              .map((part) => ({
+                itemId: part.element.itemId,
+                itemName: part.element.handle,
+                amount: part.element.quantity || 0,
+              }));
       const validation =
         creationMethod === "manual"
           ? validateMintRequirements()
@@ -566,10 +578,6 @@ const CreatureCustomizer = () => {
       console.error(error);
       if (error.message === "Authentication required") {
         setOpenAuthDialog(true);
-      } else {
-        toast.error(
-          error.message || "Failed to mint creature. Please try again."
-        );
       }
     } finally {
       stopLoading();
