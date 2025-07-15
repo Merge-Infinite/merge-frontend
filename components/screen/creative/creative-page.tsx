@@ -468,6 +468,8 @@ const CreatureCustomizer = () => {
         ? validateMintRequirements()
         : creatureName.trim() === ""
         ? { isValid: false, missingFields: ["Creature Name"] }
+        : contentParts.filter((part) => part.type === "element").length < 3
+        ? { isValid: false, missingFields: ["At least 3 elements"] }
         : { isValid: true, missingFields: [] };
 
     if (!validation.isValid) {
@@ -488,7 +490,6 @@ const CreatureCustomizer = () => {
 
   const handleMintClick = async () => {
     try {
-      // Double-check validation before proceeding
       const selectedElementsCopy =
         creationMethod === "manual"
           ? selectedElements
