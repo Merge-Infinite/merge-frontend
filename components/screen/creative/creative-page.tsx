@@ -179,6 +179,28 @@ const CreatureCustomizer = () => {
       .map((part) => part.element);
   };
 
+  // Get the full prompt text (only text parts)
+  const getPromptText = () => {
+    return contentParts
+      .filter((part) => part.type === "text")
+      .map((part) => part.content)
+      .join(" ")
+      .toLowerCase();
+  };
+
+  // Check if element matches the prompt text
+  const elementMatchesPrompt = (element: any) => {
+    const promptText = getPromptText();
+    const elementHandle = element.handle.toLowerCase();
+    return promptText.includes(elementHandle);
+  };
+
+  // Get elements that match words in the prompt
+  const getMatchingElements = () => {
+    const elements = getAllElements();
+    return elements.filter((element) => elementMatchesPrompt(element));
+  };
+
   // Parse recipe from URL parameter
   useEffect(() => {
     if (recipeParam) {
@@ -370,7 +392,11 @@ const CreatureCustomizer = () => {
     const validation =
       creationMethod === "manual"
         ? validateMintRequirements()
-        : { isValid: true, missingFields: [] };
+        : {
+            isValid:
+              creatureName.trim() !== "" && getMatchingElements().length >= 3,
+            missingFields: [],
+          };
     const hasMissingItems = Object.keys(missingItems).length > 0;
     return validation.isValid && !isLoading && !isPending && !hasMissingItems;
   };
@@ -463,13 +489,19 @@ const CreatureCustomizer = () => {
 
   // Handle mint button click with validation
   const handleMintButtonClick = () => {
+    const matchingElements = getMatchingElements();
     const validation =
       creationMethod === "manual"
         ? validateMintRequirements()
         : creatureName.trim() === ""
         ? { isValid: false, missingFields: ["Creature Name"] }
-        : contentParts.filter((part) => part.type === "element").length < 3
-        ? { isValid: false, missingFields: ["At least 3 elements"] }
+        : matchingElements.length < 3
+        ? {
+            isValid: false,
+            missingFields: [
+              `Need at least 3 elements that match words in your prompt (currently have ${matchingElements.length} matching)`,
+            ],
+          }
         : { isValid: true, missingFields: [] };
 
     if (!validation.isValid) {
@@ -866,10 +898,20 @@ const CreatureCustomizer = () => {
                     ) : (
                       <Badge
                         variant="default"
-                        className="inline-flex items-center gap-2 mx-1 rounded-2xl bg-transparent border border-white px-4 py-1"
+                        className={`inline-flex items-center gap-2 mx-1 rounded-2xl px-4 py-1 ${
+                          elementMatchesPrompt(part.element)
+                            ? "bg-green-900/20 border-green-500"
+                            : "bg-transparent border-white"
+                        }`}
                       >
                         {part.element?.emoji}
-                        <span className="text-xs font-medium text-white">
+                        <span
+                          className={`text-xs font-medium ${
+                            elementMatchesPrompt(part.element)
+                              ? "text-green-400"
+                              : "text-white"
+                          }`}
+                        >
                           {part.element.handle}
                         </span>
                         {part.element.quantity > 1 && (
@@ -930,8 +972,16 @@ const CreatureCustomizer = () => {
                 Element
               </Button>
               <div className="flex-1"></div>
-              <Badge variant="secondary" className="text-xs">
-                {getAllElements().length} elements
+              <Badge
+                variant="secondary"
+                className={`text-xs ${
+                  getMatchingElements().length >= 3
+                    ? "bg-green-900/20 border-green-500 text-green-400"
+                    : ""
+                }`}
+              >
+                {getMatchingElements().length}/{getAllElements().length}{" "}
+                matching elements (need 3+)
               </Badge>
             </div>
           </CardContent>
