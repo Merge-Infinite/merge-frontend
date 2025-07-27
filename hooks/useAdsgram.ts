@@ -88,7 +88,7 @@ export function useAdsgram({
       // Step 2: Show ad
       if (AdControllerRef.current) {
         // Record ad start
-        const { success } = await recordAdStart(sid);
+        const { success } = await recordAdStart(sid, isTelegram);
         if (isTelegram && success) {
           // Show the ad
           AdControllerRef.current

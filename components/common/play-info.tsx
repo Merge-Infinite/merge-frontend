@@ -45,13 +45,17 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
     console.log("GamePlayInfo user", user);
   }, [user]);
 
-  const onReward = useCallback(async (sid: string, result: any) => {
-    await claimAdRewardApi?.mutateAsync({
-      sessionId: sid,
-      completionDate: Date.now(),
-    });
-    await refetch?.();
-  }, []);
+  const onReward = useCallback(
+    async (sid: string, result: any) => {
+      await claimAdRewardApi?.mutateAsync({
+        sessionId: sid,
+        completionDate: Date.now(),
+        isTelegram,
+      });
+      await refetch?.();
+    },
+    [isTelegram]
+  );
 
   const onError = useCallback((result: any) => {
     toast.error(result?.description || "Error");
@@ -64,7 +68,6 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
   });
 
   const handleItemSelect = (item: any) => {
-    console.log("item", item);
     setSelectedItem(item);
     setIsRecipeDetailOpen(true);
     setIsRecipeListOpen(false);
