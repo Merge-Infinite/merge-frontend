@@ -1,5 +1,6 @@
 "use client";
 
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import useAdsgram from "@/hooks/useAdsgram";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
@@ -27,6 +28,7 @@ interface GamePlayInfoProps {
 export default function GamePlayInfo({}: GamePlayInfoProps) {
   const { user, refetch } = useUser();
   const userStore = useSelector((state: RootState) => state.user);
+  const { isTelegram } = useUniversalApp();
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -114,26 +116,28 @@ export default function GamePlayInfo({}: GamePlayInfoProps) {
             }}
           />
         </div>
-        <Button
-          className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex w-fit bg-transparent"
-          size="default"
-          onClick={showAd}
-          disabled={isLoading}
-          isLoading={isLoading}
-        >
-          <div className="justify-start items-center flex">
-            <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
-              +5
+        {isTelegram && (
+          <Button
+            className="p-2 rounded-3xl border border-[#1f1f1f] justify-start items-center gap-2 flex w-fit bg-transparent"
+            size="default"
+            onClick={showAd}
+            disabled={isLoading}
+            isLoading={isLoading}
+          >
+            <div className="justify-start items-center flex">
+              <div className="text-center text-white text-sm font-normal font-['Sora'] leading-normal">
+                +5
+              </div>
+              <Image
+                src="/images/energy.svg"
+                alt="explore"
+                width={24}
+                height={24}
+              />
             </div>
-            <Image
-              src="/images/energy.svg"
-              alt="explore"
-              width={24}
-              height={24}
-            />
-          </div>
-          <Image src="/images/ad.svg" alt="explore" width={24} height={24} />
-        </Button>
+            <Image src="/images/ad.svg" alt="explore" width={24} height={24} />
+          </Button>
+        )}
       </div>
       <Image
         src="/images/recipe.svg"
