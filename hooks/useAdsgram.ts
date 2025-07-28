@@ -63,7 +63,7 @@ export function useAdsgram({
   }, [requestAdChallengeApi]);
 
   const recordAdStart = useCallback(
-    async (sid: string) => {
+    async (sid: string, isTelegram: boolean) => {
       try {
         return await adStartedApi?.mutateAsync({
           sessionId: sid,
@@ -73,7 +73,7 @@ export function useAdsgram({
         console.error("Failed to record ad start:", error);
       }
     },
-    [adStartedApi, isTelegram]
+    [adStartedApi]
   );
 
   const showAd = useCallback(async () => {

@@ -14,8 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useLoading } from "@/hooks/useLoading";
@@ -734,7 +732,7 @@ const CreatureCustomizer = () => {
         className="bg-[#141414] text-white border-[#333333] rounded-[32px] font-bold"
       />
 
-      <div className="w-full space-y-3 ">
+      {/* <div className="w-full space-y-3 ">
         <RadioGroup
           value={creationMethod}
           onValueChange={setCreationMethod}
@@ -753,7 +751,7 @@ const CreatureCustomizer = () => {
             </Label>
           </div>
         </RadioGroup>
-      </div>
+      </div> */}
 
       {creationMethod === "manual" && (
         <div className="w-full flex flex-col gap-2">
