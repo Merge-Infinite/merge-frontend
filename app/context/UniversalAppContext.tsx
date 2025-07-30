@@ -4,9 +4,11 @@
 import { initBackButton } from "@telegram-apps/sdk";
 import React, {
   createContext,
+  memo,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { useSelector } from "react-redux";
@@ -70,7 +72,7 @@ interface UniversalAppProviderProps {
   children: React.ReactNode;
 }
 
-export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
+export const UniversalAppProvider = memo(function UniversalAppProvider({ children }: UniversalAppProviderProps) {
   // Environment state
   const [isTelegram, setIsTelegram] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -129,10 +131,10 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
     checkEnvironment();
   }, []);
 
-  const checkEnvironment = async () => {
+  const checkEnvironment = useCallback(async () => {
     const isTelegramResult = await isTelegramEnvironment();
     setIsTelegram(isTelegramResult);
-  };
+  }, []);
 
   useEffect(() => {
     if (!isTelegram && account?.address) {
@@ -140,16 +142,21 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
     }
   }, [isTelegram, account?.address]);
 
-  const getSuiBalanceWebapp = async () => {
-    const balance = Number(
-      (
-        await suiClient.getBalance({
-          owner: account?.address || "",
-        })
-      ).totalBalance
-    );
-    setBalance(balance);
-  };
+  const getSuiBalanceWebapp = useCallback(async () => {
+    if (!account?.address) return;
+    try {
+      const balance = Number(
+        (
+          await suiClient.getBalance({
+            owner: account.address,
+          })
+        ).totalBalance
+      );
+      setBalance(balance);
+    } catch (error) {
+      console.error('Failed to get SUI balance:', error);
+    }
+  }, [suiClient, account?.address]);
 
   // Set ready state
   useEffect(() => {
@@ -197,7 +204,7 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
     }
   }, [isTelegram, telegramAddress]);
 
-  const contextValue: UniversalAppContextType = {
+  const contextValue: UniversalAppContextType = useMemo(() => ({
     // Environment
     isTelegram: isTelegram ?? false,
     isLoading,
@@ -223,14 +230,30 @@ export function UniversalAppProvider({ children }: UniversalAppProviderProps) {
 
     // Ready state
     isReady,
-  };
+  }), [
+    isTelegram,
+    isLoading,
+    backButton,
+    getWalletInfo,
+    utils,
+    user,
+    inventory,
+    login,
+    saveAddress,
+    balance,
+    refetchUser,
+    refetchInventory,
+    isUserLoading,
+    userError,
+    isReady,
+  ]);
 
   return (
     <UniversalAppContext.Provider value={contextValue}>
       {children}
     </UniversalAppContext.Provider>
   );
-}
+});
 
 // Optional: Higher-order component for screens that need to wait for readiness
 export function withUniversalApp<P extends object>(

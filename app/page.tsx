@@ -1,12 +1,6 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import SplashScreen from "@/components/common/Splash";
-import { BagScreen } from "@/components/screen/bag/bag";
-import { HomeScreen } from "@/components/screen/home/home";
-import { Leaderboard } from "@/components/screen/leaderboard/leaderboard";
-import { NFTMarket } from "@/components/screen/market/market";
-import { Shop } from "@/components/screen/shop/shop";
-import TaskScreen from "@/components/screen/task/Task";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
@@ -17,16 +11,49 @@ import {
 } from "@/lib/wallet/store/app-context";
 import { clearUser } from "@/lib/wallet/store/user";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useUniversalApp } from "./context/UniversalAppContext";
+
+const BagScreen = dynamic(() => import("@/components/screen/bag/bag").then(mod => ({ default: mod.BagScreen })), {
+  loading: () => <div className="animate-pulse bg-gray-800 rounded h-32">Loading...</div>
+});
+
+const HomeScreen = dynamic(() => import("@/components/screen/home/home").then(mod => ({ default: mod.HomeScreen })), {
+  loading: () => <div className="animate-pulse bg-gray-800 rounded h-32">Loading...</div>
+});
+
+const Leaderboard = dynamic(() => import("@/components/screen/leaderboard/leaderboard").then(mod => ({ default: mod.Leaderboard })), {
+  loading: () => <div className="animate-pulse bg-gray-800 rounded h-32">Loading...</div>
+});
+
+const NFTMarket = dynamic(() => import("@/components/screen/market/market").then(mod => ({ default: mod.NFTMarket })), {
+  loading: () => <div className="animate-pulse bg-gray-800 rounded h-32">Loading...</div>
+});
+
+const Shop = dynamic(() => import("@/components/screen/shop/shop").then(mod => ({ default: mod.Shop })), {
+  loading: () => <div className="animate-pulse bg-gray-800 rounded h-32">Loading...</div>
+});
+
+const TaskScreen = dynamic(() => import("@/components/screen/task/Task"), {
+  loading: () => <div className="animate-pulse bg-gray-800 rounded h-32">Loading...</div>
+});
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { user, backButton, isTelegram, isReady, login } = useUniversalApp();
   const account = useCurrentAccount();
+
+  const handleTabChange = useCallback((value: string) => {
+    dispatch(updateTabMode(value as TabMode));
+  }, [dispatch]);
+
+  const handlePlayClick = useCallback(() => {
+    router.push("/play");
+  }, [router]);
 
   useEffect(() => {
     if (isReady) {
@@ -52,15 +79,24 @@ export default function Home() {
     }
   }, [user, isTelegram]);
 
-  const appMode = useSelector((state: RootState) => state.appContext.appMode);
-  const tabMode = useSelector((state: RootState) => state.appContext.tabMode);
+  const { appMode, tabMode } = useSelector((state: RootState) => ({
+    appMode: state.appContext.appMode,
+    tabMode: state.appContext.tabMode
+  }));
+
+  const tabListClassName = useMemo(() => 
+    `flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8 bg-black z-10 ${
+      appMode !== AppMode.GAMES ? "hidden" : ""
+    }`, [appMode]
+  );
+
+  const containerClassName = useMemo(() => 
+    `flex flex-col items-center h-full w-full p-4 ${!isTelegram && "h-screen "}`, 
+    [isTelegram]
+  );
 
   return (
-    <div
-      className={`flex flex-col items-center h-full w-full p-4 ${
-        !isTelegram && "h-screen "
-      }`}
-    >
+    <div className={containerClassName}>
       {!user ? (
         <SplashScreen />
       ) : (
@@ -68,42 +104,40 @@ export default function Home() {
           defaultValue={tabMode || "home"}
           value={tabMode}
           className="w-full h-full"
-          onValueChange={(value) => dispatch(updateTabMode(value as TabMode))}
+          onValueChange={handleTabChange}
         >
           <TabsList
-            className={`flex items-start gap-6 p-4 rounded-3xl border border-[#333] bg-neutral-950/[.60] fixed right-8 left-8  bg-black z-10 ${
-              appMode !== AppMode.GAMES ? "hidden" : ""
-            }`}
+            className={tabListClassName}
             style={{
               bottom: 40,
             }}
           >
             <TabsTrigger value="home">
-              <Image src="/images/home.svg" alt="logo" width={24} height={24} />
+              <Image src="/images/home.svg" alt="Home" width={24} height={24} priority />
             </TabsTrigger>
-            <TabsTrigger value="play" onClick={() => router.push("/play")}>
-              <Image src="/images/play.svg" alt="logo" width={24} height={24} />
+            <TabsTrigger value="play" onClick={handlePlayClick}>
+              <Image src="/images/play.svg" alt="Play" width={24} height={24} />
             </TabsTrigger>
 
             <TabsTrigger value="task">
-              <Image src="/images/task.svg" alt="logo" width={24} height={24} />
+              <Image src="/images/task.svg" alt="Tasks" width={24} height={24} />
             </TabsTrigger>
             {/* <TabsTrigger value="leaderboard">
-              <Image src="/images/rank.svg" alt="logo" width={24} height={24} />
+              <Image src="/images/rank.svg" alt="Leaderboard" width={24} height={24} />
             </TabsTrigger> */}
             <TabsTrigger value="bag">
-              <Image src="/images/bag.svg" alt="logo" width={24} height={24} />
+              <Image src="/images/bag.svg" alt="Bag" width={24} height={24} />
             </TabsTrigger>
             <TabsTrigger value="market">
               <Image
                 src="/images/market.svg"
-                alt="logo"
+                alt="Market"
                 width={24}
                 height={24}
               />
             </TabsTrigger>
             <TabsTrigger value="shop">
-              <Image src="/images/shop.svg" alt="logo" width={24} height={24} />
+              <Image src="/images/shop.svg" alt="Shop" width={24} height={24} />
             </TabsTrigger>
           </TabsList>
 

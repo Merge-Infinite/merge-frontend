@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  compress: true,
   experimental: {
     turbo: {
       rules: {
@@ -19,8 +23,8 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  webpack: (config) => {
-    const fileLoaderRule = config.module.rules.find((rule) =>
+  webpack: (config, { dev, isServer }) => {
+    const fileLoaderRule = config.module.rules.find((rule: any) =>
       rule.test?.test?.(".svg")
     );
 
@@ -40,6 +44,31 @@ const nextConfig: NextConfig = {
     );
 
     fileLoaderRule.exclude = /\.svg$/i;
+
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          chunks: 'all',
+          cacheGroups: {
+            ...config.optimization.splitChunks.cacheGroups,
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              enforce: true,
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              enforce: true,
+            },
+          },
+        },
+      };
+    }
 
     return config;
   },
@@ -64,7 +93,11 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
+    formats: ["image/webp", "image/avif"],
+    minimumCacheTTL: 31536000,
   },
+  poweredByHeader: false,
+  generateEtags: false,
 };
 
 export default nextConfig;

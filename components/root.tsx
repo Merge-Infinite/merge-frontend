@@ -11,7 +11,14 @@ import {
   useViewport,
 } from "@telegram-apps/sdk-react";
 import { AppRoot } from "@telegram-apps/telegram-ui";
-import { type PropsWithChildren, useEffect, useState } from "react";
+import React, {
+  memo,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ErrorPage } from "@/components/common/ErrorPage";
@@ -49,7 +56,7 @@ const { networkConfig } = createNetworkConfig({
 });
 
 // Telegram Mini App Component
-function TelegramApp(props: PropsWithChildren) {
+const TelegramApp = memo(function TelegramApp(props: PropsWithChildren) {
   const lp = useLaunchParams();
   const miniApp = useMiniApp();
   const themeParams = useThemeParams();
@@ -79,6 +86,20 @@ function TelegramApp(props: PropsWithChildren) {
     new ChromeStorage()
   );
 
+  const walletFilter = useCallback((wallet: any) => {
+    return wallet.name === SLUSH_WALLET_NAME;
+  }, []);
+
+  const slushWallet = useMemo(
+    () => ({
+      name: "Merge Infinity",
+    }),
+    []
+  );
+
+  const appearance = themeParams.isDark ? "dark" : "light";
+  const platform = ["macos", "ios"].includes(lp.platform) ? "ios" : "base";
+
   if (!apolloClient) {
     return <h2>Initializing app...</h2>;
   }
@@ -87,18 +108,14 @@ function TelegramApp(props: PropsWithChildren) {
     <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
       <WalletProvider
         autoConnect={true}
-        walletFilter={(wallet) => {
-          return wallet.name === SLUSH_WALLET_NAME;
-        }}
-        slushWallet={{
-          name: "Merge Infinity",
-        }}
+        walletFilter={walletFilter}
+        slushWallet={slushWallet}
       >
         <ApolloProvider client={apolloClient}>
           <UniversalAppProvider>
             <AppRoot
-              appearance={themeParams.isDark ? "dark" : "light"}
-              platform={["macos", "ios"].includes(lp.platform) ? "ios" : "base"}
+              appearance={appearance}
+              platform={platform}
               className="w-full h-full"
             >
               {props.children}
@@ -110,10 +127,10 @@ function TelegramApp(props: PropsWithChildren) {
       </WalletProvider>
     </SuiClientProvider>
   );
-}
+});
 
 // Web App Component with Slush Wallet
-function WebApp(props: PropsWithChildren) {
+const WebApp = memo(function WebApp(props: PropsWithChildren) {
   const appContext = useSelector((state: RootState) => state.appContext);
 
   const apolloClient = useCustomApolloClient(
@@ -123,6 +140,16 @@ function WebApp(props: PropsWithChildren) {
     new ChromeStorage()
   );
 
+  const walletFilter = useCallback((wallet: any) => {
+    return wallet.name === SLUSH_WALLET_NAME;
+  }, []);
+
+  const slushWallet = useMemo(
+    () => ({
+      name: "Merge Infinity",
+    }),
+    []
+  );
   if (!apolloClient) {
     return <h2>Initializing app...</h2>;
   }
@@ -132,12 +159,8 @@ function WebApp(props: PropsWithChildren) {
       <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
         <WalletProvider
           autoConnect={true}
-          walletFilter={(wallet) => {
-            return wallet.name === SLUSH_WALLET_NAME;
-          }}
-          slushWallet={{
-            name: "Merge Infinity",
-          }}
+          walletFilter={walletFilter}
+          slushWallet={slushWallet}
         >
           <UniversalAppProvider>
             <div className=" min-h-screen flex  justify-center w-full">
@@ -150,10 +173,10 @@ function WebApp(props: PropsWithChildren) {
       </SuiClientProvider>
     </ApolloProvider>
   );
-}
+});
 
 // Universal App Component that decides which version to render
-function App(props: PropsWithChildren) {
+const App = memo(function App(props: PropsWithChildren) {
   const [isTelegram, setIsTelegram] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -174,13 +197,29 @@ function App(props: PropsWithChildren) {
 
   // Render appropriate app version
   return isTelegram ? <TelegramApp {...props} /> : <WebApp {...props} />;
-}
+});
 
 // Telegram-specific Root Inner
-function TelegramRootInner({ children }: PropsWithChildren) {
+const TelegramRootInner = memo(function TelegramRootInner({
+  children,
+}: PropsWithChildren) {
   const [client] = useState(
-    new QueryClient({ defaultOptions: { queries: { staleTime: 1000 } } })
+    () => new QueryClient({ defaultOptions: { queries: { staleTime: 60000 } } })
   );
+
+  const [reactQueryClient] = useState(
+    () =>
+      new ReactQueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60000,
+            cacheTime: 300000,
+          },
+        },
+      })
+  );
+
+  const webApiClient = useMemo(() => new WebApiClient(), []);
 
   useEffect(() => {
     persistorStore.flush().then(() => {
@@ -193,8 +232,8 @@ function TelegramRootInner({ children }: PropsWithChildren) {
       <PersistGate loading={null} persistor={persistorStore}>
         <SDKProvider acceptCustomStyles>
           <QueryClientProvider client={client}>
-            <ReactQueryClientProvider client={new ReactQueryClient()}>
-              <ApiClientContext.Provider value={new WebApiClient()}>
+            <ReactQueryClientProvider client={reactQueryClient}>
+              <ApiClientContext.Provider value={webApiClient}>
                 <App>{children}</App>
               </ApiClientContext.Provider>
             </ReactQueryClientProvider>
@@ -203,13 +242,29 @@ function TelegramRootInner({ children }: PropsWithChildren) {
       </PersistGate>
     </Provider>
   );
-}
+});
 
 // Web-specific Root Inner
-function WebRootInner({ children }: PropsWithChildren) {
+const WebRootInner = memo(function WebRootInner({
+  children,
+}: PropsWithChildren) {
   const [client] = useState(
-    new QueryClient({ defaultOptions: { queries: { staleTime: 1000 } } })
+    () => new QueryClient({ defaultOptions: { queries: { staleTime: 60000 } } })
   );
+
+  const [reactQueryClient] = useState(
+    () =>
+      new ReactQueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60000,
+            cacheTime: 300000,
+          },
+        },
+      })
+  );
+
+  const webApiClient = useMemo(() => new WebApiClient(), []);
 
   useEffect(() => {
     persistorStore.flush().then(() => {
@@ -221,8 +276,8 @@ function WebRootInner({ children }: PropsWithChildren) {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistorStore}>
         <QueryClientProvider client={client}>
-          <ReactQueryClientProvider client={new ReactQueryClient()}>
-            <ApiClientContext.Provider value={new WebApiClient()}>
+          <ReactQueryClientProvider client={reactQueryClient}>
+            <ApiClientContext.Provider value={webApiClient}>
               <App>{children}</App>
             </ApiClientContext.Provider>
           </ReactQueryClientProvider>
@@ -230,10 +285,10 @@ function WebRootInner({ children }: PropsWithChildren) {
       </PersistGate>
     </Provider>
   );
-}
+});
 
 // Universal Root Inner
-function RootInner({ children }: PropsWithChildren) {
+const RootInner = memo(function RootInner({ children }: PropsWithChildren) {
   const [isTelegram, setIsTelegram] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -253,16 +308,18 @@ function RootInner({ children }: PropsWithChildren) {
   ) : (
     <WebRootInner>{children}</WebRootInner>
   );
-}
+});
 
 // Main Root Component
 export function Root(props: PropsWithChildren) {
   const didMount = useDidMount();
 
   return didMount ? (
-    <ErrorBoundary fallback={ErrorPage}>
-      <RootInner {...props} />
-    </ErrorBoundary>
+    <React.StrictMode>
+      <ErrorBoundary fallback={ErrorPage}>
+        <RootInner {...props} />
+      </ErrorBoundary>
+    </React.StrictMode>
   ) : (
     <div className="absolute inset-0 w-full h-full flex items-center justify-center">
       Loading
