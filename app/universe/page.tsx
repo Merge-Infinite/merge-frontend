@@ -517,14 +517,15 @@ const PetSlotCard = ({
   const handleUnstakeClick = useCallback(
     async (stakeInfoId: string) => {
       try {
-        if (!address && authed && isTelegram) {
-          toast.error("No address found");
-          return;
-        }
-
-        if (isTelegram && !account?.address) {
-          toast.error("No address found");
-          return;
+        if (isTelegram) {
+          if (!authed) {
+            toast.error("Please connect your wallet");
+            return;
+          }
+          if (!address) {
+            toast.error("Please connect your wallet");
+            return;
+          }
         }
 
         startLoading();

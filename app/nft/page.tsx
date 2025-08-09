@@ -340,6 +340,7 @@ const NFTCard = ({
   availableSlots: number;
   nftCount: number | undefined;
 }) => {
+  console.log(nftCount, availableSlots);
   return (
     <div className="w-44 flex flex-col items-center gap-2">
       <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
