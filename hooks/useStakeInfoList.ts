@@ -270,8 +270,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           sender: userAddress,
         });
 
-        console.log("result get_user_stake_info", result);
-
         if (!result.results?.[0]?.returnValues) {
           return null;
         }

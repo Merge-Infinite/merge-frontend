@@ -65,6 +65,8 @@ export default function InventoryStakingInterface() {
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
+
+  console.log(stakeStats);
   useEffect(() => {
     if (isReady) {
       if (isTelegram && backButton) {
@@ -368,7 +370,6 @@ const NFTCard = ({
         onClick={() => handleStakeNFT(item.id)}
         disabled={
           isLoading ||
-          !nftCount ||
           !availableSlots ||
           (nftCount !== undefined && availableSlots <= nftCount)
         }

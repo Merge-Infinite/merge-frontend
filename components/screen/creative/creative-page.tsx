@@ -387,14 +387,10 @@ const CreatureCustomizer = () => {
 
   // Check if mint button should be enabled
   const isMintEnabled = () => {
-    const validation =
-      creationMethod === "manual"
-        ? validateMintRequirements()
-        : {
-            isValid:
-              creatureName.trim() !== "" && getMatchingElements().length >= 3,
-            missingFields: [],
-          };
+    const validation = {
+      isValid: creatureName.trim() !== "" && getMatchingElements().length >= 3,
+      missingFields: [],
+    };
     const hasMissingItems = Object.keys(missingItems).length > 0;
     return validation.isValid && !isLoading && !isPending && !hasMissingItems;
   };
@@ -969,18 +965,6 @@ const CreatureCustomizer = () => {
                 <Plus className="h-4 w-4" />
                 Element
               </Button>
-              <div className="flex-1"></div>
-              <Badge
-                variant="secondary"
-                className={`text-xs ${
-                  getMatchingElements().length >= 3
-                    ? "bg-green-900/20 border-green-500 text-green-400"
-                    : ""
-                }`}
-              >
-                {getMatchingElements().length}/{getAllElements().length}{" "}
-                matching elements (need 3+)
-              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -998,7 +982,17 @@ const CreatureCustomizer = () => {
       >
         {Object.keys(missingItems).length > 0 ? "Missing Items" : "Mint"}
       </Button>
-
+      <Badge
+        variant="secondary"
+        className={`text-xs ${
+          getMatchingElements().length >= 3
+            ? "bg-green-900/20 border-green-500 text-green-400 rounded-full"
+            : ""
+        }`}
+      >
+        {getMatchingElements().length}/{getAllElements().length} matching
+        elements (need 3+)
+      </Badge>
       {/* Bottom Sheet for Element Selection */}
       <Sheet open={bottomSheetOpen} onOpenChange={setBottomSheetOpen}>
         <SheetContent

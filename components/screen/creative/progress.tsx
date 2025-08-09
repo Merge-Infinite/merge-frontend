@@ -9,7 +9,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,18 +155,16 @@ const CreatureCustomizer = () => {
                       backgroundColor:
                         mappingStatusToBadgeColor[
                           nft.status as keyof typeof mappingStatusToBadgeColor
-                        ],
+                        ] || "#b78401",
                       color:
                         mappingStatusToBadgeTextColor[
                           nft.status as keyof typeof mappingStatusToBadgeTextColor
                         ],
                     }}
                   >
-                    {
-                      mappingStatusToText[
-                        nft.status as keyof typeof mappingStatusToText
-                      ]
-                    }
+                    {mappingStatusToText[
+                      nft.status as keyof typeof mappingStatusToText
+                    ] || "Pending"}
                   </Badge>
                 </CardContent>
               </Card>
@@ -176,24 +173,23 @@ const CreatureCustomizer = () => {
         )}
       </div>
       <Dialog open={duplicateDialog.open} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-[#141414]">
           <DialogHeader>
-            <DialogTitle>Duplicate NFT Name</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white">
               This NFT name already exists. Please provide a new name to
               continue with the minting process.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="newName" className="text-right">
+              <Label htmlFor="newName" className="text-right text-white">
                 New Name
               </Label>
               <Input
                 id="newName"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="col-span-3"
+                className="col-span-3 bg-[#141414] text-white rounded-2xl"
                 placeholder="Enter a new name for your NFT"
                 onKeyDown={(e) => {
                   if (
@@ -207,7 +203,7 @@ const CreatureCustomizer = () => {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-row gap-2">
             <Button
               type="button"
               variant="outline"
