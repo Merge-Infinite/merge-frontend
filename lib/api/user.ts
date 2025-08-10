@@ -6,6 +6,9 @@ const userApi = router("user", {
     mutationFn: async (variables: { elementIds: number[] }) =>
       api.post(`/user/elements`, variables),
   }),
+  getSuiPrice: router.query({
+    fetcher: async () => api.get(`/sui/price`),
+  }),
 });
 
 export default userApi;

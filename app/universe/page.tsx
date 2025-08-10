@@ -7,6 +7,7 @@ import { useLoading } from "@/hooks/useLoading";
 import { Pool, usePoolSystem } from "@/hooks/usePool";
 import { StakeInfo, useStakeInfoList } from "@/hooks/useStakeInfoList";
 import { useUser } from "@/hooks/useUser";
+import userApi from "@/lib/api/user";
 import { formatTimeRemaining } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
@@ -67,12 +68,29 @@ export default function PetExplorerDashboard() {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const [pool, setPool] = useState<Pool | null>(null);
+  const [isClaimLoading, setIsClaimLoading] = useState(false);
   const { getPoolById, pools } = usePoolSystem({
     refreshInterval: 30000,
   });
 
   const account = useCurrentAccount();
   const { backButton, isTelegram, isReady } = useUniversalApp();
+  const { data: suiPrice } = userApi.getSuiPrice.useQuery();
+  const apiClient = useApiClient();
+  const { data: network } = useNetwork(appContext.networkId);
+  const client = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
 
   useEffect(() => {
     if (isReady) {
@@ -141,7 +159,9 @@ export default function PetExplorerDashboard() {
         (
           ((Number(stakeStats?.totalWeight) /
             Number(stakeStats?.totalPoolWeight || 0)) *
-            ((((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 10) /
+            ((((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
+              ((suiPrice as any)?.price || 2.78) *
+              10) /
               3) *
               20)) /
           100 /
@@ -156,7 +176,9 @@ export default function PetExplorerDashboard() {
         (
           ((Number(stakeStats?.totalWeight) /
             Number(stakeStats?.totalPoolWeight || 0)) *
-            (((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) * 2.78 * 10) /
+            (((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
+              ((suiPrice as any)?.price || 2.78) *
+              10) /
               3)) /
           2 /
           0.05
@@ -275,6 +297,77 @@ export default function PetExplorerDashboard() {
     ];
   }, [stakeInfos]);
 
+  const handleClaimRewards = useCallback(async () => {
+    try {
+      if (isTelegram) {
+        if (!authed) {
+          toast.error("Please connect your wallet");
+          return;
+        }
+        if (!address) {
+          toast.error("Please connect your wallet");
+          return;
+        }
+      }
+
+      if (!poolId) {
+        toast.error("Pool ID not found");
+        return;
+      }
+
+      setIsClaimLoading(true);
+
+      const tx = new Transaction();
+
+      tx.moveCall({
+        target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_rewards_dynamic`,
+        arguments: [
+          tx.object(POOL_SYSTEM),
+          tx.object(poolId),
+          tx.object("0x6"),
+        ],
+      });
+
+      let response;
+      if (isTelegram) {
+        response = await apiClient.callFunc<
+          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+          undefined
+        >(
+          "txn",
+          "signAndExecuteTransactionBlock",
+          {
+            transactionBlock: tx.serialize(),
+            context: {
+              network,
+              walletId: appContext.walletId,
+              accountId: appContext.accountId,
+            },
+          },
+          { withAuth: true }
+        );
+      } else {
+        response = await signAndExecuteTransaction({
+          transaction: tx.serialize(),
+        });
+      }
+
+      if (response && (response as any).digest) {
+        toast.success("Rewards claimed successfully!");
+        await refresh();
+      }
+    } catch (error: any) {
+      console.error("Error claiming rewards:", error);
+      if (error.message === "Authentication required") {
+        toast.error("Please authenticate to claim rewards");
+      } else {
+        toast.error(error.message || "Failed to claim rewards");
+      }
+    } finally {
+      setIsClaimLoading(false);
+    }
+  }, [address, authed, isTelegram, account?.address, poolId, refresh]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black p-4 flex items-center justify-center">
@@ -354,6 +447,17 @@ export default function PetExplorerDashboard() {
                       </div>
                     ))}
                   </div>
+                  <Button
+                    onClick={handleClaimRewards}
+                    variant="default"
+                    size="sm"
+                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white rounded-xl py-2"
+                    disabled={
+                      isClaimLoading || Number(stakeStats?.totalWeight) === 0
+                    }
+                  >
+                    {isClaimLoading ? "Claiming..." : "Claim Rewards"}
+                  </Button>
                 </CardContent>
               </Card>
             </CardContent>
@@ -368,12 +472,12 @@ export default function PetExplorerDashboard() {
               >
                 NFTs ({stakeStats?.nftCount || 0})
               </TabsTrigger>
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="reward"
                 className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
               >
                 Reward
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
 
             <TabsContent value="nfts" className="space-y-4 mt-4 w-full">
