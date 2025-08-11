@@ -20,6 +20,7 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
   MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
@@ -319,8 +320,11 @@ export default function PetExplorerDashboard() {
 
       const tx = new Transaction();
 
+      console.log(POOL_SYSTEM);
+      console.log(poolId);
+
       tx.moveCall({
-        target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_rewards_dynamic`,
+        target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_rewards_dynamic`,
         arguments: [
           tx.object(POOL_SYSTEM),
           tx.object(poolId),
