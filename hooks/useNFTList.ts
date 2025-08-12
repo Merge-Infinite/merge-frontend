@@ -1,6 +1,6 @@
 // hooks/useNFTList.ts
 import { suiClient } from "@/lib/utils";
-import { MER3_PACKAGE_ID } from "@/utils/constants";
+import { MER3_UPGRADED_PACKAGE_ID } from "@/utils/constants";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ export function useNFTList(options?: UseNFTListOptions) {
         // Get all NFTStaked events for this user
         const stakedEvents = await suiClient.queryEvents({
           query: {
-            MoveEventType: `${MER3_PACKAGE_ID}::pool_rewards::NFTStaked`,
+            MoveEventType: `${MER3_UPGRADED_PACKAGE_ID}::pool_rewards::NFTStaked`,
             Sender: userAddress,
           },
           limit: 1000,
@@ -44,7 +44,7 @@ export function useNFTList(options?: UseNFTListOptions) {
         // Get all NFTUnstaked events for this user
         const unstakedEvents = await suiClient.queryEvents({
           query: {
-            MoveEventType: `${MER3_PACKAGE_ID}::pool_rewards::NFTUnstaked`,
+            MoveEventType: `${MER3_UPGRADED_PACKAGE_ID}::pool_rewards::NFTUnstaked`,
             Sender: userAddress,
           },
           limit: 1000,

@@ -20,7 +20,7 @@ import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
   ELEMENT_NFT_MODULE_NAME,
-  MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
 } from "@/utils/constants";
 import {
   useCurrentAccount,
@@ -73,7 +73,7 @@ export function OnchainBagScreen() {
     walletAddress: isTelegram ? address : account?.address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"CreativeElementNFT"}`,
+    structType: `${MER3_UPGRADED_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"CreativeElementNFT"}`,
   });
 
   const {
@@ -85,7 +85,7 @@ export function OnchainBagScreen() {
     walletAddress: isTelegram ? address : account?.address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
+    structType: `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {

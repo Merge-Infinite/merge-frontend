@@ -17,7 +17,7 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
-  MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
 } from "@/utils/constants";
@@ -101,7 +101,7 @@ export default function InventoryStakingInterface() {
     walletAddress: isTelegram ? address : account?.address || "",
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
+    structType: `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export default function InventoryStakingInterface() {
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::${"stake_nft"}`,
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::${"stake_nft"}`,
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.object(poolId || ""),

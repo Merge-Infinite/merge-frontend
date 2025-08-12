@@ -1,7 +1,7 @@
 import { suiClient } from "@/lib/utils";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
-import { MER3_PACKAGE_ID, POOL_SYSTEM } from "@/utils/constants";
+import { MER3_UPGRADED_PACKAGE_ID, POOL_SYSTEM } from "@/utils/constants";
 import { Transaction } from "@mysten/sui/transactions";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -54,7 +54,7 @@ export const usePoolSystem = (
   options: UsePoolSystemOptions = {}
 ): UsePoolSystemReturn => {
   const {
-    packageId = MER3_PACKAGE_ID,
+    packageId = MER3_UPGRADED_PACKAGE_ID,
     poolSystemId = POOL_SYSTEM,
     refreshInterval = 30000,
   } = options;

@@ -28,7 +28,7 @@ import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
   ELEMENT_NFT_MODULE_NAME,
-  MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
 } from "@/utils/constants";
 import {
   useCurrentAccount,
@@ -126,7 +126,7 @@ export const NFTMarket = () => {
     refresh: refreshElement,
   } = useKioskListings({
     kioskId: isOwned ? user?.kiosk?.objectId : undefined,
-    nftType: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+    nftType: `${MER3_UPGRADED_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
     autoFetch: true,
     refreshInterval: 60000,
     limit: 20,
@@ -138,7 +138,7 @@ export const NFTMarket = () => {
     refresh: refreshCreature,
   } = useKioskListings({
     kioskId: isOwned ? user?.kiosk?.objectId : undefined,
-    nftType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
+    nftType: `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
     autoFetch: true,
     refreshInterval: 60000,
     limit: 20,

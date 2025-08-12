@@ -19,7 +19,6 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
-  MER3_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
@@ -641,7 +640,7 @@ const PetSlotCard = ({
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::${"unstake_nft"}`,
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::${"unstake_nft"}`,
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.object(poolId || ""),

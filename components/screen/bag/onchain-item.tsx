@@ -23,7 +23,10 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
-import { ELEMENT_NFT_MODULE_NAME, MER3_PACKAGE_ID } from "@/utils/constants";
+import {
+  ELEMENT_NFT_MODULE_NAME,
+  MER3_UPGRADED_PACKAGE_ID,
+} from "@/utils/constants";
 import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
@@ -152,7 +155,7 @@ export const CardItem = React.memo(
             txb.object(id),
           ],
           typeArguments: [
-            `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+            `${MER3_UPGRADED_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
           ],
         });
         txb.moveCall({
@@ -164,7 +167,7 @@ export const CardItem = React.memo(
             txb.pure.u64(numericPrice * Number(MIST_PER_SUI)),
           ],
           typeArguments: [
-            `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
+            `${MER3_UPGRADED_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::CreativeElementNFT`,
           ],
         });
 
@@ -251,7 +254,7 @@ export const CardItem = React.memo(
 
         const txb = new Transaction();
         txb.moveCall({
-          target: `${MER3_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
           arguments: [txb.object(id)],
         });
         let response;

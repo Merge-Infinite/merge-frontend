@@ -20,7 +20,7 @@ import {
   CREATURE_POLICY_ID,
   ELEMENT_POLICY_ID,
   FEE_ADDRESS,
-  MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
 } from "@/utils/constants";
 import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
@@ -346,7 +346,10 @@ export const MarketItem = React.memo(
 );
 
 const nftTypeToPolicyId = (type: string) => {
-  if (type === `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`) {
+  if (
+    type ===
+    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
+  ) {
     return CREATURE_POLICY_ID;
   }
   return ELEMENT_POLICY_ID;
@@ -354,7 +357,8 @@ const nftTypeToPolicyId = (type: string) => {
 
 const isCreatureNFT = (type: string) => {
   return (
-    type === `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
+    type ===
+    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
   );
 };
 
