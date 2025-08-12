@@ -191,7 +191,7 @@ export function useUser(inventorySearch?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [address, isTelegram, saveAddressApi, account]);
+  }, [address, isTelegram, account]);
 
   // Telegram login logic
   const telegramLogin = useCallback(async () => {
