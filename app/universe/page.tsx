@@ -363,6 +363,13 @@ export default function PetExplorerDashboard() {
       console.error("Error claiming rewards:", error);
       if (error.message === "Authentication required") {
         toast.error("Please authenticate to claim rewards");
+      } else if (
+        error.message.includes('Some("claim_rewards_dynamic") }, 12')
+      ) {
+        toast.error(
+          "You claim too early. Please wait 24 hours from your last claim."
+        );
+        return;
       } else {
         toast.error(error.message || "Failed to claim rewards");
       }
