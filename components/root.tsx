@@ -106,11 +106,7 @@ const TelegramApp = memo(function TelegramApp(props: PropsWithChildren) {
 
   return (
     <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
-      <WalletProvider
-        autoConnect={true}
-        walletFilter={walletFilter}
-        slushWallet={slushWallet}
-      >
+      <WalletProvider autoConnect={true}>
         <ApolloProvider client={apolloClient}>
           <UniversalAppProvider>
             <AppRoot
@@ -159,7 +155,10 @@ const WebApp = memo(function WebApp(props: PropsWithChildren) {
       <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
         <WalletProvider
           autoConnect={true}
-          walletFilter={walletFilter}
+          walletFilter={(wallet) => {
+            console.log(wallet.name);
+            return true;
+          }}
           slushWallet={slushWallet}
         >
           <UniversalAppProvider>

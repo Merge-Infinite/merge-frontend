@@ -721,12 +721,17 @@ const CreatureCustomizer = () => {
       )}
 
       {/* Name Input */}
-      <Input
-        value={creatureName}
-        onChange={(e) => setCreatureName(e.target.value)}
-        placeholder="Enter creature name"
-        className="bg-[#141414] text-white border-[#333333] rounded-[32px] font-bold"
-      />
+      <div className="w-full space-y-2">
+        <div className="text-white text-sm font-medium">
+          Step 1: Name Your Creature
+        </div>
+        <Input
+          value={creatureName}
+          onChange={(e) => setCreatureName(e.target.value)}
+          placeholder="Enter creature name"
+          className="bg-[#141414] text-white border-[#333333] rounded-[32px] font-bold"
+        />
+      </div>
 
       {/* <div className="w-full space-y-3 ">
         <RadioGroup
@@ -848,151 +853,184 @@ const CreatureCustomizer = () => {
       )}
 
       {creationMethod === "prompt" && (
-        <Card className="rounded-2xl border-[#1f1f1f] w-full">
-          <CardContent className="space-y-4 w-full p-3">
-            <div
-              ref={contentRef}
-              className="min-h-[120px] w-[300px] max-w-[400px] bg-muted/30 rounded-lg  border-dashed border-muted-foreground/20 cursor-text hover:border-muted-foreground/40 transition-colors w-full"
-              onClick={() => setCursorPosition(contentParts.length)}
-            >
-              <div className="flex flex-wrap items-start gap-1 leading-relaxed break-words w-fulls">
-                {cursorPosition === 0 && (
-                  <div className="w-0.5 h-6 bg-primary animate-pulse flex-shrink-0"></div>
-                )}
+        <div className="w-full space-y-3">
+          <div className="space-y-1">
+            <div className="text-white text-sm font-medium">
+              Step 2: Build Your Prompt
+            </div>
+            <div className="text-neutral-400 text-xs">
+              💡 Mix descriptive text with elements. Elements that match words
+              in your text will turn green. You need at least 3 matching
+              elements to mint.
+            </div>
+          </div>
+          <Card className="rounded-2xl border-[#1f1f1f] w-full">
+            <CardContent className="space-y-4 w-full p-3">
+              <div
+                ref={contentRef}
+                className="min-h-[120px] w-[300px] max-w-[400px] bg-muted/30 rounded-lg  border-dashed border-muted-foreground/20 cursor-text hover:border-muted-foreground/40 transition-colors w-full"
+                onClick={() => setCursorPosition(contentParts.length)}
+              >
+                <div className="flex flex-wrap items-start gap-1 leading-relaxed break-words w-fulls">
+                  {cursorPosition === 0 && (
+                    <div className="w-0.5 h-6 bg-primary animate-pulse flex-shrink-0"></div>
+                  )}
 
-                {contentParts.map((part: any, index: number) => (
-                  <React.Fragment key={index}>
-                    {part.type === "text" ? (
-                      editingIndex === index ? (
-                        <Textarea
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
-                          onBlur={saveTextEdit}
-                          onKeyPress={(e) =>
-                            e.key === "Enter" && saveTextEdit()
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Escape" && cancelTextEdit()
-                          }
-                          className="inline-block resize-none border-0 border-b-2 border-primary bg-transparent focus-visible:ring-0 focus:outline-none p-1 w-32 min-h-[24px] text-sm leading-tight overflow-hidden break-words text-white"
-                          autoFocus
-                          rows={1}
-                        />
+                  {contentParts.map((part: any, index: number) => (
+                    <React.Fragment key={index}>
+                      {part.type === "text" ? (
+                        editingIndex === index ? (
+                          <Textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            onBlur={saveTextEdit}
+                            onKeyPress={(e) =>
+                              e.key === "Enter" && saveTextEdit()
+                            }
+                            onKeyDown={(e) =>
+                              e.key === "Escape" && cancelTextEdit()
+                            }
+                            className="inline-block resize-none border-0 border-b-2 border-primary bg-transparent focus-visible:ring-0 focus:outline-none p-1 w-32 min-h-[24px] text-sm leading-tight overflow-hidden break-words text-white"
+                            autoFocus
+                            rows={1}
+                          />
+                        ) : (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditingText(index, part.content);
+                            }}
+                            className="hover:bg-muted/50 px-1 rounded cursor-text transition-colors inline-block break-words max-w-full text-white"
+                          >
+                            {part.content || "\u00A0"}
+                          </span>
+                        )
                       ) : (
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startEditingText(index, part.content);
-                          }}
-                          className="hover:bg-muted/50 px-1 rounded cursor-text transition-colors inline-block break-words max-w-full text-white"
-                        >
-                          {part.content || "\u00A0"}
-                        </span>
-                      )
-                    ) : (
-                      <Badge
-                        variant="default"
-                        className={`inline-flex items-center gap-2 mx-1 rounded-2xl px-4 py-1 ${
-                          elementMatchesPrompt(part.element)
-                            ? "bg-green-900/20 border-green-500"
-                            : "bg-transparent border-white"
-                        }`}
-                      >
-                        {part.element?.emoji}
-                        <span
-                          className={`text-xs font-medium ${
+                        <Badge
+                          variant="default"
+                          className={`inline-flex items-center gap-2 mx-1 rounded-2xl px-4 py-1 ${
                             elementMatchesPrompt(part.element)
-                              ? "text-green-400"
-                              : "text-white"
+                              ? "bg-green-900/20 border-green-500"
+                              : "bg-transparent border-white"
                           }`}
                         >
-                          {part.element.handle}
-                        </span>
-                        {part.element.quantity > 1 && (
-                          <span className="text-xs opacity-80">
-                            ({part.element.quantity})
+                          {part.element?.emoji}
+                          <span
+                            className={`text-xs font-medium ${
+                              elementMatchesPrompt(part.element)
+                                ? "text-green-400"
+                                : "text-white"
+                            }`}
+                          >
+                            {part.element.handle}
                           </span>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-4 w-4 p-0 bg-white rounded-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removePromptElement(index);
-                          }}
-                        >
-                          <X className="h-3 w-3 text-black" />
-                        </Button>
-                      </Badge>
-                    )}
+                          {part.element.quantity > 1 && (
+                            <span className="text-xs opacity-80">
+                              ({part.element.quantity})
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 p-0 bg-white rounded-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removePromptElement(index);
+                            }}
+                          >
+                            <X className="h-3 w-3 text-black" />
+                          </Button>
+                        </Badge>
+                      )}
 
-                    {/* Cursor after each element */}
-                    {cursorPosition === index + 1 && (
-                      <div
-                        className="w-0.5 h-6 bg-primary animate-pulse mx-1 cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      ></div>
-                    )}
-                  </React.Fragment>
-                ))}
+                      {/* Cursor after each element */}
+                      {cursorPosition === index + 1 && (
+                        <div
+                          className="w-0.5 h-6 bg-primary animate-pulse mx-1 cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        ></div>
+                      )}
+                    </React.Fragment>
+                  ))}
 
-                {contentParts.length === 0 && (
-                  <div className="w-0.5 h-6 bg-primary animate-pulse"></div>
-                )}
+                  {contentParts.length === 0 && (
+                    <div className="w-0.5 h-6 bg-primary animate-pulse"></div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 items-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addTextAtCursor}
-                className="flex items-center gap-1 rounded-2xl"
-              >
-                <Plus className="h-4 w-4" />
-                Text
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  setBottomSheetOpen(true);
-                }}
-                className="flex items-center gap-1 rounded-2xl"
-              >
-                <Plus className="h-4 w-4" />
-                Element
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <div className="text-neutral-400 text-xs">
+                  💡 Click in the prompt box above to position your cursor, then
+                  add text or elements
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addTextAtCursor}
+                    className="flex items-center gap-1 rounded-2xl"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Text
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      setBottomSheetOpen(true);
+                    }}
+                    className="flex items-center gap-1 rounded-2xl"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Element
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Mint Button */}
-      <Button
-        className={`mt-2 w-full rounded-3xl uppercase ${
-          isMintEnabled()
-            ? "bg-[#a668ff] text-neutral-950 hover:bg-[#9555e6]"
-            : "bg-[#4a4a4a] text-[#888888] cursor-not-allowed"
-        }`}
-        onClick={handleMintButtonClick}
-        disabled={!isMintEnabled()}
-      >
-        {Object.keys(missingItems).length > 0 ? "Missing Items" : "Mint"}
-      </Button>
-      <Badge
-        variant="secondary"
-        className={`text-xs ${
-          getMatchingElements().length >= 3
-            ? "bg-green-900/20 border-green-500 text-green-400 rounded-full"
-            : ""
-        }`}
-      >
-        {getMatchingElements().length}/{getAllElements().length} matching
-        elements (need 3+)
-      </Badge>
+      <div className="w-full space-y-2">
+        <div className="text-white text-sm font-medium">
+          Step 3: Mint Your Creature
+        </div>
+        <Button
+          className={`mt-2 w-full rounded-3xl uppercase ${
+            isMintEnabled()
+              ? "bg-[#a668ff] text-neutral-950 hover:bg-[#9555e6]"
+              : "bg-[#4a4a4a] text-[#888888] cursor-not-allowed"
+          }`}
+          onClick={handleMintButtonClick}
+          disabled={!isMintEnabled()}
+        >
+          {Object.keys(missingItems).length > 0 ? "Missing Items" : "Mint"}
+        </Button>
+      </div>
+      {creationMethod === "prompt" && (
+        <div className="space-y-1">
+          <Badge
+            variant="secondary"
+            className={`text-xs ${
+              getMatchingElements().length >= 3
+                ? "bg-green-900/20 border-green-500 text-green-400 rounded-full"
+                : "bg-red-900/20 border-red-500 text-red-400 rounded-full"
+            }`}
+          >
+            {getMatchingElements().length}/{getAllElements().length} matching
+            elements (need 3+)
+          </Badge>
+          {getMatchingElements().length < 3 && (
+            <div className="text-neutral-400 text-xs">
+              💡 Add more elements that match words in your prompt text (green
+              badges = matching)
+            </div>
+          )}
+        </div>
+      )}
       {/* Bottom Sheet for Element Selection */}
       <Sheet open={bottomSheetOpen} onOpenChange={setBottomSheetOpen}>
         <SheetContent
@@ -1009,8 +1047,13 @@ const CreatureCustomizer = () => {
                   )} left)`}
                 </div>
               ) : (
-                <div className="text-white text-base font-semibold">
-                  {`Select elements`}
+                <div className="space-y-1">
+                  <div className="text-white text-base font-semibold">
+                    Select Elements for Your Prompt
+                  </div>
+                  <div className="text-neutral-400 text-xs">
+                    Choose elements that relate to words in your prompt text
+                  </div>
                 </div>
               )}
             </div>
