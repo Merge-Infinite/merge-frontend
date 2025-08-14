@@ -1139,13 +1139,6 @@ const CreatureCustomizer = () => {
           </div>
           <DialogFooter className="flex gap-2 flex-row">
             <Button
-              onClick={confirmTextAddition}
-              className="flex-1 bg-[#a668ff] text-neutral-950 rounded-3xl uppercase text-white"
-              disabled={pendingTextInput.trim() === ""}
-            >
-              Add Text
-            </Button>
-            <Button
               variant="secondary"
               onClick={() => {
                 setTextInputDialog(false);
@@ -1154,6 +1147,13 @@ const CreatureCustomizer = () => {
               className="flex-1 bg-white text-black rounded-3xl uppercase"
             >
               Cancel
+            </Button>
+            <Button
+              onClick={confirmTextAddition}
+              className="flex-1 bg-[#a668ff] text-neutral-950 rounded-3xl uppercase text-white"
+              disabled={pendingTextInput.trim() === ""}
+            >
+              Add Text
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1272,6 +1272,13 @@ const CreatureCustomizer = () => {
           </div>
           <DialogFooter className="flex gap-2 flex-row">
             <Button
+              variant="secondary"
+              onClick={() => setElementDialog(false)}
+              className="flex-1 bg-white text-black rounded-3xl uppercase"
+            >
+              Cancel
+            </Button>
+            <Button
               onClick={() => {
                 if (creationMethod === "manual") {
                   confirmElementSelection();
@@ -1283,13 +1290,6 @@ const CreatureCustomizer = () => {
               className="flex-1 bg-[#a668ff] text-neutral-950 rounded-3xl uppercase text-white"
             >
               Confirm
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setElementDialog(false)}
-              className="flex-1 bg-white text-black rounded-3xl uppercase"
-            >
-              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
