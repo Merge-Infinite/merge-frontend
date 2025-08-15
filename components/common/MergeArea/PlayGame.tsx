@@ -18,7 +18,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SearchIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 import GamePlayInfo from "../../common/play-info";
 import Emoji from "../Emoji";
@@ -46,6 +46,7 @@ interface BoxItem {
   isFromInventory?: boolean;
   isHidden?: boolean;
   isNew?: boolean;
+  amount?: number;
 }
 
 export default function PlayGame({}: PlayGameProps) {
@@ -321,7 +322,7 @@ export default function PlayGame({}: PlayGameProps) {
           isNew: true,
         };
 
-        // Update state in one operation
+        // Update state in one operation with batched changes
         setMergingBoxes((prev: any) => {
           const newBoxes = { ...prev };
           delete newBoxes[targetInstanceId];
@@ -332,22 +333,27 @@ export default function PlayGame({}: PlayGameProps) {
           };
         });
 
-        refetchInventory?.();
-        refetch?.();
+        // Use startTransition to prevent layout shifts from these updates
+        React.startTransition(() => {
+          refetchInventory?.();
+          refetch?.();
+        });
 
-        // Remove the "new" flag after animation
-        setTimeout(() => {
-          setMergingBoxes((prev: any) => {
-            const newBoxes = { ...prev };
-            if (newBoxes[newInstanceId]) {
-              newBoxes[newInstanceId] = {
-                ...newBoxes[newInstanceId],
-                isNew: false,
-              };
-            }
-            return newBoxes;
-          });
-        }, 1000);
+        // Use requestAnimationFrame instead of setTimeout for smoother transitions
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            setMergingBoxes((prev: any) => {
+              const newBoxes = { ...prev };
+              if (newBoxes[newInstanceId]) {
+                newBoxes[newInstanceId] = {
+                  ...newBoxes[newInstanceId],
+                  isNew: false,
+                };
+              }
+              return newBoxes;
+            });
+          }, 1000);
+        });
       } catch (error) {
         console.error("Error combining elements:", error);
         // Restore items on error
@@ -477,7 +483,6 @@ export default function PlayGame({}: PlayGameProps) {
     [inventory]
   );
 
-  console.log("render");
 
   return (
     <div className="w-full h-full">
@@ -534,7 +539,18 @@ export default function PlayGame({}: PlayGameProps) {
             </div>
             <div className="flex justify-start items-start gap-2 flex-wrap overflow-y-auto h-[170px] sm:h-[150px] md:h-[170px] lg:h-[200px] xl:h-[230px]">
               {isLoading ? (
-                <div />
+                // Skeleton elements that match the actual DragItem height
+                <>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      key={`skeleton-${index}`}
+                      className="px-3 py-1 rounded-3xl bg-gray-200 animate-pulse h-fit"
+                      style={{ width: `${80 + (index * 15)}px` }}
+                    >
+                      <div className="h-[18px]" />
+                    </div>
+                  ))}
+                </>
               ) : (
                 craftedElements.map((element: any) => {
                   // Count how many of this item are currently in use

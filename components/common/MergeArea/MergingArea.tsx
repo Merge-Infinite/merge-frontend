@@ -93,8 +93,8 @@ export const MergingArea = ({
       className="relative h-full w-full"
       data-merging-area="true"
       style={{
-        containIntrinsicSize: "100%", // Help with layout stability
-        contain: "layout style", // Optimize rendering
+        transform: "translateZ(0)", // Force GPU acceleration for smoother rendering
+        willChange: "auto", // Optimize for changes
       }}
     >
       {boxComponents}
