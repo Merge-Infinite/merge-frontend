@@ -483,7 +483,6 @@ export default function PlayGame({}: PlayGameProps) {
     [inventory]
   );
 
-
   return (
     <div className="w-full h-full">
       <GamePlayInfo />
@@ -533,11 +532,15 @@ export default function PlayGame({}: PlayGameProps) {
               ))}
             </div>
           </div>
-          <div className="flex-col justify-start items-start gap-1 flex h-full">
+          <div className="flex-col justify-start items-start gap-1 flex h-full w-full">
             <div className="text-white text-sm font-normal font-['Sora'] leading-normal">
               Crafted elements:
             </div>
-            <div className="flex justify-start items-start gap-2 flex-wrap overflow-y-auto h-[170px] sm:h-[150px] md:h-[170px] lg:h-[200px] xl:h-[230px]">
+            <div className={`flex justify-start items-start gap-2 flex-wrap overflow-y-auto ${
+              craftedElements.length > 0 || isLoading 
+                ? "h-[170px] sm:h-[150px] md:h-[170px] lg:h-[200px] xl:h-[230px]" 
+                : "h-auto"
+            }`}>
               {isLoading ? (
                 // Skeleton elements that match the actual DragItem height
                 <>
@@ -545,7 +548,7 @@ export default function PlayGame({}: PlayGameProps) {
                     <div
                       key={`skeleton-${index}`}
                       className="px-3 py-1 rounded-3xl bg-gray-200 animate-pulse h-fit"
-                      style={{ width: `${80 + (index * 15)}px` }}
+                      style={{ width: `${80 + index * 15}px` }}
                     >
                       <div className="h-[18px]" />
                     </div>
