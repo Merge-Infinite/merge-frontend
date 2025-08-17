@@ -240,9 +240,10 @@ const CreatureCustomizer = () => {
             value={creatureName}
             onChange={(e) => setCreatureName(e.target.value)}
             placeholder="Enter NFT name"
-            className={`bg-transparent border-0 text-sm p-0 h-6 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
+            className={`bg-transparent border-0 text-base p-0 h-6 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
               creatureName ? "text-white font-bold" : "text-[#666666]"
             }`}
+            style={{ fontSize: '16px' }}
           />
         </div>
       </div>
@@ -260,9 +261,10 @@ const CreatureCustomizer = () => {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="A powerful superhero with a muscular body and sharp mask..."
-            className={`bg-transparent border-0 text-sm p-0 min-h-[76px] max-h-[200px] resize-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
+            className={`bg-transparent border-0 text-base p-0 min-h-[76px] max-h-[200px] resize-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
               prompt ? "text-white font-normal" : "text-[#666666]"
             }`}
+            style={{ fontSize: '16px' }}
           />
         </div>
       </div>
@@ -326,31 +328,6 @@ const CreatureCustomizer = () => {
         </Button>
       </div>
 
-      {/* Mint Button */}
-      <div className="w-full pt-4 pb-8 bg-[#141414] rounded-tl-2xl rounded-tr-2xl px-4 flex flex-col gap-2">
-        {getMatchingCount() >= 3 ? (
-          <div className="text-center text-[#5cb91a] text-xs">
-            {getMatchingCount()}/3 matching keywords
-          </div>
-        ) : (
-          <div className="text-center text-[#ff6868] text-xs">
-            {getMatchingCount()}/3 matching keywords (need{" "}
-            {3 - getMatchingCount()} more)
-          </div>
-        )}
-        <Button
-          className={`w-full rounded-3xl py-2 ${
-            isMintEnabled()
-              ? "bg-[#a668ff] text-white hover:bg-[#9555e6]"
-              : "bg-[#4a4a4a] text-[#888888] cursor-not-allowed"
-          }`}
-          onClick={handleMintButtonClick}
-          disabled={!isMintEnabled()}
-        >
-          <span className="text-sm font-bold uppercase">Mint</span>
-        </Button>
-      </div>
-
       {/* Bottom Sheet for Element Selection */}
       <Sheet open={bottomSheetOpen} onOpenChange={setBottomSheetOpen}>
         <SheetContent
@@ -378,7 +355,8 @@ const CreatureCustomizer = () => {
                   value={searchText}
                   onChange={handleSearchChange}
                   placeholder="Search elements..."
-                  className="pl-10 bg-[#141414] text-white border-[#333333] rounded-[32px]"
+                  className="pl-10 bg-[#141414] text-white border-[#333333] rounded-[32px] text-base"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
             </div>
@@ -498,6 +476,31 @@ const CreatureCustomizer = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Mint Button */}
+      <div className="w-full pt-4 pb-8 bg-[#141414] rounded-tl-2xl rounded-tr-2xl px-4 flex flex-col gap-2">
+        {getMatchingCount() >= 3 ? (
+          <div className="text-center text-[#5cb91a] text-xs">
+            {getMatchingCount()}/3 matching keywords
+          </div>
+        ) : (
+          <div className="text-center text-[#ff6868] text-xs">
+            {getMatchingCount()}/3 matching keywords (need{" "}
+            {3 - getMatchingCount()} more)
+          </div>
+        )}
+        <Button
+          className={`w-full rounded-3xl py-2 ${
+            isMintEnabled()
+              ? "bg-[#a668ff] text-white hover:bg-[#9555e6]"
+              : "bg-[#4a4a4a] text-[#888888] cursor-not-allowed"
+          }`}
+          onClick={handleMintButtonClick}
+          disabled={!isMintEnabled()}
+        >
+          <span className="text-sm font-bold uppercase">Mint</span>
+        </Button>
+      </div>
     </div>
   );
 };

@@ -17,6 +17,12 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "The Merges Infinite",
   description: "The Merges Infinite",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
