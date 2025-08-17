@@ -38,7 +38,6 @@ const CreatureCustomizer = () => {
   const { data: network } = useNetwork(appContext.networkId);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const [elementDialog, setElementDialog] = useState(false);
   const [creatureName, setCreatureName] = useState("");
   const [prompt, setPrompt] = useState("");
   const [selectedPromptElements, setSelectedPromptElements] = useState<any[]>(
@@ -241,7 +240,9 @@ const CreatureCustomizer = () => {
             value={creatureName}
             onChange={(e) => setCreatureName(e.target.value)}
             placeholder="Enter NFT name"
-            className="bg-transparent border-0 text-white text-sm font-bold p-0 h-6 focus-visible:ring-0 focus-visible:ring-offset-0"
+            className={`bg-transparent border-0 text-sm p-0 h-6 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
+              creatureName ? "text-white font-bold" : "text-[#666666]"
+            }`}
           />
         </div>
       </div>
@@ -259,7 +260,9 @@ const CreatureCustomizer = () => {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="A powerful superhero with a muscular body and sharp mask..."
-            className="bg-transparent border-0 text-white text-sm p-0 min-h-[76px] max-h-[200px] resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            className={`bg-transparent border-0 text-sm p-0 min-h-[76px] max-h-[200px] resize-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
+              prompt ? "text-white font-normal" : "text-[#666666]"
+            }`}
           />
         </div>
       </div>
