@@ -348,7 +348,7 @@ export const MarketItem = React.memo(
 const nftTypeToPolicyId = (type: string) => {
   if (
     type ===
-    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
+    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::NFTMetadataV2`
   ) {
     return CREATURE_POLICY_ID;
   }
@@ -358,7 +358,7 @@ const nftTypeToPolicyId = (type: string) => {
 const isCreatureNFT = (type: string) => {
   return (
     type ===
-    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
+    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::NFTMetadataV2`
   );
 };
 

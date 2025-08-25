@@ -138,7 +138,7 @@ export const NFTMarket = () => {
     refresh: refreshCreature,
   } = useKioskListings({
     kioskId: isOwned ? user?.kiosk?.objectId : undefined,
-    nftType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
+    nftType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::NFTMetadataV2`,
     autoFetch: true,
     refreshInterval: 60000,
     limit: 20,
