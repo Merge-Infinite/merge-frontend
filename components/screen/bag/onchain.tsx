@@ -85,7 +85,7 @@ export function OnchainBagScreen() {
     walletAddress: isTelegram ? address : account?.address,
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"NFTMetadataV2"}`,
+    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {

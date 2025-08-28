@@ -156,7 +156,7 @@ export const CreativeOnchainItem = React.memo(
             txb.object(id),
           ],
           typeArguments: [
-            `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::NFTMetadataV2`,
+            `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
           ],
         });
         txb.moveCall({
@@ -168,7 +168,7 @@ export const CreativeOnchainItem = React.memo(
             txb.pure.u64(numericPrice * Number(MIST_PER_SUI)),
           ],
           typeArguments: [
-            `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::NFTMetadataV2`,
+            `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`,
           ],
         });
 
