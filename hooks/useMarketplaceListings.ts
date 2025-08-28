@@ -13,7 +13,7 @@ export interface KioskListing {
   imageUrl: string;
   itemId: string;
   type: string;
-  recipe: any;
+  prompt: any;
 }
 
 interface UseKioskListingsOptions {
@@ -180,7 +180,7 @@ export function useKioskListings(options: UseKioskListingsOptions) {
               "",
             itemId: content?.fields?.item_id || display?.item_id || "",
             type: content.type,
-            recipe: content?.fields?.metadata.fields || {},
+            prompt: content?.fields?.metadata?.fields?.prompt || "",
           };
 
           activeListings.push(listing);
