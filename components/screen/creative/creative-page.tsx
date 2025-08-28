@@ -26,12 +26,14 @@ import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { Search, X } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
 const CreatureCustomizer = () => {
+  const searchParams = useSearchParams();
   const apiClient = useApiClient();
   const { isLoading, startLoading, stopLoading } = useLoading();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -39,7 +41,11 @@ const CreatureCustomizer = () => {
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [creatureName, setCreatureName] = useState("");
-  const [prompt, setPrompt] = useState("");
+
+  // Parse prompt from URL params if available
+  const promptParam = searchParams.get("prompt");
+  const initialPrompt = promptParam ? JSON.parse(promptParam) : "";
+  const [prompt, setPrompt] = useState(initialPrompt);
   const [selectedPromptElements, setSelectedPromptElements] = useState<any[]>(
     []
   );
@@ -243,7 +249,7 @@ const CreatureCustomizer = () => {
             className={`bg-transparent border-0 text-base p-0 h-6 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
               creatureName ? "text-white font-bold" : "text-[#666666]"
             }`}
-            style={{ fontSize: '16px' }}
+            style={{ fontSize: "16px" }}
           />
         </div>
       </div>
@@ -264,7 +270,7 @@ const CreatureCustomizer = () => {
             className={`bg-transparent border-0 text-base p-0 min-h-[76px] max-h-[200px] resize-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-[#666666] ${
               prompt ? "text-white font-normal" : "text-[#666666]"
             }`}
-            style={{ fontSize: '16px' }}
+            style={{ fontSize: "16px" }}
           />
         </div>
       </div>
@@ -356,7 +362,7 @@ const CreatureCustomizer = () => {
                   onChange={handleSearchChange}
                   placeholder="Search elements..."
                   className="pl-10 bg-[#141414] text-white border-[#333333] rounded-[32px] text-base"
-                  style={{ fontSize: '16px' }}
+                  style={{ fontSize: "16px" }}
                 />
               </div>
             </div>

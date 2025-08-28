@@ -34,7 +34,7 @@ import { toast } from "sonner";
 export const MarketItem = React.memo(
   ({
     element,
-    recipe,
+    prompt,
     price,
     loading: initialLoading,
     imageUrl,
@@ -46,7 +46,7 @@ export const MarketItem = React.memo(
     type,
   }: {
     element: string;
-    recipe?: any;
+    prompt?: string;
     id: string;
     price?: string;
     loading?: boolean;
@@ -251,8 +251,7 @@ export const MarketItem = React.memo(
     }
 
     const handleCopyElements = () => {
-      const formattedRecipe = getRecipe(recipe);
-      router.push(`/creative?recipe=${JSON.stringify(formattedRecipe)}`);
+      router.push(`/creative?prompt=${JSON.stringify(prompt)}`);
     };
 
     return (

@@ -491,7 +491,7 @@ export const NFTMarket = () => {
                     <MarketItem
                       key={listing.objectId}
                       element={listing.element}
-                      recipe={listing.recipe}
+                      prompt={listing.prompt}
                       id={listing.objectId}
                       imageUrl={listing.imageUrl}
                       emoji={listing.element}
