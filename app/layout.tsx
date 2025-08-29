@@ -1,7 +1,7 @@
 import { Root } from "@/components/root";
 import "@mysten/dapp-kit/dist/index.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -17,12 +17,13 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "The Merges Infinite",
   description: "The Merges Infinite",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -38,6 +39,9 @@ export default function RootLayout({
         src="https://tganalytics.xyz/index.js"
         type="text/javascript"
       />
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body
         className={`${
           sora.variable
