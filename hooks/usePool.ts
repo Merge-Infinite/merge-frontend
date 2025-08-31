@@ -93,6 +93,10 @@ export const usePoolSystem = (
             ? (result.data?.content?.fields as any)
             : null;
 
+        console.log("returnValues", returnValues);
+        if (!returnValues) {
+          return null;
+        }
         return {
           id: poolId,
           poolId,
@@ -185,7 +189,7 @@ export const usePoolSystem = (
       }
 
       // Query PoolCreated events to get all pool IDs
-      const events = await suiClient.queryEvents({
+      const createdEvents = await suiClient.queryEvents({
         query: {
           MoveEventType: `${packageId}::pool_rewards::PoolCreated`,
         },
@@ -194,7 +198,7 @@ export const usePoolSystem = (
       });
 
       const poolIds: string[] = [];
-      for (const event of events.data) {
+      for (const event of createdEvents.data) {
         if (event.parsedJson && typeof event.parsedJson === "object") {
           const poolId = (event.parsedJson as any).pool_id;
           if (poolId && !poolIds.includes(poolId)) {
@@ -203,7 +207,31 @@ export const usePoolSystem = (
         }
       }
 
-      return poolIds;
+      // Query PoolDeleted events to filter out deleted pools
+      const deletedEvents = await suiClient.queryEvents({
+        query: {
+          MoveEventType: `${packageId}::pool_rewards::PoolDeleted`,
+        },
+        limit: 1000, // Adjust as needed
+        order: "ascending",
+      });
+
+      const deletedPoolIds: Set<string> = new Set();
+      for (const event of deletedEvents.data) {
+        if (event.parsedJson && typeof event.parsedJson === "object") {
+          const poolId = (event.parsedJson as any).pool_id;
+          if (poolId) {
+            deletedPoolIds.add(poolId);
+          }
+        }
+      }
+
+      // Filter out deleted pools from the list
+      const activePoolIds = poolIds.filter(
+        (poolId) => !deletedPoolIds.has(poolId)
+      );
+
+      return activePoolIds;
     } catch (err) {
       console.error("Error fetching pool IDs:", err);
       return [];
@@ -231,8 +259,6 @@ export const usePoolSystem = (
 
       const [poolResults] = await Promise.all([Promise.all(poolPromises)]);
 
-      console.log("poolResults", poolResults);
-      // Filter out null results
       const validPools = poolResults.filter(
         (pool): pool is Pool => pool !== null
       );
