@@ -101,7 +101,7 @@ export default function InventoryStakingInterface() {
     walletAddress: isTelegram ? address : account?.address || "",
     refreshInterval: undefined,
     autoFetch: true,
-    structType: `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
+    structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
 
   useEffect(() => {

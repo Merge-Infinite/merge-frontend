@@ -91,12 +91,6 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     calculateRewards = true, // Enable by default
   } = options;
 
-  // Constants for reward calculations
-  const SUI_DECIMALS = 9;
-  const REWARD_UPDATE_INTERVAL = 21_600_000; // 6 hours
-  const BASE_ENERGY_PER_HOUR = 10;
-  const ENERGY_MULTIPLIER_PER_ITEM = 0.1;
-
   /**
    * Determine currently staked NFTs from events
    */
