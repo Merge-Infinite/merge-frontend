@@ -2,6 +2,7 @@
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/hooks/useLoading";
 import { Pool, usePoolSystem } from "@/hooks/usePool";
@@ -608,6 +609,8 @@ const PetSlotCard = ({
   const router = useRouter();
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const { data: network } = useNetwork(appContext.networkId);
+  const [showUnstakeWarning, setShowUnstakeWarning] = useState(false);
+  const [pendingUnstakeId, setPendingUnstakeId] = useState<string | null>(null);
   const client = useSuiClient();
   const { mutateAsync: signAndExecuteTransaction } =
     useSignAndExecuteTransaction({
@@ -721,12 +724,13 @@ const PetSlotCard = ({
             </div>
 
             <Button
-              onClick={() => handleUnstakeClick(slot.stakeInfo?.id || "")}
+              onClick={() => {
+                setPendingUnstakeId(slot.stakeInfo?.id || "");
+                setShowUnstakeWarning(true);
+              }}
               variant="secondary"
               size="sm"
               className="self-stretch h-6 px-4 bg-white rounded-3xl inline-flex justify-center items-center gap-2 hover:bg-gray-200 mx-auto w-full"
-              disabled={isLoading}
-              isLoading={isLoading}
             >
               <div className="text-center justify-start text-black text-xs font-normal font-sora uppercase leading-normal">
                 Unstake
@@ -754,6 +758,69 @@ const PetSlotCard = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Unstake Warning Dialog */}
+      <Dialog open={showUnstakeWarning} onOpenChange={setShowUnstakeWarning}>
+        <DialogContent className="max-w-sm bg-[#1f1f1f] border-0 p-0">
+          <div className="p-4 flex flex-col gap-4">
+            {/* Warning Icon */}
+            <div className="w-8 h-8 relative overflow-hidden">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M16 2L2 28H30L16 2Z" fill="#dba301" />
+                <path
+                  d="M16 11V19"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <circle cx="16" cy="23" r="1" fill="white" />
+              </svg>
+            </div>
+
+            {/* Warning Message */}
+            <div className="text-white text-sm font-normal font-sora leading-normal">
+              Please make sure to{" "}
+              <span className="font-bold">claim your rewards</span> before
+              unstaking. If you proceed without claiming, you may lose all
+              accumulated rewards.
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={async () => {
+                  setShowUnstakeWarning(false);
+                  if (pendingUnstakeId) {
+                    await handleUnstakeClick(pendingUnstakeId);
+                    setPendingUnstakeId(null);
+                  }
+                }}
+                disabled={isLoading}
+                isLoading={isLoading}
+                className="w-full bg-[#a668ff] hover:bg-[#9555ee] text-white rounded-3xl py-2 px-4 text-sm font-semibold font-sora uppercase tracking-wide"
+              >
+                Unstake Anyway
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowUnstakeWarning(false);
+                  setPendingUnstakeId(null);
+                }}
+                variant="secondary"
+                className="w-full bg-white hover:bg-gray-200 text-black rounded-3xl py-2 px-4 text-sm font-semibold font-sora uppercase tracking-wide"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
