@@ -360,29 +360,3 @@ const isCreatureNFT = (type: string) => {
     type === `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
   );
 };
-
-const getRecipe = (metadata: any) => {
-  const recipes: Record<string, Array<{ itemId: number; quantity: number }>> = {
-    head: [] as Array<{ itemId: number; quantity: number }>,
-    body: [] as Array<{ itemId: number; quantity: number }>,
-    environment: [] as Array<{ itemId: number; quantity: number }>,
-    hand: [] as Array<{ itemId: number; quantity: number }>,
-    leg: [] as Array<{ itemId: number; quantity: number }>,
-    material: [] as Array<{ itemId: number; quantity: number }>,
-    style: [] as Array<{ itemId: number; quantity: number }>,
-  };
-  Object.keys(recipes).forEach((key) => {
-    const array = metadata[`${key}_items`] as Array<{
-      fields: { item_id: string; quantity: string };
-    }>;
-    if (array) {
-      recipes[key] = array.map((item) => {
-        return {
-          itemId: Number(item.fields.item_id),
-          quantity: Number(item.fields.quantity),
-        };
-      });
-    }
-  });
-  return recipes;
-};

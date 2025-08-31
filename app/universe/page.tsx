@@ -319,9 +319,6 @@ export default function PetExplorerDashboard() {
 
       const tx = new Transaction();
 
-      console.log(POOL_SYSTEM);
-      console.log(poolId);
-
       tx.moveCall({
         target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_rewards_dynamic`,
         arguments: [
