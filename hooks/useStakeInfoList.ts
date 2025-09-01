@@ -255,7 +255,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.pure.id(poolId),
-            tx.pure.address("userAddress"),
+            tx.pure.address(userAddress),
             tx.object("0x6"),
           ],
         });
