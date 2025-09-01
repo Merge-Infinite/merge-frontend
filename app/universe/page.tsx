@@ -110,6 +110,8 @@ export default function PetExplorerDashboard() {
     refreshInterval: undefined,
   });
 
+  console.log("stakeStats", stakeStats);
+
   useEffect(() => {
     if (!authed && isTelegram) {
       setOpenAuthDialog(true);
@@ -125,6 +127,7 @@ export default function PetExplorerDashboard() {
   useEffect(() => {
     if (!pool && poolId) {
       const foundPool = getPoolById(poolId);
+      console.log("foundPool", foundPool);
       if (foundPool) {
         setPool(foundPool);
       }
@@ -379,7 +382,7 @@ export default function PetExplorerDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black p-4 flex items-center justify-center">
-        <div className="text-white">Loading your pets...</div>
+        <div className="text-white">Loading your pool...</div>
       </div>
     );
   }

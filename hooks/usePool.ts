@@ -270,12 +270,11 @@ export const usePoolSystem = (
     } finally {
       setLoading(false);
     }
-  }, [fetchAllPoolIds, fetchPoolInfo, fetchPoolOverview]);
+  }, [fetchAllPoolIds, fetchPoolInfo]);
 
   // Helper functions
   const getPoolById = useCallback(
     (poolId: string): Pool | undefined => {
-      console.log("pools", pools);
       return pools.find((pool) => pool.poolId === poolId);
     },
     [pools]

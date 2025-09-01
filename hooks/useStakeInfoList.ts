@@ -1,5 +1,6 @@
 import { suiClient } from "@/lib/utils";
 import {
+  MER3_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
@@ -250,11 +251,11 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       try {
         const tx = new Transaction();
         tx.moveCall({
-          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
+          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.pure.id(poolId),
-            tx.pure.address(userAddress),
+            tx.pure.address("userAddress"),
             tx.object("0x6"),
           ],
         });
@@ -267,6 +268,8 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         if (!result.results?.[0]?.returnValues) {
           return null;
         }
+
+        console.log(result.results[0].returnValues);
 
         const [
           userNftCount,
