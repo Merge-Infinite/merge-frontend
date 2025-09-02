@@ -78,6 +78,7 @@ export default function PetExplorerDashboard() {
   const { backButton, isTelegram, isReady } = useUniversalApp();
   const { data: suiPrice } = userApi.getSuiPrice.useQuery();
   const apiClient = useApiClient();
+
   const { data: network } = useNetwork(appContext.networkId);
   const client = useSuiClient();
   const { mutateAsync: signAndExecuteTransaction } =
@@ -109,8 +110,6 @@ export default function PetExplorerDashboard() {
     includeNFTDetails: true,
     refreshInterval: 5000,
   });
-
-  console.log("stakeStats", stakeStats);
 
   useEffect(() => {
     if (!authed && isTelegram) {
@@ -157,24 +156,34 @@ export default function PetExplorerDashboard() {
     {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
       value:
+        // Calculate total prize pool in USD based on SUI rewards (20% of total)
+        // Then take 30% of total pool and divide by M3R8 price ($0.0088)
         (
-          ((Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI)) *
-            (((((suiPrice as any)?.price || 2.78) * 10) / 3) * 20)) /
-          100 /
-          0.03
-        ).toFixed(4) || 0,
+          (((Number(stakeStats?.pendingSuiRewards || 0) /
+            Number(MIST_PER_SUI)) *
+            (suiPrice as any)?.price || 2.78) * // SUI value in USD
+            (100 / 20) * // Total pool (SUI is 20%)
+            0.3) / // M3R8 takes 30%
+          0.0088
+        ) // M3R8 price
+          .toFixed(4) || 0,
     },
     {
       icon: (
         <Image src="/images/energy.svg" alt="User" width={24} height={24} />
       ),
       value:
+        // Calculate total prize pool in USD based on SUI rewards (20% of total)
+        // Then take 50% of total pool and divide by Energy price ($0.005)
         (
-          ((Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI)) *
-            ((((suiPrice as any)?.price || 2.78) * 10) / 3)) /
-          2 /
-          0.05
-        ).toFixed(4) || 0,
+          (((Number(stakeStats?.pendingSuiRewards || 0) /
+            Number(MIST_PER_SUI)) *
+            (suiPrice as any)?.price || 2.78) * // SUI value in USD
+            (100 / 20) * // Total pool (SUI is 20%)
+            0.5) / // Energy takes 50%
+          0.005
+        ) // Energy price
+          .toFixed(4) || 0,
     },
   ];
 
