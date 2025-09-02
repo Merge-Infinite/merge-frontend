@@ -66,8 +66,21 @@ export default function InventoryStakingInterface() {
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
+  
+  // Track pending stakes to prevent concurrent staking beyond limit
+  const [pendingStakes, setPendingStakes] = useState<Set<string>>(new Set());
+  const [optimisticStakeCount, setOptimisticStakeCount] = useState<number>(0);
 
   console.log("stakeStats", stakeStats);
+
+  // Sync optimistic count with actual count when stakeStats updates
+  useEffect(() => {
+    if (stakeStats?.nftCount !== undefined) {
+      setOptimisticStakeCount(stakeStats.nftCount);
+      // Clear pending stakes when we get fresh data from the contract
+      setPendingStakes(new Set());
+    }
+  }, [stakeStats?.nftCount]);
 
   useEffect(() => {
     if (isReady) {
@@ -161,6 +174,12 @@ export default function InventoryStakingInterface() {
   const handleStakeNFT = useCallback(
     async (nftId: string) => {
       try {
+        // Check if this NFT is already being staked
+        if (pendingStakes.has(nftId)) {
+          toast.error("This NFT is already being staked. Please wait.");
+          return;
+        }
+
         if (!address && authed && isTelegram) {
           toast.error("No address found");
           return;
@@ -170,12 +189,19 @@ export default function InventoryStakingInterface() {
           return;
         }
 
-        if (availableSlots <= (stakeStats?.nftCount || 0)) {
+        // Use optimistic count for limit check
+        const currentCount = Math.max(optimisticStakeCount, stakeStats?.nftCount || 0);
+        if (availableSlots <= currentCount) {
           toast.error(
             `You have reached the maximum number of NFTs. You can stake ${availableSlots} NFTs.`
           );
           return;
         }
+        
+        // Add to pending stakes and update optimistic count
+        setPendingStakes(prev => new Set(prev).add(nftId));
+        setOptimisticStakeCount(prev => prev + 1);
+        
         startLoading();
 
         let tx = new Transaction();
@@ -218,6 +244,14 @@ export default function InventoryStakingInterface() {
           await refreshRewards();
         }
       } catch (error: any) {
+        // Revert optimistic updates on error
+        setPendingStakes(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(nftId);
+          return newSet;
+        });
+        setOptimisticStakeCount(prev => Math.max(0, prev - 1));
+        
         if (error.message.includes('Some("validate_nft_requirements") }, 12')) {
           toast.error("NFT is not containing the required elements");
           return;
@@ -230,6 +264,12 @@ export default function InventoryStakingInterface() {
         }
       } finally {
         stopLoading();
+        // Remove from pending stakes after operation completes
+        setPendingStakes(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(nftId);
+          return newSet;
+        });
       }
     },
     [
@@ -237,6 +277,8 @@ export default function InventoryStakingInterface() {
       authed,
       availableSlots,
       stakeStats?.nftCount,
+      optimisticStakeCount,
+      pendingStakes,
       isTelegram,
       account?.address,
     ]
@@ -305,6 +347,8 @@ export default function InventoryStakingInterface() {
                       isLoading={isLoading}
                       availableSlots={Number(availableSlots)}
                       nftCount={Number(stakeStats?.nftCount)}
+                      optimisticStakeCount={optimisticStakeCount}
+                      isPending={pendingStakes.has(card.id)}
                     />
                   ))
               )}
@@ -335,12 +379,16 @@ const NFTCard = ({
   isLoading,
   availableSlots,
   nftCount,
+  optimisticStakeCount,
+  isPending,
 }: {
   item: InventoryItem;
   handleStakeNFT: (id: string) => void;
   isLoading: boolean;
   availableSlots: number;
   nftCount: number | undefined;
+  optimisticStakeCount: number;
+  isPending: boolean;
 }) => {
   return (
     <div className="w-44 flex flex-col items-center gap-2">
@@ -371,15 +419,18 @@ const NFTCard = ({
         onClick={() => handleStakeNFT(item.id)}
         disabled={
           isLoading ||
+          isPending ||
           nftCount === undefined ||
           nftCount === null ||
           availableSlots === undefined ||
           availableSlots === null ||
-          (nftCount !== undefined && availableSlots <= nftCount)
+          (nftCount !== undefined && availableSlots <= Math.max(nftCount, optimisticStakeCount))
         }
-        isLoading={isLoading}
+        isLoading={isLoading || isPending}
       >
-        {nftCount !== undefined && availableSlots <= nftCount
+        {isPending 
+          ? "Staking..." 
+          : (nftCount !== undefined && availableSlots <= Math.max(nftCount, optimisticStakeCount))
           ? "Max Slots Reached"
           : "Stake"}
       </Button>

@@ -33,7 +33,7 @@ import { formatAddress, MIST_PER_SUI } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useUniversalApp } from "../context/UniversalAppContext";
@@ -145,45 +145,47 @@ export default function PetExplorerDashboard() {
     },
   ];
 
+  console.log(stakeStats);
+
+  const suiRewardAmount = React.useMemo(
+    () => Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI),
+    [stakeStats?.pendingSuiRewards]
+  );
+
   const rewardStats: StatsItem[] = [
     {
       icon: <Image src="/images/sui.svg" alt="User" width={24} height={24} />,
-      value:
-        (
-          Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI)
-        ).toFixed(4) || 0,
+      value: suiRewardAmount.toFixed(4) || "0",
     },
     {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
       value:
-        // Calculate total prize pool in USD based on SUI rewards (20% of total)
-        // Then take 30% of total pool and divide by M3R8 price ($0.0088)
-        (
-          (((Number(stakeStats?.pendingSuiRewards || 0) /
-            Number(MIST_PER_SUI)) *
-            (suiPrice as any)?.price || 2.78) * // SUI value in USD
-            (100 / 20) * // Total pool (SUI is 20%)
-            0.3) / // M3R8 takes 30%
-          0.0088
-        ) // M3R8 price
-          .toFixed(4) || 0,
+        suiRewardAmount > 0
+          ? (
+              (suiRewardAmount *
+                ((suiPrice as any)?.price || 2.78) * // SUI value in USD
+                (100 / 20) * // Total pool (SUI is 20%)
+                0.3) / // M3R8 takes 30%
+              0.0088
+            ) // M3R8 price
+              .toFixed(4)
+          : "0",
     },
     {
       icon: (
         <Image src="/images/energy.svg" alt="User" width={24} height={24} />
       ),
       value:
-        // Calculate total prize pool in USD based on SUI rewards (20% of total)
-        // Then take 50% of total pool and divide by Energy price ($0.005)
-        (
-          (((Number(stakeStats?.pendingSuiRewards || 0) /
-            Number(MIST_PER_SUI)) *
-            (suiPrice as any)?.price || 2.78) * // SUI value in USD
-            (100 / 20) * // Total pool (SUI is 20%)
-            0.5) / // Energy takes 50%
-          0.005
-        ) // Energy price
-          .toFixed(4) || 0,
+        suiRewardAmount > 0
+          ? (
+              (suiRewardAmount *
+                ((suiPrice as any)?.price || 2.78) * // SUI value in USD
+                (100 / 20) * // Total pool (SUI is 20%)
+                0.5) / // Energy takes 50%
+              0.005
+            ) // Energy price
+              .toFixed(4)
+          : "0",
     },
   ];
 
