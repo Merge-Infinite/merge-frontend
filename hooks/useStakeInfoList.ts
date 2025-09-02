@@ -38,7 +38,7 @@ interface StakeStats {
   totalStakes: number;
   totalStakingHours: number;
   avgStakingHours: number;
-  totalWeight: number;
+  userWeight: number;
   oldestStake?: Date;
   newestStake?: Date;
 
@@ -58,7 +58,7 @@ interface StakeStats {
 interface PoolStats {
   poolId: string;
   nftCount: number;
-  totalWeight: number;
+  userWeight: number;
   totalPoolWeight: number;
   pendingSuiRewards: number;
   stakeDurations: number;
@@ -257,7 +257,9 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.pure.id(poolId),
-            tx.pure.address(userAddress),
+            tx.pure.address(
+              "0xe9b6f28ccd10a412b2a6a0415691871622aa1a477ed6db914e706e35943777d3"
+            ),
             tx.object("0x6"),
           ],
         });
@@ -289,7 +291,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
         return {
           nftCount: decodeU64(userNftCount[0]),
-          totalWeight: decodeU64(userWeight[0]),
+          userWeight: decodeU64(userWeight[0]),
           totalPoolWeight: decodeU64(totalPoolWeight[0]),
           pendingSuiRewards: decodeU64(pendingSuiRewards[0]),
           stakeDurations: decodeU64(stakeDurations[0]),
@@ -331,7 +333,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         return {
           poolId,
           nftCount: userStakeInfo?.nftCount || 0,
-          totalWeight: userStakeInfo?.totalWeight || 0,
+          userWeight: userStakeInfo?.userWeight || 0,
           totalPoolWeight: userStakeInfo?.totalPoolWeight || 0,
           pendingSuiRewards: userStakeInfo?.pendingSuiRewards || 0,
           stakeDurations: userStakeInfo?.stakeDurations || 0,
@@ -342,7 +344,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         return {
           poolId,
           nftCount: 0,
-          totalWeight: 0,
+          userWeight: 0,
           totalPoolWeight: 0,
           pendingSuiRewards: 0,
           stakeDurations: 0,
@@ -387,45 +389,51 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     []
   );
 
-  const fetchStakeInfos = useCallback(async (isRefresh = false) => {
-    if (!walletAddress) {
-      setError(new Error("No wallet address available"));
-      return [];
-    }
-
-    try {
-      // Only show loading screen on initial load
-      if (!isRefresh && initialLoading) {
-        setLoading(true);
+  const fetchStakeInfos = useCallback(
+    async (isRefresh = false) => {
+      if (!walletAddress) {
+        setError(new Error("No wallet address available"));
+        return [];
       }
-      setError(null);
 
-      const stakedNftIds = await fetchUserStakedNftIds(poolId!, walletAddress);
-      const stakeInfosList = await convertEventsToStakeInfos(stakedNftIds);
-      setStakeInfos(stakeInfosList);
-      setLastFetchTime(new Date());
+      try {
+        // Only show loading screen on initial load
+        if (!isRefresh && initialLoading) {
+          setLoading(true);
+        }
+        setError(null);
 
-      return stakeInfosList;
-    } catch (err) {
-      console.error("Error fetching stake infos:", err);
-      const error =
-        err instanceof Error ? err : new Error("Unknown error occurred");
-      setError(error);
-      toast.error(`Error fetching stake information: ${error.message}`);
-      return [];
-    } finally {
-      if (!isRefresh && initialLoading) {
-        setLoading(false);
-        setInitialLoading(false);
+        const stakedNftIds = await fetchUserStakedNftIds(
+          poolId!,
+          walletAddress
+        );
+        const stakeInfosList = await convertEventsToStakeInfos(stakedNftIds);
+        setStakeInfos(stakeInfosList);
+        setLastFetchTime(new Date());
+
+        return stakeInfosList;
+      } catch (err) {
+        console.error("Error fetching stake infos:", err);
+        const error =
+          err instanceof Error ? err : new Error("Unknown error occurred");
+        setError(error);
+        toast.error(`Error fetching stake information: ${error.message}`);
+        return [];
+      } finally {
+        if (!isRefresh && initialLoading) {
+          setLoading(false);
+          setInitialLoading(false);
+        }
       }
-    }
-  }, [
-    walletAddress,
-    poolId,
-    determineCurrentlyStakedNFTs,
-    convertEventsToStakeInfos,
-    initialLoading,
-  ]);
+    },
+    [
+      walletAddress,
+      poolId,
+      determineCurrentlyStakedNFTs,
+      convertEventsToStakeInfos,
+      initialLoading,
+    ]
+  );
 
   // State for async calculated stats
   const [calculatedStats, setCalculatedStats] = useState<PoolStats | null>(

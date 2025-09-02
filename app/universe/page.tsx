@@ -464,7 +464,7 @@ export default function PetExplorerDashboard() {
                     size="sm"
                     className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white rounded-xl py-2"
                     disabled={
-                      isClaimLoading || Number(stakeStats?.totalWeight) === 0
+                      isClaimLoading || Number(stakeStats?.userWeight) === 0
                     }
                   >
                     {isClaimLoading ? "Claiming..." : "Claim Rewards"}
