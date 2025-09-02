@@ -100,7 +100,7 @@ export default function InventoryStakingInterface() {
     refresh,
   } = useNFTList({
     walletAddress: isTelegram ? address : account?.address || "",
-    refreshInterval: undefined,
+    refreshInterval: 3000,
     autoFetch: true,
     structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
@@ -215,7 +215,6 @@ export default function InventoryStakingInterface() {
 
         if (response && (response as any).digest) {
           toast.success("NFT staked successfully!");
-          await refresh();
           await refreshRewards();
         }
       } catch (error: any) {

@@ -32,7 +32,7 @@ export const ELEMENT_ADMIN_CAP =
 export const MER3_PACKAGE_ID =
   "0x17aa7d1e8f59d5a869847b308837e7bdee73ee19b11b970dba0f2a8435bec549";
 export const MER3_UPGRADED_PACKAGE_ID =
-  "0x08b0a2464c1fb52345a970fec7b39b416ddd8ffceb976a0a8d159d8209f3961b";
+  "0xa283fe9fd74e38007e318d4f9ba62e6c0046bd1ddf0505acac1e3d9bf21cd2fc";
 export const CREATURE_COLLECTION_OBJECT_ID =
   "0x3ebd4676ccead8d5b01b8205b35a280aca3cdb33115e2526530ab316361fce1b";
 export const CREATURE_NFT_MODULE_NAME = "creature_nft";

@@ -1,6 +1,5 @@
 import { suiClient } from "@/lib/utils";
 import {
-  MER3_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
@@ -62,6 +61,8 @@ interface PoolStats {
   totalWeight: number;
   totalPoolWeight: number;
   pendingSuiRewards: number;
+  stakeDurations: number;
+  lastRewardClaim: number;
 }
 
 interface UseStakeInfoListOptions {
@@ -251,7 +252,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       try {
         const tx = new Transaction();
         tx.moveCall({
-          target: `${MER3_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
           arguments: [
             tx.object(POOL_SYSTEM),
             tx.pure.id(poolId),
@@ -269,21 +270,28 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           return null;
         }
 
-        console.log(result.results[0].returnValues);
+        console.log(
+          "result.results[0].returnValues",
+          result.results[0].returnValues
+        );
 
         const [
           userNftCount,
           userWeight,
           totalPoolWeight,
           pendingSuiRewards,
+          stakeDurations,
           lastRewardClaim,
         ] = result.results[0].returnValues;
+        console.log("pendingSuiRewards", pendingSuiRewards[0]);
+        console.log("stakeDurations", decodeU64(pendingSuiRewards[0]));
 
         return {
           nftCount: decodeU64(userNftCount[0]),
           totalWeight: decodeU64(userWeight[0]),
           totalPoolWeight: decodeU64(totalPoolWeight[0]),
           pendingSuiRewards: decodeU64(pendingSuiRewards[0]),
+          stakeDurations: decodeU64(stakeDurations[0]),
           lastRewardClaim: decodeU64(lastRewardClaim[0]),
         };
       } catch (error) {
@@ -317,12 +325,16 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           poolId
         );
 
+        console.log("userStakeInfo", userStakeInfo);
+
         return {
           poolId,
           nftCount: userStakeInfo?.nftCount || 0,
           totalWeight: userStakeInfo?.totalWeight || 0,
           totalPoolWeight: userStakeInfo?.totalPoolWeight || 0,
           pendingSuiRewards: userStakeInfo?.pendingSuiRewards || 0,
+          stakeDurations: userStakeInfo?.stakeDurations || 0,
+          lastRewardClaim: userStakeInfo?.lastRewardClaim || 0,
         };
       } catch (error) {
         console.error(`Error getting pool reward stats for ${poolId}:`, error);
@@ -332,6 +344,8 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           totalWeight: 0,
           totalPoolWeight: 0,
           pendingSuiRewards: 0,
+          stakeDurations: 0,
+          lastRewardClaim: 0,
         };
       }
     },
@@ -498,7 +512,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         setRewardsLoading(true);
         try {
           const rewardStats = await getPoolRewardStats(walletAddress, poolId!);
-          setCalculatedStats(rewardStats);
+          return rewardStats;
         } catch (error) {
           console.error("Error refreshing rewards:", error);
           toast.error("Error refreshing reward data");
@@ -515,10 +529,6 @@ export function bytesToId(bytes: number[]): string {
 }
 
 export function parseSuiVectorIds(rawData: number[]): string[] {
-  console.log("=== PARSING SUI VECTOR IDS ===");
-  console.log("Raw data length:", rawData.length);
-  console.log("First few elements:", rawData.slice(0, 10));
-
   if (!Array.isArray(rawData) || rawData.length < 1) {
     console.warn("Invalid data format");
     return [];
@@ -526,7 +536,6 @@ export function parseSuiVectorIds(rawData: number[]): string[] {
 
   // First element is the count
   const count = rawData[0];
-  console.log("Number of IDs:", count);
 
   if (count === 0) {
     console.log("No IDs to parse");
@@ -536,9 +545,6 @@ export function parseSuiVectorIds(rawData: number[]): string[] {
   // Each ID is 32 bytes
   const bytesPerID = 32;
   const expectedTotalBytes = 1 + count * bytesPerID; // 1 for count + count * 32 bytes
-
-  console.log("Expected total bytes:", expectedTotalBytes);
-  console.log("Actual total bytes:", rawData.length);
 
   if (rawData.length !== expectedTotalBytes) {
     console.warn(
@@ -553,17 +559,12 @@ export function parseSuiVectorIds(rawData: number[]): string[] {
     const startIndex = 1 + i * bytesPerID; // Skip count byte, then i * 32 bytes
     const endIndex = startIndex + bytesPerID;
 
-    console.log(`\n--- Parsing ID ${i + 1} ---`);
-    console.log(`Bytes range: ${startIndex} to ${endIndex - 1}`);
-
     if (endIndex > rawData.length) {
       console.error(`Not enough bytes for ID ${i + 1}`);
       break;
     }
 
     const idBytes = rawData.slice(startIndex, endIndex);
-    console.log(`ID ${i + 1} bytes:`, idBytes);
-    console.log(`ID ${i + 1} length:`, idBytes.length);
 
     // Convert to hex
     const hexString = idBytes
@@ -571,12 +572,8 @@ export function parseSuiVectorIds(rawData: number[]): string[] {
       .join("");
     const id = `0x${hexString}`;
 
-    console.log(`ID ${i + 1} result:`, id);
     ids.push(id);
   }
-
-  console.log("=== FINAL PARSED IDS ===");
-  console.log("All IDs:", ids);
 
   return ids;
 }

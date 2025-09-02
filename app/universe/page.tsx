@@ -107,7 +107,7 @@ export default function PetExplorerDashboard() {
     walletAddress: isTelegram ? address : account?.address || "",
     poolId: poolId || undefined,
     includeNFTDetails: true,
-    refreshInterval: undefined,
+    refreshInterval: 5000,
   });
 
   console.log("stakeStats", stakeStats);
@@ -127,7 +127,6 @@ export default function PetExplorerDashboard() {
   useEffect(() => {
     if (!pool && poolId) {
       const foundPool = getPoolById(poolId);
-      console.log("foundPool", foundPool);
       if (foundPool) {
         setPool(foundPool);
       }
@@ -152,22 +151,15 @@ export default function PetExplorerDashboard() {
       icon: <Image src="/images/sui.svg" alt="User" width={24} height={24} />,
       value:
         (
-          (Number(stakeStats?.totalWeight || 0) /
-            Number(stakeStats?.totalPoolWeight || 0)) *
-          (Number(pool?.suiRewards || 0) / Number(MIST_PER_SUI))
+          Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI)
         ).toFixed(4) || 0,
     },
     {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
       value:
         (
-          ((Number(stakeStats?.totalWeight || 0) /
-            Number(stakeStats?.totalPoolWeight || 0)) *
-            ((((Number(pool?.suiRewards || 0) / Number(MIST_PER_SUI)) *
-              ((suiPrice as any)?.price || 2.78) *
-              10) /
-              3) *
-              20)) /
+          ((Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI)) *
+            (((((suiPrice as any)?.price || 2.78) * 10) / 3) * 20)) /
           100 /
           0.03
         ).toFixed(4) || 0,
@@ -178,12 +170,8 @@ export default function PetExplorerDashboard() {
       ),
       value:
         (
-          ((Number(stakeStats?.totalWeight || 0) /
-            Number(stakeStats?.totalPoolWeight || 0)) *
-            (((Number(pool?.suiRewards || 0) / Number(MIST_PER_SUI)) *
-              ((suiPrice as any)?.price || 2.78) *
-              10) /
-              3)) /
+          ((Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI)) *
+            ((((suiPrice as any)?.price || 2.78) * 10) / 3)) /
           2 /
           0.05
         ).toFixed(4) || 0,
