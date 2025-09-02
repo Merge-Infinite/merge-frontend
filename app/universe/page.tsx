@@ -104,12 +104,13 @@ export default function PetExplorerDashboard() {
       }
     }
   }, [isReady, isTelegram, backButton]);
-  const { stakeInfos, loading, error, stakeStats, refresh } = useStakeInfoList({
-    walletAddress: isTelegram ? address : account?.address || "",
-    poolId: poolId || undefined,
-    includeNFTDetails: true,
-    refreshInterval: 5000,
-  });
+  const { stakeInfos, loading, initialLoading, error, stakeStats, refresh } =
+    useStakeInfoList({
+      walletAddress: isTelegram ? address : account?.address || "",
+      poolId: poolId || undefined,
+      includeNFTDetails: true,
+      refreshInterval: 5000,
+    });
 
   useEffect(() => {
     if (!authed && isTelegram) {
@@ -378,7 +379,7 @@ export default function PetExplorerDashboard() {
     }
   }, [address, authed, isTelegram, account?.address, poolId, refresh]);
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-black p-4 flex items-center justify-center">
         <div className="text-white">Loading your pool...</div>

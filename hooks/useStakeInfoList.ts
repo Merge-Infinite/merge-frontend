@@ -78,6 +78,7 @@ interface UseStakeInfoListOptions {
 export function useStakeInfoList(options: UseStakeInfoListOptions) {
   const [stakeInfos, setStakeInfos] = useState<StakeInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [rewardsLoading, setRewardsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
@@ -386,14 +387,17 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     []
   );
 
-  const fetchStakeInfos = useCallback(async () => {
+  const fetchStakeInfos = useCallback(async (isRefresh = false) => {
     if (!walletAddress) {
       setError(new Error("No wallet address available"));
       return [];
     }
 
     try {
-      setLoading(true);
+      // Only show loading screen on initial load
+      if (!isRefresh && initialLoading) {
+        setLoading(true);
+      }
       setError(null);
 
       const stakedNftIds = await fetchUserStakedNftIds(poolId!, walletAddress);
@@ -410,13 +414,17 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       toast.error(`Error fetching stake information: ${error.message}`);
       return [];
     } finally {
-      setLoading(false);
+      if (!isRefresh && initialLoading) {
+        setLoading(false);
+        setInitialLoading(false);
+      }
     }
   }, [
     walletAddress,
     poolId,
     determineCurrentlyStakedNFTs,
     convertEventsToStakeInfos,
+    initialLoading,
   ]);
 
   // State for async calculated stats
@@ -474,7 +482,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   useEffect(() => {
     if (refreshInterval && walletAddress && refreshInterval > 0) {
       const intervalId = setInterval(() => {
-        fetchStakeInfos();
+        fetchStakeInfos(true); // Pass true to indicate this is a refresh
       }, refreshInterval);
 
       return () => clearInterval(intervalId);
@@ -492,6 +500,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     // Data
     stakeInfos,
     loading,
+    initialLoading,
     rewardsLoading,
     error,
     lastFetchTime,
@@ -499,7 +508,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
     // Actions
     fetchStakeInfos,
-    refresh: fetchStakeInfos,
+    refresh: () => fetchStakeInfos(true),
 
     // Utility functions
     getStakeInfoById,
