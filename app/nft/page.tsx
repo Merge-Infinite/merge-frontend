@@ -66,7 +66,7 @@ export default function InventoryStakingInterface() {
     includeNFTDetails: true,
     refreshInterval: undefined,
   });
-  
+
   // Track pending stakes to prevent concurrent staking beyond limit
   const [pendingStakes, setPendingStakes] = useState<Set<string>>(new Set());
   const [optimisticStakeCount, setOptimisticStakeCount] = useState<number>(0);
@@ -190,18 +190,21 @@ export default function InventoryStakingInterface() {
         }
 
         // Use optimistic count for limit check
-        const currentCount = Math.max(optimisticStakeCount, stakeStats?.nftCount || 0);
+        const currentCount = Math.max(
+          optimisticStakeCount,
+          stakeStats?.nftCount || 0
+        );
         if (availableSlots <= currentCount) {
           toast.error(
             `You have reached the maximum number of NFTs. You can stake ${availableSlots} NFTs.`
           );
           return;
         }
-        
+
         // Add to pending stakes and update optimistic count
-        setPendingStakes(prev => new Set(prev).add(nftId));
-        setOptimisticStakeCount(prev => prev + 1);
-        
+        setPendingStakes((prev) => new Set(prev).add(nftId));
+        setOptimisticStakeCount((prev) => prev + 1);
+
         startLoading();
 
         let tx = new Transaction();
@@ -245,13 +248,13 @@ export default function InventoryStakingInterface() {
         }
       } catch (error: any) {
         // Revert optimistic updates on error
-        setPendingStakes(prev => {
+        setPendingStakes((prev) => {
           const newSet = new Set(prev);
           newSet.delete(nftId);
           return newSet;
         });
-        setOptimisticStakeCount(prev => Math.max(0, prev - 1));
-        
+        setOptimisticStakeCount((prev) => Math.max(0, prev - 1));
+
         if (error.message.includes('Some("validate_nft_requirements") }, 12')) {
           toast.error("NFT is not containing the required elements");
           return;
@@ -265,7 +268,7 @@ export default function InventoryStakingInterface() {
       } finally {
         stopLoading();
         // Remove from pending stakes after operation completes
-        setPendingStakes(prev => {
+        setPendingStakes((prev) => {
           const newSet = new Set(prev);
           newSet.delete(nftId);
           return newSet;
@@ -327,7 +330,7 @@ export default function InventoryStakingInterface() {
               value="all"
               className="flex-1 mt-4 grid grid-cols-2 gap-4"
             >
-              {creatureNftsLoading ? (
+              {creatureNftsLoading && creatureNfts.length === 0 ? (
                 <SkeletonCard />
               ) : (
                 creatureNfts
@@ -424,13 +427,15 @@ const NFTCard = ({
           nftCount === null ||
           availableSlots === undefined ||
           availableSlots === null ||
-          (nftCount !== undefined && availableSlots <= Math.max(nftCount, optimisticStakeCount))
+          (nftCount !== undefined &&
+            availableSlots <= Math.max(nftCount, optimisticStakeCount))
         }
         isLoading={isLoading || isPending}
       >
-        {isPending 
-          ? "Staking..." 
-          : (nftCount !== undefined && availableSlots <= Math.max(nftCount, optimisticStakeCount))
+        {isPending
+          ? "Staking..."
+          : nftCount !== undefined &&
+            availableSlots <= Math.max(nftCount, optimisticStakeCount)
           ? "Max Slots Reached"
           : "Stake"}
       </Button>

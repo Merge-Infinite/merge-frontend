@@ -21,9 +21,12 @@ import {
   ELEMENT_POLICY_ID,
   FEE_ADDRESS,
   MER3_PACKAGE_ID,
-  MER3_UPGRADED_PACKAGE_ID,
 } from "@/utils/constants";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+  useSuiClient,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
@@ -68,6 +71,7 @@ export const MarketItem = React.memo(
     const { address, fetchAddressByAccountId } = useAccount(
       appContext.accountId
     );
+    const account = useCurrentAccount();
     const { data: network } = useNetwork(appContext.networkId);
     const [loading, setLoading] = useState(initialLoading || false);
     const [copied, setCopied] = useState(false);
@@ -107,6 +111,14 @@ export const MarketItem = React.memo(
           toast.error("Insufficient balance");
           return;
         }
+        if (!isTelegram && !account?.address) {
+          toast.error("Please login to your account");
+          return;
+        } else if (isTelegram && !address) {
+          toast.error("Please connect your wallet");
+          return;
+        }
+
         // Show processing toast
         toast.info("Transaction in progress...");
 
@@ -126,7 +138,10 @@ export const MarketItem = React.memo(
           arguments: [txb.object(nftTypeToPolicyId(type)), request],
         });
 
-        txb.transferObjects([nft], txb.pure.address(address));
+        txb.transferObjects(
+          [nft],
+          txb.pure.address(isTelegram ? address : account?.address || "")
+        );
         // Calculate 3% fee for the platform owner
         const feeAmount = Math.floor(Number(price) * 0.03);
         const platformOwnerAddress = FEE_ADDRESS;
@@ -346,10 +361,7 @@ export const MarketItem = React.memo(
 );
 
 const nftTypeToPolicyId = (type: string) => {
-  if (
-    type ===
-    `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`
-  ) {
+  if (type === `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::CreatureNFT`) {
     return CREATURE_POLICY_ID;
   }
   return ELEMENT_POLICY_ID;
