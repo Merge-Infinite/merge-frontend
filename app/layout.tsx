@@ -3,6 +3,7 @@ import "@mysten/dapp-kit/dist/index.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Sora } from "next/font/google";
+import Head from "next/head";
 import Script from "next/script";
 import "./globals.css";
 
@@ -39,9 +40,9 @@ export default function RootLayout({
         src="https://tganalytics.xyz/index.js"
         type="text/javascript"
       />
-      <head>
+      <Head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
-      </head>
+      </Head>
       <body
         className={`${
           sora.variable
