@@ -90,7 +90,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const onBuy = useCallback(
     async (item: any) => {
       if (currency === "sui") {
-        await onBuyBySui(item.usdPrice / suiPrice);
+        await onBuyBySui(item.usdPrice ? item.usdPrice / suiPrice : item.price);
       } else {
         const resp = await createPurchase?.mutateAsync({
           productId: item.id,
@@ -271,7 +271,9 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                         />
                       )}
                       <div className="text-white text-sm font-normal leading-normal">
-                        {product.usdPrice / suiPrice} SUI
+                        {product.usdPrice
+                          ? product.usdPrice / suiPrice
+                          : product.price}{" "}
                       </div>
                     </div>
                   </div>
@@ -378,7 +380,9 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                         />
                       )}
                       <div className="text-white text-sm font-normal leading-normal">
-                        {product.price}
+                        {product.usdPrice
+                          ? product.usdPrice / suiPrice
+                          : product.price}{" "}
                       </div>
                     </div>
                   </div>
