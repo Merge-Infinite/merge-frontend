@@ -60,11 +60,9 @@ export default function PoolCard({ pool }: PoolCardProps) {
   } else if (currentTime > endTime) {
     poolState = "ended";
     stateText = "Ended";
-    stateClass = "bg-neutral-800 text-white cursor-not-allowed";
-    disabled = true;
+    stateClass = "bg-neutral-800 text-white";
+    disabled = false;
   }
-
-  console.log(pool);
 
   // Fetch recipes/items data using your API
   useEffect(() => {
