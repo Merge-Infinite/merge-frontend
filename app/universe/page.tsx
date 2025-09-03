@@ -450,10 +450,9 @@ export default function PetExplorerDashboard() {
                   </span>
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
                     {(
-                      ((Number(pool?.suiRewards) / Number(MIST_PER_SUI)) *
-                        2.78 *
-                        10) /
-                      3
+                      ((Number(pool?.totalPrize) / Number(MIST_PER_SUI)) *
+                        (suiPrice || 2.78)) /
+                      (30 / 100)
                     ).toFixed(2)}
                     $
                   </span>

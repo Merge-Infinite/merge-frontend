@@ -11,6 +11,7 @@ export interface Pool {
   id: string;
   poolId: string;
   name: string;
+  totalPrize: number;
   description: string;
   creator: string;
   imageUrl: string;
@@ -101,6 +102,7 @@ export const usePoolSystem = (
           id: poolId,
           poolId,
           name: String(returnValues.name),
+          totalPrize: Number(returnValues.total_sui_deposited),
           description: String(returnValues.description),
           creator: String(returnValues.creator), // You might need to fetch this separately
           imageUrl: String(returnValues.image_url), // You might need to fetch this separately
