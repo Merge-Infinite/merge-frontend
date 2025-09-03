@@ -156,8 +156,10 @@ const WebApp = memo(function WebApp(props: PropsWithChildren) {
         <WalletProvider
           autoConnect={true}
           walletFilter={(wallet) => {
-            console.log(wallet.name);
-            return true;
+            if (wallet.name === SLUSH_WALLET_NAME) {
+              return true;
+            }
+            return false;
           }}
           slushWallet={slushWallet}
         >
