@@ -3,6 +3,7 @@
 import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import ElementItem from "@/components/common/ElementItem";
 import TagSkeleton from "@/components/common/ElementSkeleton";
+import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +45,12 @@ export function OffchainBagScreen() {
   const { data: network } = useNetwork(appContext.networkId);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<{
+    emoji: string;
+    handle: string;
+    amount: number;
+    itemId: string;
+  } | null>(null);
   const [mintQuantity, setMintQuantity] = useState<number | null>(null);
   const [isMinting, setIsMinting] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -322,7 +328,7 @@ export function OffchainBagScreen() {
               <div className="flex-col justify-start items-start gap-3 flex w-full">
                 <div className="flex items-center justify-start w-full py-2">
                   <div className="px-3 py-1 rounded-3xl border border-white justify-center items-center gap-2 inline-flex">
-                    <span className="text-xl">{selectedItem.emoji}</span>
+                    <Emoji emoji={selectedItem.emoji} size={18} />
                     <div className="text-white text-xs font-normal font-['Sora'] uppercase leading-normal">
                       {selectedItem.handle} ({selectedItem.amount})
                     </div>

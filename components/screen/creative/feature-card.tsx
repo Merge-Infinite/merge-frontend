@@ -1,4 +1,5 @@
 "use client";
+import Emoji from "@/components/common/Emoji";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -110,16 +111,7 @@ const FeatureCard = ({
                 onClick={() => removeElement(title, idx)}
               >
                 <span className="text-white text-xs uppercase mr-1 flex items-center gap-2">
-                  {item.emoji.includes("https") ? (
-                    <Image
-                      src={item.emoji}
-                      alt={item.handle}
-                      width={16}
-                      height={16}
-                    />
-                  ) : (
-                    item.emoji
-                  )}
+                  <Emoji emoji={item.emoji} size={18} />
                   {item.handle}
                   {item.displayQuantity && (
                     <span className="text-[#68ffd1]">

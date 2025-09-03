@@ -1,6 +1,7 @@
 "use client";
 import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import ElementItem from "@/components/common/ElementItem";
+import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -304,7 +305,8 @@ const CreatureCustomizer = () => {
                     isMatching ? "text-[#68ffd1]" : "text-[#ff6868]"
                   }`}
                 >
-                  {element.emoji} {element.handle}
+                  <Emoji emoji={element.emoji} size={18} />
+                  {element.handle}
                 </span>
                 <Button
                   variant="ghost"
