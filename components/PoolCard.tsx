@@ -103,7 +103,7 @@ export default function PoolCard({ pool }: PoolCardProps) {
         <div className="self-stretch justify-start text-white text-base font-semibold font-sora uppercase leading-normal tracking-wider">
           {pool.name}
         </div>
-        <div className="self-stretch justify-start text-[#858585] text-sm font-normal font-sora underline leading-normal">
+        <div className="self-stretch justify-start text-[#858585] text-sm font-normal font-sora underline decoration-dotted leading-normal">
           {pool.description}
         </div>
 
