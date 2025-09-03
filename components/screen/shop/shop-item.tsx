@@ -56,6 +56,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
     method: "GET",
     url: `shop/products?currency=${currency}`,
   }).get;
+  const suiPrice = useSelector((state: RootState) => state.appContext.suiPrice);
 
   useEffect(() => {
     fetchProducts?.refetch();
@@ -89,7 +90,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const onBuy = useCallback(
     async (item: any) => {
       if (currency === "sui") {
-        await onBuyBySui(item.price);
+        await onBuyBySui(item.usdPrice / suiPrice);
       } else {
         const resp = await createPurchase?.mutateAsync({
           productId: item.id,
@@ -152,6 +153,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
         try {
           await processSuiPayment?.mutateAsync({
             txHash: response.digest,
+            productId: product.id,
           });
           refetch();
         } catch (error) {
@@ -269,7 +271,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                         />
                       )}
                       <div className="text-white text-sm font-normal leading-normal">
-                        {product.price}
+                        {product.usdPrice / suiPrice} SUI
                       </div>
                     </div>
                   </div>

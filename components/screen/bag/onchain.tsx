@@ -114,7 +114,7 @@ export function OnchainBagScreen() {
         toast.error("No address found");
         return;
       }
-      if (!account?.address) {
+      if (!isTelegram && !account?.address) {
         toast.error("wallet is not connected");
         return;
       }
@@ -126,7 +126,7 @@ export function OnchainBagScreen() {
 
       tx.transferObjects(
         [kioskOwnerCap],
-        tx.pure.address(isTelegram ? address : account?.address)
+        tx.pure.address(isTelegram ? address : account?.address || "")
       );
       tx.moveCall({
         target: "0x2::transfer::public_share_object",

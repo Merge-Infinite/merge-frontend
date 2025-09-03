@@ -59,7 +59,7 @@ export default function PoolCard({ pool }: PoolCardProps) {
     disabled = true;
   } else if (currentTime > endTime) {
     poolState = "ended";
-    stateText = "Ended";
+    stateText = "Ended.";
     stateClass = "bg-neutral-800 text-white";
     disabled = false;
   }

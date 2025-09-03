@@ -16,7 +16,6 @@ import { useLoading } from "@/hooks/useLoading";
 import { Pool, usePoolSystem } from "@/hooks/usePool";
 import { StakeInfo, useStakeInfoList } from "@/hooks/useStakeInfoList";
 import { useUser } from "@/hooks/useUser";
-import userApi from "@/lib/api/user";
 import { formatTimeRemaining } from "@/lib/utils";
 import {
   SendAndExecuteTxParams,
@@ -104,7 +103,7 @@ export default function PetExplorerDashboard() {
 
   const account = useCurrentAccount();
   const { backButton, isTelegram, isReady } = useUniversalApp();
-  const { data: suiPrice } = userApi.getSuiPrice.useQuery();
+  const suiPrice = useSelector((state: RootState) => state.appContext.suiPrice);
   const apiClient = useApiClient();
 
   const { data: network } = useNetwork(appContext.networkId);
@@ -213,7 +212,7 @@ export default function PetExplorerDashboard() {
         suiRewardAmount > 0
           ? (
               (suiRewardAmount *
-                ((suiPrice as any)?.price || 2.78) * // SUI value in USD
+                (suiPrice || 2.78) * // SUI value in USD
                 (100 / 20) * // Total pool (SUI is 20%)
                 0.3) / // M3R8 takes 30%
               0.0088
@@ -229,7 +228,7 @@ export default function PetExplorerDashboard() {
         suiRewardAmount > 0
           ? (
               (suiRewardAmount *
-                ((suiPrice as any)?.price || 2.78) * // SUI value in USD
+                (suiPrice || 2.78) * // SUI value in USD
                 (100 / 20) * // Total pool (SUI is 20%)
                 0.5) / // Energy takes 50%
               0.005

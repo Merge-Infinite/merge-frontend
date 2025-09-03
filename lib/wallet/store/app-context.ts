@@ -10,6 +10,7 @@ export interface AppContextState {
   networkId: string;
   appMode: AppMode;
   tabMode: TabMode;
+  suiPrice: number;
   biometricDismissed: boolean;
 }
 
@@ -35,6 +36,7 @@ const initialState: AppContextState = {
   appMode: AppMode.GAMES,
   tabMode: TabMode.HOME,
   biometricDismissed: false,
+  suiPrice: 0,
 };
 
 // thunks
@@ -82,6 +84,9 @@ export const appContextSlice = createSlice({
     updateTabMode(state, action: PayloadAction<TabMode>) {
       state.tabMode = action.payload;
     },
+    updateSuiPrice(state, action: PayloadAction<number>) {
+      state.suiPrice = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(resetAppContext.fulfilled, () => {});
@@ -97,6 +102,7 @@ export const {
   updateBiometricDismissed,
   updateAppMode,
   updateTabMode,
+  updateSuiPrice,
 } = appContextSlice.actions;
 
 export default appContextSlice.reducer;
