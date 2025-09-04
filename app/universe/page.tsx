@@ -928,7 +928,7 @@ const PetSlotCard = ({
             {/* NFT Name */}
             <div className="justify-start text-white text-sm font-normal font-sora leading-normal text-center">
               {slot.stakeInfo.displayData?.name ||
-                `Pet ${slot.stakeInfo.nftId.slice(-6)}`}
+                `${slot.stakeInfo.nftId.slice(-6)}`}
             </div>
 
             <Button
