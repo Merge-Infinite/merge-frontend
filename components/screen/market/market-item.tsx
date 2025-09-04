@@ -228,7 +228,10 @@ export const MarketItem = React.memo(
           ],
           typeArguments: [type],
         });
-        txb.transferObjects([takenObject], address);
+        txb.transferObjects(
+          [takenObject],
+          isTelegram ? address : account?.address || ""
+        );
         const response = await apiClient.callFunc<
           SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
           undefined
