@@ -1,5 +1,6 @@
 import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
+import { ShareBottomSheet } from "@/components/common/ShareBottomSheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -351,14 +352,16 @@ export const CardItem = React.memo(
               className="p-4 border border-[#1f1f1f] rounded-2xl w-full"
             />
 
-            <div
-              className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer"
-              onClick={() => {
-                window.open(`https://suivision.xyz/object/${id}`, "_blank");
-              }}
-            >
-              #{formatAddress(id)}
-            </div>
+            <ShareBottomSheet
+              trigger={
+                <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer">
+                  #{formatAddress(id)}
+                </div>
+              }
+              blobId={imageUrl}
+              name={element}
+              nftId={id}
+            />
 
             <div className="w-full flex justify-between items-center gap-2">
               <Button

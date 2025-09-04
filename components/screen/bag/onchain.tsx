@@ -67,7 +67,6 @@ export function OnchainBagScreen() {
   const {
     nfts,
     loading,
-    error,
     refresh: nftsRefresh,
   } = useNFTList({
     walletAddress: isTelegram ? address : account?.address,
@@ -79,7 +78,6 @@ export function OnchainBagScreen() {
   const {
     nfts: creatureNfts,
     loading: creatureNftsLoading,
-    error: creatureNftsError,
     refresh: creatureNftsRefresh,
   } = useNFTList({
     walletAddress: isTelegram ? address : account?.address,

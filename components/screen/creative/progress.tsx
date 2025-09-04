@@ -1,5 +1,6 @@
 "use client";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { ShareBottomSheet } from "@/components/common/ShareBottomSheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,25 +12,10 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import creativeApi from "@/lib/api/creative";
 import { formatAddress } from "@mysten/sui/utils";
-import { Copy, Download, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import {
-  FacebookIcon,
-  FacebookShareButton,
-  LinkedinIcon,
-  LinkedinShareButton,
-  RedditIcon,
-  RedditShareButton,
-  TelegramIcon,
-  TelegramShareButton,
-  TwitterShareButton,
-  XIcon,
-} from "react-share";
-import { toast } from "sonner";
 
 export const NFTGenerationJobStatus = {
   PENDING: "PENDING",
@@ -145,123 +131,17 @@ const CreatureCustomizer = () => {
                     )}
                   </div>
                   {nft.transactionHash && (
-                    <Sheet>
-                      <SheetTrigger asChild>
+                    <ShareBottomSheet
+                      trigger={
                         <div className="text-emerald-300 text-sm font-normal underline leading-normal cursor-pointer">
                           #{formatAddress(nft.transactionHash)}
                         </div>
-                      </SheetTrigger>
-                      <SheetContent
-                        side="bottom"
-                        className="w-96 pb-8 bg-[#141414] rounded-tl-3xl rounded-tr-3xl mx-auto"
-                      >
-                        <div className="inline-flex flex-col justify-start items-center gap-3 w-full">
-                          <div className="self-stretch h-11 px-4 pt-4 inline-flex justify-between items-center">
-                            <div className="justify-start text-white text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide"></div>
-                          </div>
-                          <div className="self-stretch px-4 pb-2 flex flex-col justify-start items-start gap-6">
-                            <div className="w-full flex flex-col justify-start items-start gap-1">
-                              <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                                Share via:
-                              </div>
-                              <div className="w-full inline-flex justify-start items-start gap-2 flex-wrap content-start overflow-hidden">
-                                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                                  <FacebookShareButton
-                                    url={`https://walrus.tusky.io/${nft.blobId}`}
-                                    className="w-full h-full flex items-center justify-center"
-                                    title={`Check out my NFT: ${nft.name}`}
-                                  >
-                                    <FacebookIcon size={24} round />
-                                  </FacebookShareButton>
-                                </div>
-                                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                                  <TwitterShareButton
-                                    url={`https://walrus.tusky.io/${nft.blobId}`}
-                                    title={`Check out my NFT: ${nft.name}`}
-                                    className="w-full h-full flex items-center justify-center"
-                                  >
-                                    <XIcon size={24} round />
-                                  </TwitterShareButton>
-                                </div>
-                                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                                  <TelegramShareButton
-                                    url={`https://walrus.tusky.io/${nft.blobId}`}
-                                    title={`Check out my NFT: ${nft.name}`}
-                                    className="w-full h-full flex items-center justify-center"
-                                  >
-                                    <TelegramIcon size={24} round />
-                                  </TelegramShareButton>
-                                </div>
-                                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                                  <LinkedinShareButton
-                                    url={`https://walrus.tusky.io/${nft.blobId}`}
-                                    title={`Check out my NFT: ${nft.name}`}
-                                    className="w-full h-full flex items-center justify-center"
-                                  >
-                                    <LinkedinIcon size={24} round />
-                                  </LinkedinShareButton>
-                                </div>
-                                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                                  <RedditShareButton
-                                    url={`https://walrus.tusky.io/${nft.blobId}`}
-                                    title={`Check out my NFT: ${nft.name}`}
-                                    className="w-full h-full flex items-center justify-center"
-                                  >
-                                    <RedditIcon size={24} round />
-                                  </RedditShareButton>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden">
-                              <div
-                                onClick={() => {
-                                  navigator.clipboard.writeText(
-                                    `https://app.cr3dentials.xyz/creative?prompt=${JSON.stringify(
-                                      nft.prompt
-                                    )}`
-                                  );
-                                  toast.success("Prompt copied to clipboard");
-                                }}
-                                className="self-stretch px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-                              >
-                                <Copy className="w-6 h-6 text-white" />
-                                <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                                  Copy Prompt
-                                </div>
-                              </div>
-                              <div
-                                className="self-stretch px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-                                onClick={() => {
-                                  const link = document.createElement("a");
-                                  link.href = `https://walrus.tusky.io/${nft.blobId}`;
-                                  link.download = `${nft.name}.jpg`;
-                                  link.click();
-                                }}
-                              >
-                                <Download className="w-6 h-6 text-white" />
-                                <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                                  Download Image
-                                </div>
-                              </div>
-                              <div
-                                className="w-full px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-                                onClick={() => {
-                                  window.open(
-                                    `https://suivision.xyz/txblock/${nft.transactionHash}`,
-                                    "_blank"
-                                  );
-                                }}
-                              >
-                                <ExternalLink className="w-6 h-6 text-white" />
-                                <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                                  View on Explorer
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </SheetContent>
-                    </Sheet>
+                      }
+                      blobId={nft.blobId}
+                      name={nft.name}
+                      prompt={nft.prompt}
+                      transactionHash={nft.transactionHash}
+                    />
                   )}
                   <div className="text-white text-sm font-normal leading-normal text-center">
                     {nft.name}
