@@ -27,10 +27,9 @@ import {
   TelegramIcon,
   TelegramShareButton,
   TwitterShareButton,
-  WhatsappIcon,
-  WhatsappShareButton,
   XIcon,
 } from "react-share";
+import { toast } from "sonner";
 
 export const NFTGenerationJobStatus = {
   PENDING: "PENDING",
@@ -211,21 +210,17 @@ const CreatureCustomizer = () => {
                                     <RedditIcon size={24} round />
                                   </RedditShareButton>
                                 </div>
-                                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                                  <WhatsappShareButton
-                                    url={`https://walrus.tusky.io/${nft.blobId}`}
-                                    title={`Check out my NFT: ${nft.name}`}
-                                    className="w-full h-full flex items-center justify-center"
-                                  >
-                                    <WhatsappIcon size={24} round />
-                                  </WhatsappShareButton>
-                                </div>
                               </div>
                             </div>
                             <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden">
                               <div
                                 onClick={() => {
-                                  navigator.clipboard.writeText(nft.prompt);
+                                  navigator.clipboard.writeText(
+                                    `https://app.cr3dentials.xyz/creative?prompt=${JSON.stringify(
+                                      nft.prompt
+                                    )}`
+                                  );
+                                  toast.success("Prompt copied to clipboard");
                                 }}
                                 className="self-stretch px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
                               >

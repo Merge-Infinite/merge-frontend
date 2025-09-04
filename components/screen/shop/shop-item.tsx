@@ -272,7 +272,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                       )}
                       <div className="text-white text-sm font-normal leading-normal">
                         {product.usdPrice
-                          ? product.usdPrice / suiPrice
+                          ? (product.usdPrice / suiPrice).toFixed(2)
                           : product.price}{" "}
                       </div>
                     </div>
@@ -381,7 +381,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                       )}
                       <div className="text-white text-sm font-normal leading-normal">
                         {product.usdPrice
-                          ? product.usdPrice / suiPrice
+                          ? (product.usdPrice / suiPrice).toFixed(2)
                           : product.price}{" "}
                       </div>
                     </div>
