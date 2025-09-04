@@ -182,7 +182,6 @@ export function OffchainBagScreen() {
         });
       }
 
-      console.log(response);
       if (response && (response as any).signature) {
         const result = await mintNFTsApi?.mutateAsync({
           transactionBlockBytes:

@@ -11,7 +11,6 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import creativeApi from "@/lib/api/creative";
 import { formatAddress } from "@mysten/sui/utils";
 import Image from "next/image";
@@ -34,7 +33,7 @@ const mappingStatusToText = {
   [NFTGenerationJobStatus.MINTING]: "Minting",
   [NFTGenerationJobStatus.COMPLETED]: "Completed",
   [NFTGenerationJobStatus.FAILED]: "Failed",
-  [NFTGenerationJobStatus.DUPLICATE_NFT]: "Duplicate NFT",
+  [NFTGenerationJobStatus.DUPLICATE_NFT]: "Change name",
 };
 
 const mappingStatusToBadgeColor = {
@@ -44,6 +43,7 @@ const mappingStatusToBadgeColor = {
   [NFTGenerationJobStatus.MINTING]: "#ffebad",
   [NFTGenerationJobStatus.COMPLETED]: "#99ffc6",
   [NFTGenerationJobStatus.FAILED]: "#ff1744",
+  [NFTGenerationJobStatus.DUPLICATE_NFT]: "#ff1744",
 };
 
 const mappingStatusToBadgeTextColor = {
@@ -53,6 +53,7 @@ const mappingStatusToBadgeTextColor = {
   [NFTGenerationJobStatus.MINTING]: "#b78401",
   [NFTGenerationJobStatus.COMPLETED]: "#009093",
   [NFTGenerationJobStatus.FAILED]: "#fff",
+  [NFTGenerationJobStatus.DUPLICATE_NFT]: "#ff1744",
 };
 
 const CreatureCustomizer = () => {
@@ -173,42 +174,33 @@ const CreatureCustomizer = () => {
         )}
       </div>
       <Dialog open={duplicateDialog.open} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[425px] bg-[#141414]">
+        <DialogContent className="sm:max-w-[425px] p-4 bg-[#1f1f1f] rounded-2xl border-none">
           <DialogHeader>
-            <DialogDescription className="text-white">
-              This NFT name already exists. Please provide a new name to
-              continue with the minting process.
+            <DialogDescription className="self-stretch justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+              This NFT name is already taken. Please enter a unique name to
+              continue minting.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="newName" className="text-right text-white">
-                New Name
-              </Label>
-              <Input
-                id="newName"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="col-span-3 bg-[#141414] text-white rounded-2xl"
-                placeholder="Enter a new name for your NFT"
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    !isUpdatingNftName &&
-                    newName.trim()
-                  ) {
-                    handleSubmitNewName();
-                  }
-                }}
-              />
-            </div>
+          <div className="self-stretch flex flex-col justify-start items-start gap-3">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Enter a new NFT name"
+              className="self-stretch max-h-52 min-h-20 px-3 py-2 bg-[#141414] rounded-xl outline outline-1 outline-offset-[-1px] outline-[#333333] text-white text-sm font-normal font-['Sora'] leading-normal placeholder:text-[#858585] border-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isUpdatingNftName && newName.trim()) {
+                  handleSubmitNewName();
+                }
+              }}
+            />
           </div>
-          <DialogFooter className="flex flex-row gap-2">
+          <DialogFooter className="self-stretch inline-flex justify-start items-start gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={handleCloseDialog}
               disabled={isUpdatingNftName}
+              className="px-4 py-2 bg-white rounded-3xl flex justify-center items-center gap-2 text-black text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide hover:bg-white border-none"
             >
               Cancel
             </Button>
@@ -217,8 +209,9 @@ const CreatureCustomizer = () => {
               onClick={handleSubmitNewName}
               disabled={!newName.trim() || isUpdatingNftName}
               isLoading={isUpdatingNftName}
+              className="flex-1 px-4 py-2 bg-[#a668ff] rounded-3xl flex justify-center items-center gap-2 text-white text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide hover:bg-[#a668ff] border-none disabled:bg-[#6b4399] disabled:opacity-50"
             >
-              {isUpdatingNftName ? "Submitting..." : "Submit"}
+              {isUpdatingNftName ? "Renaming..." : "Rename & Mint"}
             </Button>
           </DialogFooter>
         </DialogContent>
