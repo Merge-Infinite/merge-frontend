@@ -452,7 +452,7 @@ export default function PetExplorerDashboard() {
                     {(
                       ((Number(pool?.totalPrize) / Number(MIST_PER_SUI)) *
                         (suiPrice || 2.78)) /
-                      (30 / 100)
+                      (20 / 100)
                     ).toFixed(2)}
                     $
                   </span>
