@@ -71,6 +71,7 @@ export const addAuthHeader = (
  */
 export const handleAuthError = (): void => {
   removeAuthToken();
+  window.location.reload();
 };
 
 // Parse JWT token to get expiration time and other claims
