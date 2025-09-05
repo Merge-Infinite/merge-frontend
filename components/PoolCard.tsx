@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import useApi from "@/hooks/useApi";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Emoji from "./common/Emoji";
 
 interface Pool {
   id: string;
@@ -30,6 +31,11 @@ interface RecipeItem {
   dep: null | number;
   freq: number;
   isBasic: boolean;
+}
+
+function truncateText(text: string, maxLength: number = 70): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + "...";
 }
 
 export default function PoolCard({ pool }: PoolCardProps) {
@@ -90,35 +96,37 @@ export default function PoolCard({ pool }: PoolCardProps) {
       key={pool.id}
       data-property-2="SUI"
       data-type={poolState === "coming-soon" ? "Coming soon" : poolState}
-      className="w-full p-4 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#292929] inline-flex justify-start items-start gap-2 overflow-hidden"
+      className="w-full p-4 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#292929] flex   justify-start items-start gap-2"
     >
       <img
         className="w-20 h-20 p-2.5 rounded-xl"
         src={pool.imageUrl || "https://placehold.co/80x80"}
         alt={pool.name}
       />
-      <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch justify-start text-white text-base font-semibold font-sora uppercase leading-normal tracking-wider">
+      <div className="flex flex-col justify-start items-start gap-2 w-full flex-1">
+        <div className="self-stretch justify-start text-white text-base font-semibold font-sora uppercase leading-normal break-words">
           {pool.name}
         </div>
-        <div className="self-stretch justify-start text-[#858585] text-sm font-normal font-sora underline decoration-dotted leading-normal truncate">
-          {pool.description}
+        <div className="w-full text-[#858585] text-sm font-normal font-sora underline decoration-dotted leading-normal">
+          {truncateText(pool.description)}
         </div>
 
         {/* Display items from API */}
         {items.length > 0 && (
-          <div className="self-stretch inline-flex justify-start items-start gap-1.5 flex-wrap content-start">
+          <div className="flex justify-start items-start gap-1.5 flex-wrap content-start">
             <div className="justify-start text-white text-xs font-normal font-sora leading-none">
               *Required Elements:
             </div>
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
-              >
-                {item.emoji} {item.handle} (1)
-              </div>
-            ))}
+            <div className="flex items-center gap-1">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
+                >
+                  <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
