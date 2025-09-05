@@ -71,10 +71,6 @@ export const addAuthHeader = (
  */
 export const handleAuthError = (): void => {
   removeAuthToken();
-  // Redirect to login page
-  if (typeof window !== "undefined") {
-    window.location.href = "/login";
-  }
 };
 
 // Parse JWT token to get expiration time and other claims

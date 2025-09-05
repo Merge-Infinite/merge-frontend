@@ -391,6 +391,10 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     async (isRefresh = false) => {
       if (!walletAddress) {
         setError(new Error("No wallet address available"));
+        // Set initialLoading to false even when there's no wallet address
+        if (initialLoading) {
+          setInitialLoading(false);
+        }
         return [];
       }
 
@@ -477,12 +481,33 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     [stakeInfos]
   );
 
-  // Auto-fetch when wallet changes
+  // Auto-fetch when wallet changes or handle no wallet case
   useEffect(() => {
     if (walletAddress) {
       fetchStakeInfos();
+    } else if (initialLoading && autoFetch) {
+      // If there's no wallet address and we're still in initial loading,
+      // call fetchStakeInfos to properly handle the no-wallet case
+      fetchStakeInfos();
     }
-  }, [walletAddress, fetchStakeInfos]);
+  }, [walletAddress, initialLoading, autoFetch]);
+
+  // Add a timeout to prevent infinite loading state
+  useEffect(() => {
+    if (initialLoading) {
+      const timeoutId = setTimeout(() => {
+        if (initialLoading) {
+          console.warn("Initial loading timeout reached, forcing completion");
+          setInitialLoading(false);
+          if (!walletAddress) {
+            setError(new Error("Wallet connection timeout"));
+          }
+        }
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [initialLoading, walletAddress]);
 
   // Set up auto-refresh interval
   useEffect(() => {
