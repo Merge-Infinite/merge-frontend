@@ -10,6 +10,7 @@ import {
 import { Pool } from "@/hooks/usePool";
 import { useRouter } from "next/navigation";
 import React from "react";
+import Emoji from "./common/Emoji";
 
 interface RecipeItem {
   id: number;
@@ -130,7 +131,7 @@ export const PoolInfoSheet: React.FC<PoolInfoSheetProps> = ({
                     className="px-3 py-1 rounded-3xl outline outline-1 outline-offset-[-1px] outline-[#292929] flex justify-center items-center gap-2"
                   >
                     <div className="justify-start text-white text-xs font-normal font-sora uppercase leading-normal">
-                      {item.emoji} {item.handle} (1)
+                      <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
                     </div>
                   </div>
                 ))
