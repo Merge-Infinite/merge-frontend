@@ -1,5 +1,6 @@
 "use client";
 
+import { PoolInfoSheet } from "@/components/PoolInfoSheet";
 import { Button } from "@/components/ui/button";
 import useApi from "@/hooks/useApi";
 import { useRouter } from "next/navigation";
@@ -14,6 +15,9 @@ interface Pool {
   startTime: number;
   endTime: number;
   requiredElements?: number[];
+  participantCount?: number;
+  totalStakedCount?: number;
+  totalPrize?: string;
 }
 
 interface PoolCardProps {
@@ -104,12 +108,16 @@ export default function PoolCard({ pool }: PoolCardProps) {
         alt={pool.name}
       />
       <div className="flex flex-col justify-start items-start gap-2 w-full flex-1">
-        <div className="self-stretch justify-start text-white text-base font-semibold font-sora uppercase leading-normal break-words">
-          {pool.name}
-        </div>
-        <div className="w-full text-[#858585] text-sm font-normal font-sora underline decoration-dotted leading-normal">
-          {truncateText(pool.description)}
-        </div>
+        <PoolInfoSheet pool={pool as any} poolRequiredItems={items}>
+          <div className="cursor-pointer">
+            <div className="self-stretch justify-start text-white text-base font-semibold font-sora uppercase leading-normal break-words hover:text-[#a668ff] transition-colors">
+              {pool.name}
+            </div>
+            <div className="w-full text-[#858585] text-sm font-normal font-sora underline decoration-dotted leading-normal hover:text-white transition-colors">
+              {truncateText(pool.description)}
+            </div>
+          </div>
+        </PoolInfoSheet>
 
         {/* Display items from API */}
         {items.length > 0 && (
