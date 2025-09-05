@@ -206,6 +206,14 @@ export const MarketItem = React.memo(
           toast.error("User not found");
           return;
         }
+        let recipient = address;
+        if (!isTelegram) {
+          recipient = account?.address || "";
+        }
+        if (!recipient) {
+          toast.error("Please connect your wallet");
+          return;
+        }
         setLoading(true);
         const txb = new Transaction();
 
@@ -228,10 +236,7 @@ export const MarketItem = React.memo(
           ],
           typeArguments: [type],
         });
-        txb.transferObjects(
-          [takenObject],
-          isTelegram ? address : account?.address || ""
-        );
+        txb.transferObjects([takenObject], recipient);
         const response = await apiClient.callFunc<
           SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
           undefined
