@@ -33,9 +33,6 @@ export const setAuthToken = (token: string): void => {
  * Remove the authentication token from localStorage
  */
 export const removeAuthToken = (): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
   localStorage.removeItem(AUTH_TOKEN_KEY);
 };
 
