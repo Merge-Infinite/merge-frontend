@@ -208,12 +208,6 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
               <div>
                 {formatAddress(isTelegram ? address : account?.address || "")}
               </div>
-              <Image
-                src="/images/remove.svg"
-                alt="copy"
-                width={24}
-                height={24}
-              />
             </div>
             <div className="flex justify-start items-center">
               <Image src="/images/sui.svg" alt="copy" width={24} height={24} />
