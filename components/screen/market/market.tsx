@@ -318,6 +318,10 @@ export const NFTMarket = () => {
         toast.error("No profit to claim");
         return;
       }
+      if (!user) {
+        toast.error("User not found");
+        return;
+      }
       setLoadingClaim(true);
       const txb = new Transaction();
       const amtArg = txb.moveCall({
@@ -333,7 +337,10 @@ export const NFTMarket = () => {
           amtArg,
         ],
       });
-      txb.transferObjects([coin], txb.pure.address(address));
+      txb.transferObjects(
+        [coin],
+        txb.pure.address(isTelegram ? address : account?.address || "")
+      );
 
       let response;
       if (isTelegram) {
