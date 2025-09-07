@@ -1,6 +1,9 @@
 "use client";
+import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useUser } from "@/hooks/useUser";
 import { Copy, Download, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 import {
   FacebookIcon,
@@ -31,8 +34,28 @@ export const ShareBottomSheet = ({
   transactionHash,
   nftId,
 }: ShareBottomSheetProps) => {
+  const router = useRouter();
   const shareUrl = blobId ? `https://walrus.tusky.io/${blobId}` : "";
   const shareTitle = `Check out my NFT: ${name || ""}`;
+  const { user } = useUser();
+  const { isTelegram } = useUniversalApp();
+
+  const onCopy = async () => {
+    try {
+      if (isTelegram) {
+        navigator.clipboard.writeText(
+          `${process.env.NEXT_PUBLIC_TELEGRAM_APP}?startapp=${user?.referralCode}`
+        );
+      } else {
+        navigator.clipboard.writeText(
+          `${process.env.NEXT_PUBLIC_APP_URL}?referralCode=${user?.referralCode}`
+        );
+      }
+      toast("Copied to clipboard");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <Sheet>
@@ -60,6 +83,16 @@ export const ShareBottomSheet = ({
                     <FacebookIcon size={24} round />
                   </FacebookShareButton>
                 </div>
+                {/* <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
+                  <FacebookMessengerShareButton
+                    appId={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
+                    url={shareUrl}
+                    title={shareTitle}
+                    className="w-full h-full flex items-center justify-center"
+                  >
+                    <FacebookMessengerIcon size={24} round />
+                  </FacebookMessengerShareButton>
+                </div> */}
                 <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
                   <TwitterShareButton
                     url={shareUrl}
@@ -90,22 +123,28 @@ export const ShareBottomSheet = ({
                 </div>
               </div>
             </div>
+            <div
+              className="self-stretch min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-center items-center gap-2 overflow-hidden"
+              onClick={onCopy}
+            >
+              <div className="size-6 relative overflow-hidden">
+                <div className="size-5 left-[2px] top-[2px] absolute bg-white" />
+              </div>
+              <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                Copy link
+              </div>
+            </div>
             <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden">
               {prompt && (
                 <div
                   onClick={() => {
-                    navigator.clipboard.writeText(
-                      `https://app.cr3dentials.xyz/creative?prompt=${JSON.stringify(
-                        prompt
-                      )}`
-                    );
-                    toast.success("Prompt copied to clipboard");
+                    router.push(`/creative?prompt=${JSON.stringify(prompt)}`);
                   }}
                   className="self-stretch px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
                 >
                   <Copy className="w-6 h-6 text-white" />
                   <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                    Copy Prompt
+                    Use Prompt
                   </div>
                 </div>
               )}
