@@ -1,6 +1,7 @@
 "use client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Copy, Download, ExternalLink } from "lucide-react";
+import { ReactNode } from "react";
 import {
   FacebookIcon,
   FacebookShareButton,
@@ -14,7 +15,6 @@ import {
   XIcon,
 } from "react-share";
 import { toast } from "sonner";
-import { ReactNode } from "react";
 
 interface ShareBottomSheetProps {
   trigger: ReactNode;
