@@ -5,8 +5,6 @@ import { ReactNode } from "react";
 import {
   FacebookIcon,
   FacebookShareButton,
-  LinkedinIcon,
-  LinkedinShareButton,
   RedditIcon,
   RedditShareButton,
   TelegramIcon,
@@ -80,15 +78,7 @@ export const ShareBottomSheet = ({
                     <TelegramIcon size={24} round />
                   </TelegramShareButton>
                 </div>
-                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                  <LinkedinShareButton
-                    url={shareUrl}
-                    title={shareTitle}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <LinkedinIcon size={24} round />
-                  </LinkedinShareButton>
-                </div>
+
                 <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
                   <RedditShareButton
                     url={shareUrl}
