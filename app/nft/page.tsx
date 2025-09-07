@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/hooks/useLoading";
 import { useNFTList } from "@/hooks/useNFTList";
+import { Pool, usePoolSystem } from "@/hooks/usePool";
 import { useStakeInfoList } from "@/hooks/useStakeInfoList";
 import { useUser } from "@/hooks/useUser";
 import { SendAndExecuteTxParams, TxEssentials } from "@/lib/wallet/core";
@@ -50,6 +51,10 @@ interface InventoryItem {
 export default function InventoryStakingInterface() {
   const searchParams = useSearchParams();
   const poolId = searchParams.get("poolId");
+  const { getPoolById } = usePoolSystem({
+    refreshInterval: 30000,
+  });
+
   const { isLoading, startLoading, stopLoading } = useLoading();
   const apiClient = useApiClient();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -172,7 +177,7 @@ export default function InventoryStakingInterface() {
   }, [user]);
 
   const handleStakeNFT = useCallback(
-    async (nftId: string) => {
+    async (nftId: string, nftElements: number[], poolInfo: Pool) => {
       try {
         // Check if this NFT is already being staked
         if (pendingStakes.has(nftId)) {
@@ -186,6 +191,16 @@ export default function InventoryStakingInterface() {
         }
         if (!isTelegram && !account?.address) {
           toast.error("No address found");
+          return;
+        }
+
+        if (
+          poolInfo?.requiredElements &&
+          !poolInfo.requiredElements.every((element) =>
+            nftElements.includes(element)
+          )
+        ) {
+          toast.error("NFT does not contain all required elements.");
           return;
         }
 
@@ -311,7 +326,7 @@ export default function InventoryStakingInterface() {
               >
                 All
               </TabsTrigger>
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="elements"
                 className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
               >
@@ -322,7 +337,7 @@ export default function InventoryStakingInterface() {
                 className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
               >
                 NFT
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
 
             {/* All Items */}
@@ -336,16 +351,24 @@ export default function InventoryStakingInterface() {
                 creatureNfts
                   .map(({ data }) => {
                     const metadata = data?.content?.fields.metadata;
+                    console.log("metadata", metadata);
+                    const poolInfo = poolId ? getPoolById(poolId) : null;
                     return {
                       id: data!.objectId,
                       name: metadata?.fields?.name || "Creature NFT",
                       imageUrl: metadata?.fields?.image_uri || "",
+                      elements: metadata?.fields?.material_items.map(
+                        (item: any) => item.fields.item_id
+                      ),
+                      poolInfo,
                     };
                   })
                   .map((card, index) => (
                     <NFTCard
                       key={index}
                       item={card}
+                      nftElements={card.elements}
+                      poolInfo={card.poolInfo}
                       handleStakeNFT={handleStakeNFT}
                       isLoading={isLoading}
                       availableSlots={Number(availableSlots)}
@@ -384,14 +407,18 @@ const NFTCard = ({
   nftCount,
   optimisticStakeCount,
   isPending,
+  nftElements,
+  poolInfo,
 }: {
   item: InventoryItem;
-  handleStakeNFT: (id: string) => void;
+  handleStakeNFT: (id: string, nftElements: number[], poolInfo: Pool) => void;
   isLoading: boolean;
   availableSlots: number;
   nftCount: number | undefined;
   optimisticStakeCount: number;
   isPending: boolean;
+  nftElements: number[];
+  poolInfo: Pool;
 }) => {
   return (
     <div className="w-44 flex flex-col items-center gap-2">
@@ -419,7 +446,7 @@ const NFTCard = ({
         variant="secondary"
         size="sm"
         className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
-        onClick={() => handleStakeNFT(item.id)}
+        onClick={() => handleStakeNFT(item.id, nftElements, poolInfo)}
         disabled={
           isLoading ||
           isPending ||
