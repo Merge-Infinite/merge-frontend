@@ -244,7 +244,6 @@ export function OnchainBagScreen() {
               nfts
                 .map((nft) => {
                   const display = nft?.data?.display?.data;
-                  console.log("nft", nft);
                   return {
                     id: nft!.data.objectId,
                     name: display?.name || "Element NFT",

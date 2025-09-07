@@ -1,5 +1,6 @@
 import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
+import { ShareBottomSheet } from "@/components/common/ShareBottomSheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -323,16 +324,16 @@ export const CreativeOnchainItem = React.memo(
                 className="rounded-2xl"
               />
 
-              {/* Hash ID */}
-              <div
-                className="text-emerald-300 text-sm font-normal underline leading-normal cursor-pointer"
-                onClick={() => {
-                  window.open(`https://suivision.xyz/object/${id}`, "_blank");
-                }}
-              >
-                #{formatAddress(id)}
-              </div>
-
+              <ShareBottomSheet
+                trigger={
+                  <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer">
+                    #{formatAddress(id)}
+                  </div>
+                }
+                blobId={imageUrl}
+                name={name}
+                nftId={id}
+              />
               <div className="text-white text-sm font-normal leading-normal text-center">
                 {name}
               </div>
