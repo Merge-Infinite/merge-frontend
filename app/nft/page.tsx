@@ -76,8 +76,6 @@ export default function InventoryStakingInterface() {
   const [pendingStakes, setPendingStakes] = useState<Set<string>>(new Set());
   const [optimisticStakeCount, setOptimisticStakeCount] = useState<number>(0);
 
-  console.log("stakeStats", stakeStats);
-
   // Sync optimistic count with actual count when stakeStats updates
   useEffect(() => {
     if (stakeStats?.nftCount !== undefined) {
@@ -194,6 +192,8 @@ export default function InventoryStakingInterface() {
           return;
         }
 
+        console.log(poolInfo);
+        console.log(nftElements);
         if (
           poolInfo?.requiredElements &&
           !poolInfo.requiredElements.every((element) =>
@@ -351,14 +351,13 @@ export default function InventoryStakingInterface() {
                 creatureNfts
                   .map(({ data }) => {
                     const metadata = data?.content?.fields.metadata;
-                    console.log("metadata", metadata);
-                    const poolInfo = poolId ? getPoolById(poolId) : null;
+                    const poolInfo = poolId ? getPoolById(poolId) : undefined;
                     return {
                       id: data!.objectId,
                       name: metadata?.fields?.name || "Creature NFT",
                       imageUrl: metadata?.fields?.image_uri || "",
                       elements: metadata?.fields?.material_items.map(
-                        (item: any) => item.fields.item_id
+                        (item: any) => Number(item.fields.item_id)
                       ),
                       poolInfo,
                     };
@@ -411,14 +410,18 @@ const NFTCard = ({
   poolInfo,
 }: {
   item: InventoryItem;
-  handleStakeNFT: (id: string, nftElements: number[], poolInfo: Pool) => void;
+  handleStakeNFT: (
+    id: string,
+    nftElements: number[],
+    poolInfo: Pool | undefined
+  ) => void;
   isLoading: boolean;
   availableSlots: number;
   nftCount: number | undefined;
   optimisticStakeCount: number;
   isPending: boolean;
   nftElements: number[];
-  poolInfo: Pool;
+  poolInfo: Pool | undefined;
 }) => {
   return (
     <div className="w-44 flex flex-col items-center gap-2">
