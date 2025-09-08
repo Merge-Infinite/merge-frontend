@@ -26,11 +26,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { SELLER_ADDRESS } from "@/utils/constants";
-import {
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-  useSuiClient,
-} from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
 import { initInvoice } from "@telegram-apps/sdk";
@@ -50,7 +46,6 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
   const { data: balance } = useSuiBalance(address);
   const [isLoading, setIsLoading] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
-  const [product, setProduct] = useState<any>(null);
   const fetchProducts = useApi({
     key: ["products"],
     method: "GET",
@@ -73,24 +68,16 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
     url: "shop/process-sui-transaction",
     method: "POST",
   }).post;
-  const client = useSuiClient();
-  const { mutateAsync: signAndExecuteTransaction } =
-    useSignAndExecuteTransaction({
-      execute: async ({ bytes, signature }) =>
-        await client.executeTransactionBlock({
-          transactionBlock: bytes,
-          signature,
-          options: {
-            showRawEffects: true,
-            showObjectChanges: true,
-          },
-        }),
-    });
+
+  const { mutateAsync: signTransaction } = useSignTransaction();
 
   const onBuy = useCallback(
     async (item: any) => {
       if (currency === "sui") {
-        await onBuyBySui(item.usdPrice ? item.usdPrice / suiPrice : item.price);
+        await onBuyBySui(
+          item.usdPrice ? item.usdPrice / suiPrice : item.price,
+          item
+        );
       } else {
         const resp = await createPurchase?.mutateAsync({
           productId: item.id,
@@ -113,12 +100,12 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
     [createPurchase, invoice, currency]
   );
 
-  async function onBuyBySui(suiPrice: number): Promise<void> {
+  async function onBuyBySui(suiPrice: number, item: any): Promise<void> {
     setIsLoading(true);
     try {
       const txb = new Transaction();
       const coinToTransfer = txb.splitCoins(txb.gas, [
-        Number(suiPrice * Number(MIST_PER_SUI)),
+        Math.floor(Number(suiPrice) * Number(MIST_PER_SUI)),
       ]);
 
       // Transfer the split coin to the recipient address
@@ -131,7 +118,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           undefined
         >(
           "txn",
-          "signAndExecuteTransactionBlock",
+          "signTransactionBlock",
           {
             transactionBlock: txb.serialize(),
             context: {
@@ -143,24 +130,30 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
           { withAuth: true }
         );
       } else {
-        response = await signAndExecuteTransaction({
+        response = await signTransaction({
           transaction: txb.serialize(),
         });
       }
 
-      if (response && response.digest) {
+      if (response && (response as any).signature) {
         // Sync with backend
         try {
           await processSuiPayment?.mutateAsync({
-            txHash: response.digest,
-            productId: product.id,
+            productId: item.id,
+            transactionBlockBytes:
+              (response as any).transactionBlockBytes ||
+              (response as any).bytes,
+            signature: (response as any).signature,
           });
-          refetch();
+          toast.success("We are processing your purchase. Please wait...");
         } catch (error) {
           console.error("Backend sync error:", error);
         }
+      } else {
+        toast.error("Failed to purchase energy. Please try again.");
       }
     } catch (error: any) {
+      console.log(error);
       if (error.message === "Authentication required") {
         setOpenAuthDialog(true);
       }
@@ -277,7 +270,6 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                     disabled={createPurchase?.isPending || isLoading}
                     isLoading={createPurchase?.isPending || isLoading}
                     onClick={async () => {
-                      setProduct(product);
                       await onBuy(product);
                     }}
                   >

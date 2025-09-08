@@ -1,10 +1,11 @@
 "use client";
+import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useApi from "@/hooks/useApi";
 import { useLoading } from "@/hooks/useLoading";
 import { useNFTList } from "@/hooks/useNFTList";
 import { Pool, usePoolSystem } from "@/hooks/usePool";
@@ -51,8 +52,8 @@ interface InventoryItem {
 export default function InventoryStakingInterface() {
   const searchParams = useSearchParams();
   const poolId = searchParams.get("poolId");
-  const { getPoolById } = usePoolSystem({
-    refreshInterval: 30000,
+  const { getPoolById, pools } = usePoolSystem({
+    refreshInterval: 3000,
   });
 
   const { isLoading, startLoading, stopLoading } = useLoading();
@@ -75,6 +76,7 @@ export default function InventoryStakingInterface() {
   // Track pending stakes to prevent concurrent staking beyond limit
   const [pendingStakes, setPendingStakes] = useState<Set<string>>(new Set());
   const [optimisticStakeCount, setOptimisticStakeCount] = useState<number>(0);
+  const [items, setItems] = useState<any[]>([]);
 
   // Sync optimistic count with actual count when stakeStats updates
   useEffect(() => {
@@ -160,6 +162,34 @@ export default function InventoryStakingInterface() {
     return totalSlots;
   }
 
+  const recipesApi = useApi({
+    key: ["recipes-items"],
+    method: "POST",
+    url: "recipes/items",
+  }).post;
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      if (!poolId) return;
+      const poolInfo = poolId ? getPoolById(poolId) : undefined;
+      if (!poolInfo) return;
+
+      try {
+        const response = await recipesApi?.mutateAsync({
+          itemIds: poolInfo?.requiredElements,
+        });
+
+        if (response.items) {
+          setItems(response.items);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
+
+    fetchItems();
+  }, [pools]);
+
   const availableSlots = useMemo(() => {
     const subscriptionEndDate =
       user?.userBalance?.subscriptionEndDate &&
@@ -175,7 +205,11 @@ export default function InventoryStakingInterface() {
   }, [user]);
 
   const handleStakeNFT = useCallback(
-    async (nftId: string, nftElements: number[], poolInfo: Pool) => {
+    async (
+      nftId: string,
+      nftElements: number[],
+      poolInfo: Pool | undefined
+    ) => {
       try {
         // Check if this NFT is already being staked
         if (pendingStakes.has(nftId)) {
@@ -192,8 +226,6 @@ export default function InventoryStakingInterface() {
           return;
         }
 
-        console.log(poolInfo);
-        console.log(nftElements);
         if (
           poolInfo?.requiredElements &&
           !poolInfo.requiredElements.every((element) =>
@@ -317,74 +349,71 @@ export default function InventoryStakingInterface() {
             />
           </div>
 
-          {/* Category Tabs */}
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="flex justify-start gap-6 bg-transparent">
-              <TabsTrigger
-                value="all"
-                className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
-              >
-                All
-              </TabsTrigger>
-              {/* <TabsTrigger
-                value="elements"
-                className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
-              >
-                Elements
-              </TabsTrigger>
-              <TabsTrigger
-                value="nft"
-                className="data-[state=active]:text-white data-[state=active]:border-b-white data-[state=active]:border-b-2 uppercase"
-              >
-                NFT
-              </TabsTrigger> */}
-            </TabsList>
-
-            {/* All Items */}
-            <TabsContent
-              value="all"
-              className="flex-1 mt-4 grid grid-cols-2 gap-4"
-            >
-              {creatureNftsLoading && creatureNfts.length === 0 ? (
-                <SkeletonCard />
-              ) : (
-                creatureNfts
-                  .map(({ data }) => {
-                    const metadata = data?.content?.fields.metadata;
-                    const poolInfo = poolId ? getPoolById(poolId) : undefined;
-                    return {
-                      id: data!.objectId,
-                      name: metadata?.fields?.name || "Creature NFT",
-                      imageUrl: metadata?.fields?.image_uri || "",
-                      elements: metadata?.fields?.material_items.map(
-                        (item: any) => Number(item.fields.item_id)
-                      ),
-                      poolInfo,
-                    };
-                  })
-                  .map((card, index) => (
-                    <NFTCard
-                      key={index}
-                      item={card}
-                      nftElements={card.elements}
-                      poolInfo={card.poolInfo}
-                      handleStakeNFT={handleStakeNFT}
-                      isLoading={isLoading}
-                      availableSlots={Number(availableSlots)}
-                      nftCount={Number(stakeStats?.nftCount)}
-                      optimisticStakeCount={optimisticStakeCount}
-                      isPending={pendingStakes.has(card.id)}
-                    />
-                  ))
-              )}
-            </TabsContent>
-
-            {/* Elements Only */}
-            <TabsContent value="elements" className="flex-1 mt-4"></TabsContent>
-
-            {/* NFTs Only */}
-            <TabsContent value="nft" className="flex-1 mt-4"></TabsContent>
-          </Tabs>
+          {creatureNftsLoading ? (
+            <SkeletonCard />
+          ) : creatureNfts.length === 0 ? (
+            <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
+              <Image
+                src="/images/empty.svg"
+                alt="No NFT"
+                width={64}
+                height={64}
+              />
+              <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
+                <div className="self-stretch text-center justify-start text-[#858585] text-sm font-bold font-['Sora'] leading-normal">
+                  You dont have any eligible NFTs
+                </div>
+                <div className="self-stretch text-center justify-start text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
+                  Make sure you own at least one NFT that includes these
+                  required elements:{" "}
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
+                    >
+                      <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            creatureNfts
+              .map(({ data }) => {
+                const metadata = data?.content?.fields.metadata;
+                const poolInfo = poolId ? getPoolById(poolId) : undefined;
+                return {
+                  id: data!.objectId,
+                  name: metadata?.fields?.name || "Creature NFT",
+                  imageUrl: metadata?.fields?.image_uri || "",
+                  elements: metadata?.fields?.material_items.map((item: any) =>
+                    Number(item.fields.item_id)
+                  ),
+                  poolInfo,
+                };
+              })
+              .filter(
+                (card) =>
+                  card.poolInfo?.requiredElements &&
+                  card.poolInfo.requiredElements.every((element) =>
+                    card.elements.includes(element)
+                  )
+              )
+              .map((card, index) => (
+                <NFTCard
+                  key={index}
+                  item={card}
+                  nftElements={card.elements}
+                  poolInfo={card.poolInfo}
+                  handleStakeNFT={handleStakeNFT}
+                  isLoading={isLoading}
+                  availableSlots={Number(availableSlots)}
+                  nftCount={Number(stakeStats?.nftCount)}
+                  optimisticStakeCount={optimisticStakeCount}
+                  isPending={pendingStakes.has(card.id)}
+                />
+              ))
+          )}
         </div>
       </div>
       <PasscodeAuthDialog

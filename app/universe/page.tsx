@@ -188,8 +188,6 @@ export default function PetExplorerDashboard() {
     },
   ];
 
-  console.log(stakeStats);
-
   const suiRewardAmount = React.useMemo(
     () => Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI),
     [stakeStats?.pendingSuiRewards]

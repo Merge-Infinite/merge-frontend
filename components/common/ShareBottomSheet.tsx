@@ -62,76 +62,86 @@ export const ShareBottomSheet = ({
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="bottom"
-        className="w-96 pb-8 bg-[#141414] rounded-tl-3xl rounded-tr-3xl mx-auto"
+        className="w-full pb-8 bg-[#141414] rounded-tl-3xl rounded-tr-3xl mx-auto"
       >
         <div className="inline-flex flex-col justify-start items-center gap-3 w-full">
           <div className="self-stretch h-11 px-4 pt-4 inline-flex justify-between items-center">
             <div className="justify-start text-white text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide"></div>
           </div>
-          <div className="self-stretch px-4 pb-2 flex flex-col justify-start items-start gap-6">
-            <div className="w-full flex flex-col justify-start items-start gap-1">
+          <div className="self-stretch px-4 pb-2 inline-flex flex-col justify-start items-start gap-6">
+            <div className="size- flex flex-col justify-start items-start gap-1">
               <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
                 Share via:
               </div>
               <div className="w-full inline-flex justify-start items-start gap-2 flex-wrap content-start overflow-hidden">
-                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
+                <div
+                  className="flex-1 min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+                  onClick={onCopy}
+                >
+                  <Copy className="size-6 text-white" />
+                  <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                    Copy link
+                  </div>
+                </div>
+                <div className="flex-1 min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
+                  <TwitterShareButton
+                    url={shareUrl}
+                    title={shareTitle}
+                    className="w-full h-full flex flex-col items-center justify-center gap-2"
+                  >
+                    <XIcon size={24} round />
+                    <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                      X
+                    </div>
+                  </TwitterShareButton>
+                </div>
+                <div className="flex-1 min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
+                  <TelegramShareButton
+                    url={shareUrl}
+                    title={shareTitle}
+                    className="w-full h-full flex flex-col items-center justify-center gap-2"
+                  >
+                    <TelegramIcon size={24} round />
+                    <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                      Telegram
+                    </div>
+                  </TelegramShareButton>
+                </div>
+                <div className="flex-1 min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
                   <FacebookShareButton
                     url={shareUrl}
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-full h-full flex flex-col items-center justify-center gap-2"
                     title={shareTitle}
                   >
                     <FacebookIcon size={24} round />
+                    <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                      Facebook
+                    </div>
                   </FacebookShareButton>
                 </div>
-                {/* <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
+                {/* <div className="flex-1 min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
                   <FacebookMessengerShareButton
                     appId={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
                     url={shareUrl}
                     title={shareTitle}
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-full h-full flex flex-col items-center justify-center gap-2"
                   >
                     <FacebookMessengerIcon size={24} round />
+                    <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">Messenger</div>
                   </FacebookMessengerShareButton>
                 </div> */}
-                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                  <TwitterShareButton
-                    url={shareUrl}
-                    title={shareTitle}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <XIcon size={24} round />
-                  </TwitterShareButton>
-                </div>
-                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
-                  <TelegramShareButton
-                    url={shareUrl}
-                    title={shareTitle}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <TelegramIcon size={24} round />
-                  </TelegramShareButton>
-                </div>
-
-                <div className="flex-1 min-w-24 p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
+                <div className="flex-1 min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-center items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors">
                   <RedditShareButton
                     url={shareUrl}
                     title={shareTitle}
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-full h-full flex flex-col items-center justify-center gap-2"
                   >
                     <RedditIcon size={24} round />
+                    <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                      Reddit
+                    </div>
                   </RedditShareButton>
                 </div>
-              </div>
-            </div>
-            <div
-              className="self-stretch min-w-24 px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-center items-center gap-2 overflow-hidden"
-              onClick={onCopy}
-            >
-              <div className="size-6 relative overflow-hidden">
-                <div className="size-5 left-[2px] top-[2px] absolute bg-white" />
-              </div>
-              <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                Copy link
               </div>
             </div>
             <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden">
@@ -142,9 +152,12 @@ export const ShareBottomSheet = ({
                   }}
                   className="self-stretch px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
                 >
-                  <Copy className="w-6 h-6 text-white" />
+                  <div className="size-6 relative overflow-hidden">
+                    <Copy className="size-5 absolute left-[2px] top-[2px] text-white" />
+                    <div className="size-2 left-[13px] top-[2.27px] absolute bg-white" />
+                  </div>
                   <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                    Use Prompt
+                    Use Promt
                   </div>
                 </div>
               )}
@@ -158,7 +171,9 @@ export const ShareBottomSheet = ({
                     link.click();
                   }}
                 >
-                  <Download className="w-6 h-6 text-white" />
+                  <div className="size-6 relative overflow-hidden">
+                    <Download className="size-5 absolute left-[2px] top-[2px] text-white" />
+                  </div>
                   <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
                     Download Image
                   </div>
@@ -174,7 +189,9 @@ export const ShareBottomSheet = ({
                     window.open(explorerUrl, "_blank");
                   }}
                 >
-                  <ExternalLink className="w-6 h-6 text-white" />
+                  <div className="size-6 relative overflow-hidden">
+                    <ExternalLink className="size-5 absolute left-[2px] top-[2px] text-white" />
+                  </div>
                   <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
                     View on Explorer
                   </div>

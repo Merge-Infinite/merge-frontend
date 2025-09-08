@@ -19,6 +19,7 @@ import {
   SendAndExecuteTxParams,
   TxEssentials,
 } from "@/lib/wallet/core/api/txn";
+import { formatSUI } from "@/lib/wallet/core/utils";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
@@ -451,7 +452,7 @@ export const CardItem = React.memo(
                   />
 
                   <div className="flex justify-between items-center">
-                    <div className="text-sm font-medium">Listing price:</div>
+                    <div className="text-sm font-medium">Price (total):</div>
                     <div className="text-sm font-normal">Fee: 3%</div>
                   </div>
 
@@ -476,6 +477,10 @@ export const CardItem = React.memo(
                         height={24}
                       />
                     </div>
+                  </div>
+                  <div className="justify-start text-[#858585] text-xs font-normal font-['Sora'] leading-none">
+                    (≈{formatSUI(Number(listingPrice) / Number(amount))} SUI
+                    each)
                   </div>
                   {priceError && (
                     <p className="text-red-500 text-xs mt-1">{priceError}</p>
