@@ -36,7 +36,6 @@ export default function BrainrotExplorer() {
     return { activePools: active, inactivePools: inactive };
   }, [pools]);
 
-
   return (
     <div className="w-full h-full bg-black p-4">
       <Tabs defaultValue="active" className="w-full">
@@ -58,9 +57,7 @@ export default function BrainrotExplorer() {
         <TabsContent value="active" className="mt-0">
           <div className="flex flex-col gap-4">
             {activePools.length > 0 ? (
-              activePools.map((pool) => (
-                <PoolCard key={pool.id} pool={pool} />
-              ))
+              activePools.map((pool) => <PoolCard key={pool.id} pool={pool} />)
             ) : (
               <div className="text-center py-8">
                 <p className="text-neutral-500 font-sora">

@@ -359,21 +359,23 @@ export default function InventoryStakingInterface() {
                 width={64}
                 height={64}
               />
-              <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
+              <div className="self-stretch inline-flex flex-col justify-center items-center gap-2">
                 <div className="self-stretch text-center justify-start text-[#858585] text-sm font-bold font-['Sora'] leading-normal">
                   You dont have any eligible NFTs
                 </div>
                 <div className="self-stretch text-center justify-start text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
                   Make sure you own at least one NFT that includes these
                   required elements:{" "}
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
-                    >
-                      <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
-                    </div>
-                  ))}
+                  <div className="flex gap-2">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
+                      >
+                        <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
