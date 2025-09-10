@@ -2,8 +2,6 @@
 import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useLoading } from "@/hooks/useLoading";
@@ -29,12 +27,11 @@ import {
   useSignAndExecuteTransaction,
   useSuiClient,
 } from "@mysten/dapp-kit";
-import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useUniversalApp } from "../context/UniversalAppContext";
@@ -73,6 +70,7 @@ export default function InventoryStakingInterface() {
     refreshInterval: undefined,
   });
 
+  const firstRender = useRef(false);
   // Track pending stakes to prevent concurrent staking beyond limit
   const [pendingStakes, setPendingStakes] = useState<Set<string>>(new Set());
   const [optimisticStakeCount, setOptimisticStakeCount] = useState<number>(0);
@@ -188,6 +186,7 @@ export default function InventoryStakingInterface() {
     };
 
     fetchItems();
+    firstRender.current = true;
   }, [pools]);
 
   const availableSlots = useMemo(() => {
@@ -334,89 +333,97 @@ export default function InventoryStakingInterface() {
     ]
   );
 
-  return (
-    <div className="min-h-screen bg-black p-4">
-      <div className="max-w-md mx-auto h-[593px]">
-        <div className="flex flex-col gap-4 h-full">
-          {/* Search Input */}
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-              <Search className="w-5 h-5 text-white opacity-95" />
-            </div>
-            <Input
-              placeholder="Search items..."
-              className="h-10 pl-12 pr-3 bg-neutral-900 border-neutral-700 rounded-[32px] text-neutral-500 placeholder:text-neutral-500 font-sora text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
-          </div>
+  const filteredNfts = useMemo(
+    () =>
+      creatureNfts
+        .map(({ data }) => {
+          const metadata = data?.content?.fields.metadata;
+          const poolInfo = poolId ? getPoolById(poolId) : undefined;
+          return {
+            id: data!.objectId,
+            name: metadata?.fields?.name || "Creature NFT",
+            imageUrl: metadata?.fields?.image_uri || "",
+            elements: metadata?.fields?.material_items.map((item: any) =>
+              Number(item.fields.item_id)
+            ),
+            poolInfo,
+          };
+        })
+        .filter(
+          (card) =>
+            card.poolInfo?.requiredElements &&
+            card.poolInfo.requiredElements.every((element) =>
+              card.elements.includes(element)
+            )
+        ),
+    [creatureNfts, poolId]
+  );
 
-          {creatureNftsLoading ? (
+  return (
+    <div className="min-h-screen bg-black p-4 w-full">
+      <div className="flex flex-col gap-4 h-full w-full">
+        {/* Search Input */}
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+            <Search className="w-5 h-5 text-white opacity-95" />
+          </div>
+          <Input
+            placeholder="Search items..."
+            className="h-10 pl-12 pr-3 bg-neutral-900 border-neutral-700 rounded-[32px] text-neutral-500 placeholder:text-neutral-500 font-sora text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+        </div>
+
+        {creatureNftsLoading && !firstRender.current ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <SkeletonCard />
-          ) : creatureNfts.length === 0 ? (
-            <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
-              <Image
-                src="/images/empty.svg"
-                alt="No NFT"
-                width={64}
-                height={64}
-              />
-              <div className="self-stretch inline-flex flex-col justify-center items-center gap-2">
-                <div className="self-stretch text-center justify-start text-[#858585] text-sm font-bold font-['Sora'] leading-normal">
-                  You dont have any eligible NFTs
-                </div>
-                <div className="self-stretch text-center justify-start text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
-                  Make sure you own at least one NFT that includes these
-                  required elements:{" "}
-                  <div className="flex gap-2">
-                    {items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
-                      >
-                        <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
-                      </div>
-                    ))}
-                  </div>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : filteredNfts.length === 0 ? (
+          <div className="self-stretch inline-flex flex-col justify-center items-center gap-2">
+            <Image
+              src="/images/empty.svg"
+              alt="No NFT"
+              width={64}
+              height={64}
+            />
+            <div className="self-stretch inline-flex flex-col justify-center items-center gap-2">
+              <div className="self-stretch text-center justify-start text-[#858585] text-sm font-bold font-['Sora'] leading-normal">
+                You dont have any eligible NFTs
+              </div>
+              <div className="self-stretch text-center justify-center items-center text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
+                Make sure you own at least one NFT that includes these required
+                elements:{" "}
+                <div className="flex gap-2 justify-center">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
+                    >
+                      <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          ) : (
-            creatureNfts
-              .map(({ data }) => {
-                const metadata = data?.content?.fields.metadata;
-                const poolInfo = poolId ? getPoolById(poolId) : undefined;
-                return {
-                  id: data!.objectId,
-                  name: metadata?.fields?.name || "Creature NFT",
-                  imageUrl: metadata?.fields?.image_uri || "",
-                  elements: metadata?.fields?.material_items.map((item: any) =>
-                    Number(item.fields.item_id)
-                  ),
-                  poolInfo,
-                };
-              })
-              .filter(
-                (card) =>
-                  card.poolInfo?.requiredElements &&
-                  card.poolInfo.requiredElements.every((element) =>
-                    card.elements.includes(element)
-                  )
-              )
-              .map((card, index) => (
-                <NFTCard
-                  key={index}
-                  item={card}
-                  nftElements={card.elements}
-                  poolInfo={card.poolInfo}
-                  handleStakeNFT={handleStakeNFT}
-                  isLoading={isLoading}
-                  availableSlots={Number(availableSlots)}
-                  nftCount={Number(stakeStats?.nftCount)}
-                  optimisticStakeCount={optimisticStakeCount}
-                  isPending={pendingStakes.has(card.id)}
-                />
-              ))
-          )}
-        </div>
+          </div>
+        ) : (
+          filteredNfts.map((card, index) => (
+            <NFTCard
+              key={index}
+              item={card}
+              nftElements={card.elements}
+              poolInfo={card.poolInfo}
+              handleStakeNFT={handleStakeNFT}
+              isLoading={isLoading}
+              availableSlots={Number(availableSlots)}
+              nftCount={Number(stakeStats?.nftCount)}
+              optimisticStakeCount={optimisticStakeCount}
+              isPending={pendingStakes.has(card.id)}
+            />
+          ))
+        )}
       </div>
       <PasscodeAuthDialog
         open={openAuthDialog}
@@ -428,78 +435,3 @@ export default function InventoryStakingInterface() {
     </div>
   );
 }
-
-const NFTCard = ({
-  item,
-  handleStakeNFT,
-  isLoading,
-  availableSlots,
-  nftCount,
-  optimisticStakeCount,
-  isPending,
-  nftElements,
-  poolInfo,
-}: {
-  item: InventoryItem;
-  handleStakeNFT: (
-    id: string,
-    nftElements: number[],
-    poolInfo: Pool | undefined
-  ) => void;
-  isLoading: boolean;
-  availableSlots: number;
-  nftCount: number | undefined;
-  optimisticStakeCount: number;
-  isPending: boolean;
-  nftElements: number[];
-  poolInfo: Pool | undefined;
-}) => {
-  return (
-    <div className="w-44 flex flex-col items-center gap-2">
-      <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
-        <CardContent className="p-0 h-full flex justify-center items-center">
-          <Image
-            className="w-44 h-44 object-cover"
-            src={`https://walrus.tusky.io/${item.imageUrl}`}
-            alt={item.name}
-            width={176}
-            height={176}
-          />
-        </CardContent>
-      </Card>
-
-      <div className="text-green-400 text-sm font-normal font-sora underline leading-normal">
-        #{formatAddress(item.id)}
-      </div>
-
-      <div className="text-white text-sm font-normal font-sora leading-normal text-center">
-        {item.name}
-      </div>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
-        onClick={() => handleStakeNFT(item.id, nftElements, poolInfo)}
-        disabled={
-          isLoading ||
-          isPending ||
-          nftCount === undefined ||
-          nftCount === null ||
-          availableSlots === undefined ||
-          availableSlots === null ||
-          (nftCount !== undefined &&
-            availableSlots <= Math.max(nftCount, optimisticStakeCount))
-        }
-        isLoading={isLoading || isPending}
-      >
-        {isPending
-          ? "Staking..."
-          : nftCount !== undefined &&
-            availableSlots <= Math.max(nftCount, optimisticStakeCount)
-          ? "Max Slots Reached"
-          : "Stake"}
-      </Button>
-    </div>
-  );
-};
