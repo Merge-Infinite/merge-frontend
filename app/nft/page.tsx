@@ -2,6 +2,8 @@
 import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useLoading } from "@/hooks/useLoading";
@@ -27,6 +29,7 @@ import {
   useSignAndExecuteTransaction,
   useSuiClient,
 } from "@mysten/dapp-kit";
+import { formatAddress } from "@mysten/sui.js";
 import { Transaction } from "@mysten/sui/transactions";
 import { Search } from "lucide-react";
 import Image from "next/image";
@@ -435,3 +438,78 @@ export default function InventoryStakingInterface() {
     </div>
   );
 }
+
+const NFTCard = ({
+  item,
+  handleStakeNFT,
+  isLoading,
+  availableSlots,
+  nftCount,
+  optimisticStakeCount,
+  isPending,
+  nftElements,
+  poolInfo,
+}: {
+  item: InventoryItem;
+  handleStakeNFT: (
+    id: string,
+    nftElements: number[],
+    poolInfo: Pool | undefined
+  ) => void;
+  isLoading: boolean;
+  availableSlots: number;
+  nftCount: number | undefined;
+  optimisticStakeCount: number;
+  isPending: boolean;
+  nftElements: number[];
+  poolInfo: Pool | undefined;
+}) => {
+  return (
+    <div className="w-44 flex flex-col items-center gap-2">
+      <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
+        <CardContent className="p-0 h-full flex justify-center items-center">
+          <Image
+            className="w-44 h-44 object-cover"
+            src={`https://walrus.tusky.io/${item.imageUrl}`}
+            alt={item.name}
+            width={176}
+            height={176}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="text-green-400 text-sm font-normal font-sora underline leading-normal">
+        #{formatAddress(item.id)}
+      </div>
+
+      <div className="text-white text-sm font-normal font-sora leading-normal text-center">
+        {item.name}
+      </div>
+
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-44 h-6 px-4 bg-white text-black hover:bg-gray-200 rounded-3xl text-xs font-normal font-sora uppercase"
+        onClick={() => handleStakeNFT(item.id, nftElements, poolInfo)}
+        disabled={
+          isLoading ||
+          isPending ||
+          nftCount === undefined ||
+          nftCount === null ||
+          availableSlots === undefined ||
+          availableSlots === null ||
+          (nftCount !== undefined &&
+            availableSlots <= Math.max(nftCount, optimisticStakeCount))
+        }
+        isLoading={isLoading || isPending}
+      >
+        {isPending
+          ? "Staking..."
+          : nftCount !== undefined &&
+            availableSlots <= Math.max(nftCount, optimisticStakeCount)
+          ? "Max Slots Reached"
+          : "Stake"}
+      </Button>
+    </div>
+  );
+};
