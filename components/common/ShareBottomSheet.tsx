@@ -35,7 +35,11 @@ export const ShareBottomSheet = ({
   nftId,
 }: ShareBottomSheetProps) => {
   const router = useRouter();
-  const shareUrl = blobId ? `https://walrus.tusky.io/${blobId}` : "";
+  const shareUrl = blobId
+    ? blobId.includes("https")
+      ? blobId
+      : `https://wal.gg/${blobId}`
+    : "";
   const shareTitle = `Check out my NFT: ${name || ""}`;
   const { user } = useUser();
   const { isTelegram } = useUniversalApp();

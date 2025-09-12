@@ -17,7 +17,12 @@ import { useUser } from "@/hooks/useUser";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
 import { isTelegramEnvironment } from "@/utils/functions";
-import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import {
+  useConnectWallet,
+  useCurrentAccount,
+  useSuiClient,
+  useWallets,
+} from "@mysten/dapp-kit";
 import { useUtils } from "@telegram-apps/sdk-react";
 
 // Types
@@ -72,14 +77,17 @@ interface UniversalAppProviderProps {
   children: React.ReactNode;
 }
 
-export const UniversalAppProvider = memo(function UniversalAppProvider({ children }: UniversalAppProviderProps) {
+export const UniversalAppProvider = memo(function UniversalAppProvider({
+  children,
+}: UniversalAppProviderProps) {
   // Environment state
   const [isTelegram, setIsTelegram] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const suiClient = useSuiClient();
-
+  const { mutate: connect } = useConnectWallet();
+  const wallets = useWallets();
   // Telegram specific state
   const [backButton, setBackButton] = useState<any>(null);
 
@@ -97,6 +105,7 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({ childre
     console.debug("useUtils failed (expected if not in Telegram):", error);
     utils = null;
   }
+
   const account = useCurrentAccount();
   // User hook
   const {
@@ -110,6 +119,17 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({ childre
     isLoading: isUserLoading,
     error: userError,
   } = useUser();
+
+  useEffect(() => {
+    if (!account) {
+      connect(
+        { wallet: wallets[0] },
+        {
+          onSuccess: () => console.log("connected"),
+        }
+      );
+    }
+  }, [account]);
 
   // Initialize environment detection
   useEffect(() => {
@@ -154,7 +174,7 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({ childre
       );
       setBalance(balance);
     } catch (error) {
-      console.error('Failed to get SUI balance:', error);
+      console.error("Failed to get SUI balance:", error);
     }
   }, [suiClient, account?.address]);
 
@@ -204,49 +224,52 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({ childre
     }
   }, [isTelegram, telegramAddress]);
 
-  const contextValue: UniversalAppContextType = useMemo(() => ({
-    // Environment
-    isTelegram: isTelegram ?? false,
-    isLoading,
+  const contextValue: UniversalAppContextType = useMemo(
+    () => ({
+      // Environment
+      isTelegram: isTelegram ?? false,
+      isLoading,
 
-    // Telegram specific
-    backButton,
+      // Telegram specific
+      backButton,
 
-    wallet: getWalletInfo(),
-    utils: isTelegram ? utils : null,
-    user,
-    inventory: inventory || [],
+      wallet: getWalletInfo(),
+      utils: isTelegram ? utils : null,
+      user,
+      inventory: inventory || [],
 
-    // Functions
-    login,
-    saveAddress,
-    suiBalance: balance,
-    refetchUser,
-    refetchInventory: refetchInventory as () => Promise<void>,
+      // Functions
+      login,
+      saveAddress,
+      suiBalance: balance,
+      refetchUser,
+      refetchInventory: refetchInventory as () => Promise<void>,
 
-    // Status
-    isUserLoading,
-    userError,
+      // Status
+      isUserLoading,
+      userError,
 
-    // Ready state
-    isReady,
-  }), [
-    isTelegram,
-    isLoading,
-    backButton,
-    getWalletInfo,
-    utils,
-    user,
-    inventory,
-    login,
-    saveAddress,
-    balance,
-    refetchUser,
-    refetchInventory,
-    isUserLoading,
-    userError,
-    isReady,
-  ]);
+      // Ready state
+      isReady,
+    }),
+    [
+      isTelegram,
+      isLoading,
+      backButton,
+      getWalletInfo,
+      utils,
+      user,
+      inventory,
+      login,
+      saveAddress,
+      balance,
+      refetchUser,
+      refetchInventory,
+      isUserLoading,
+      userError,
+      isReady,
+    ]
+  );
 
   return (
     <UniversalAppContext.Provider value={contextValue}>

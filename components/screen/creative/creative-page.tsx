@@ -216,10 +216,6 @@ const CreatureCustomizer = () => {
       console.error(error);
       if (error.message === "Authentication required") {
         setOpenAuthDialog(true);
-      } else {
-        toast.error(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
       }
     } finally {
       stopLoading();

@@ -65,6 +65,7 @@ export default function InventoryStakingInterface() {
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const { data: network } = useNetwork(appContext.networkId);
   const account = useCurrentAccount();
+
   const { backButton, isTelegram, isReady } = useUniversalApp();
   const { stakeStats, refreshRewards } = useStakeInfoList({
     walletAddress: isTelegram ? address : account?.address || "",
@@ -336,6 +337,7 @@ export default function InventoryStakingInterface() {
     ]
   );
 
+  console.log(creatureNfts);
   const filteredNfts = useMemo(
     () =>
       creatureNfts
@@ -470,7 +472,11 @@ const NFTCard = ({
         <CardContent className="p-0 h-full flex justify-center items-center">
           <Image
             className="w-44 h-44 object-cover"
-            src={`https://walrus.tusky.io/${item.imageUrl}`}
+            src={
+              item.imageUrl.includes("https")
+                ? item.imageUrl
+                : `https://wal.gg/${item.imageUrl}`
+            }
             alt={item.name}
             width={176}
             height={176}

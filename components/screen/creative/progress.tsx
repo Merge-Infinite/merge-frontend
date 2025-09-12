@@ -158,7 +158,7 @@ const CreatureCustomizer = () => {
                       <div className="size-20 bg-[#1f1f1f] rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
                         {nft.blobId ? (
                           <Image
-                            src={`https://walrus.tusky.io/${nft.blobId}`}
+                            src={`https://wal.gg/${nft.blobId}`}
                             alt={nft.name}
                             width={80}
                             height={80}

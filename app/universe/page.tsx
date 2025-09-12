@@ -754,7 +754,11 @@ const PetSlotCard = ({
             {slot.stakeInfo.displayData?.image_uri && (
               <Image
                 className="w-full h-[100px] object-cover rounded-2xl"
-                src={`https://walrus.tusky.io/${slot.stakeInfo.displayData?.image_uri}`}
+                src={
+                  slot.stakeInfo.displayData?.image_uri.includes("https")
+                    ? slot.stakeInfo.displayData?.image_uri
+                    : `https://wal.gg/${slot.stakeInfo.displayData?.image_uri}`
+                }
                 alt={slot.stakeInfo.displayData?.name || "NFT"}
                 width={112}
                 height={112}
