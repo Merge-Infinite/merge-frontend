@@ -386,7 +386,7 @@ export default function InventoryStakingInterface() {
             <SkeletonCard />
           </div>
         ) : filteredNfts.length === 0 ? (
-          <div className="self-stretch inline-flex flex-col justify-center items-center gap-2 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="self-stretch inline-flex flex-col justify-center items-center gap-2">
             <Image
               src="/images/empty.svg"
               alt="No NFT"
@@ -414,20 +414,22 @@ export default function InventoryStakingInterface() {
             </div>
           </div>
         ) : (
-          filteredNfts.map((card, index) => (
-            <NFTCard
-              key={index}
-              item={card}
-              nftElements={card.elements}
-              poolInfo={card.poolInfo}
-              handleStakeNFT={handleStakeNFT}
-              isLoading={isLoading}
-              availableSlots={Number(availableSlots)}
-              nftCount={Number(stakeStats?.nftCount)}
-              optimisticStakeCount={optimisticStakeCount}
-              isPending={pendingStakes.has(card.id)}
-            />
-          ))
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto">
+            {filteredNfts.map((card, index) => (
+              <NFTCard
+                key={index}
+                item={card}
+                nftElements={card.elements}
+                poolInfo={card.poolInfo}
+                handleStakeNFT={handleStakeNFT}
+                isLoading={isLoading}
+                availableSlots={Number(availableSlots)}
+                nftCount={Number(stakeStats?.nftCount)}
+                optimisticStakeCount={optimisticStakeCount}
+                isPending={pendingStakes.has(card.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
       <PasscodeAuthDialog
