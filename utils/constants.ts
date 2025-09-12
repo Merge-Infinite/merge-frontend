@@ -8,7 +8,7 @@ export const STYLES = {
 };
 
 export const MINT_NFT_FEE = 0.06;
-export const GENERATION_FEE = 0.01;
+export const GENERATION_FEE = 1;
 
 export const SELLER_ADDRESS =
   "0x9a1057730e9062b2819c52acc40cd06d7c990d6152a6754a231f1ca1b849521a";
