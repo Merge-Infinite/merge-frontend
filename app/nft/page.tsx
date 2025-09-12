@@ -379,14 +379,14 @@ export default function InventoryStakingInterface() {
         </div>
 
         {creatureNftsLoading && !firstRender.current ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto">
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
           </div>
         ) : filteredNfts.length === 0 ? (
-          <div className="self-stretch inline-flex flex-col justify-center items-center gap-2">
+          <div className="self-stretch inline-flex flex-col justify-center items-center gap-2 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <Image
               src="/images/empty.svg"
               alt="No NFT"
