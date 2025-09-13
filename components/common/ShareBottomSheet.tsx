@@ -161,7 +161,7 @@ export const ShareBottomSheet = ({
                     <div className="size-2 left-[13px] top-[2.27px] absolute bg-white" />
                   </div>
                   <div className="justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                    Use Promt
+                    Use Prompt
                   </div>
                 </div>
               )}
