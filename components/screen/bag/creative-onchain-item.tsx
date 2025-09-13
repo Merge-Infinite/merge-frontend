@@ -47,19 +47,16 @@ export const CreativeOnchainItem = React.memo(
     id,
     name,
     imageUrl,
+    prompt,
     onListingComplete,
   }: {
     id: string;
     name: string;
     imageUrl: string;
+    prompt: string;
     onListingComplete?: () => void;
   }) => {
     const apiClient = useApiClient();
-    const marketplaceListings = useApi({
-      key: ["syncUserBag"],
-      method: "POST",
-      url: "marketplace/listings",
-    }).post;
 
     const burnNFT = useApi({
       key: ["burnNFT"],
@@ -329,6 +326,7 @@ export const CreativeOnchainItem = React.memo(
               />
 
               <ShareBottomSheet
+                prompt={prompt}
                 trigger={
                   <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer">
                     #{formatAddress(id)}

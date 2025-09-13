@@ -275,6 +275,7 @@ export function OnchainBagScreen() {
                     id: data!.objectId,
                     name: metadata?.fields?.name || "Creature NFT",
                     imageUrl: metadata?.fields?.image_uri || "",
+                    prompt: metadata?.fields?.prompt || "",
                   };
                 })
                 .map((card, index) => (
@@ -283,6 +284,7 @@ export function OnchainBagScreen() {
                     id={card.id}
                     name={card.name}
                     imageUrl={card.imageUrl}
+                    prompt={card.prompt}
                     onListingComplete={creatureNftsRefresh}
                   />
                 ))

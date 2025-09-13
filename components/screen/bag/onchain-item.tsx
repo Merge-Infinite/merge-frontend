@@ -55,11 +55,6 @@ export const CardItem = React.memo(
     imageUrl: string;
   }) => {
     const apiClient = useApiClient();
-    const marketplaceListings = useApi({
-      key: ["syncUserBag"],
-      method: "POST",
-      url: "marketplace/listings",
-    }).post;
 
     const burnNFT = useApi({
       key: ["burnNFT"],
@@ -363,6 +358,7 @@ export const CardItem = React.memo(
                   #{formatAddress(id)}
                 </div>
               }
+              prompt={prompt}
               blobId={imageUrl}
               name={element}
               nftId={id}
