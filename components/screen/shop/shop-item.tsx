@@ -82,7 +82,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
         const resp = await createPurchase?.mutateAsync({
           productId: item.id,
         });
-        if (resp?.invoiceLink) {
+        if (resp?.invoiceLink && invoice) {
           invoice
             .open(resp?.invoiceLink, "url")
             .then(async (status) => {
