@@ -501,6 +501,7 @@ export const NFTMarket = () => {
                       prompt={listing.prompt}
                       id={listing.objectId}
                       imageUrl={listing.imageUrl}
+                      materials={listing.materials}
                       emoji={listing.element}
                       price={listing.price}
                       nftId={listing.objectId}

@@ -24,7 +24,7 @@ interface PoolCardProps {
   pool: Pool;
 }
 
-interface RecipeItem {
+export interface RecipeItem {
   id: number;
   handle: string;
   emoji: string;

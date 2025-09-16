@@ -1,7 +1,10 @@
 import { useUniversalApp } from "@/app/context/UniversalAppContext";
+import Emoji from "@/components/common/Emoji";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
+import { RecipeItem } from "@/components/PoolCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { formatSUI } from "@/lib/wallet/core";
 import {
@@ -42,6 +45,7 @@ export const MarketItem = React.memo(
     price,
     loading: initialLoading,
     imageUrl,
+    materials,
     emoji,
     nftId,
     seller_kiosk,
@@ -55,6 +59,7 @@ export const MarketItem = React.memo(
     price?: string;
     loading?: boolean;
     imageUrl: string;
+    materials: number[];
     emoji: string;
     nftId: string;
     seller_kiosk: string;
@@ -71,6 +76,7 @@ export const MarketItem = React.memo(
     const { address, fetchAddressByAccountId } = useAccount(
       appContext.accountId
     );
+    const [items, setItems] = useState<RecipeItem[]>([]);
     const account = useCurrentAccount();
     const { data: network } = useNetwork(appContext.networkId);
     const [loading, setLoading] = useState(initialLoading || false);
@@ -91,6 +97,31 @@ export const MarketItem = React.memo(
             },
           }),
       });
+
+    const recipesApi = useApi({
+      key: ["recipes-items"],
+      method: "POST",
+      url: "recipes/items",
+    }).post;
+
+    useEffect(() => {
+      const fetchItems = async () => {
+        try {
+          const response = await recipesApi?.mutateAsync({
+            itemIds: materials,
+          });
+
+          if (response.items) {
+            setItems(response.items);
+          }
+        } catch (error) {
+          console.error("Error fetching items:", error);
+        }
+      };
+
+      fetchItems();
+    }, []);
+
     const handleCopyId = () => {
       const currentNetworkConfig = featureFlags.networks[appContext.networkId];
       window.open(
@@ -309,6 +340,34 @@ export const MarketItem = React.memo(
                 }}
               />
             ) : null}
+          </div>
+          <div className="self-stretch inline-flex justify-center items-center gap-1">
+            <Image
+              src="/images/Info.svg"
+              alt="Copy"
+              width={15}
+              height={15}
+              className="inline ml-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyElements();
+              }}
+            />
+            <div className="flex justify-start items-start gap-1.5 flex-wrap content-start">
+              <div className="justify-start text-white text-xs font-normal font-sora leading-none">
+                Elements:
+              </div>
+              <div className="flex items-center gap-1">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
+                  >
+                    <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="w-full flex justify-between items-center">
             <div className="flex items-center gap-1">

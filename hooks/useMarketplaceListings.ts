@@ -14,6 +14,7 @@ export interface KioskListing {
   itemId: string;
   type: string;
   prompt: any;
+  materials: number[];
 }
 
 interface UseKioskListingsOptions {
@@ -181,6 +182,9 @@ export function useKioskListings(options: UseKioskListingsOptions) {
             itemId: content?.fields?.item_id || display?.item_id || "",
             type: content.type,
             prompt: content?.fields?.metadata?.fields?.prompt || "",
+            materials: content?.fields?.metadata?.fields?.material_items.map(
+              (item: any) => Number(item.fields.item_id)
+            ),
           };
 
           activeListings.push(listing);
