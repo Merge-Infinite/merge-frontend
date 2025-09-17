@@ -272,7 +272,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `1m-${i + 1}`,
-              isEnabled: subscriptionMonths > 0 && subscriptionMonths <= 1,
+              isEnabled: subscriptionMonths >= 1,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex: MAX_FREE_SLOTS + i,
@@ -290,7 +290,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `3m-${i + 1}`,
-              isEnabled: subscriptionMonths > 1 && subscriptionMonths <= 3,
+              isEnabled: subscriptionMonths >= 1,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex: MAX_FREE_SLOTS + MAX_SUBSCRIPTION_SLOTS_PER_TIER + i,
@@ -308,7 +308,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `6m-${i + 1}`,
-              isEnabled: subscriptionMonths > 3 && subscriptionMonths <= 6,
+              isEnabled: subscriptionMonths >= 3,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex:
@@ -327,7 +327,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `12m-${i + 1}`,
-              isEnabled: subscriptionMonths > 6 && subscriptionMonths <= 12,
+              isEnabled: subscriptionMonths >= 6,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex:
