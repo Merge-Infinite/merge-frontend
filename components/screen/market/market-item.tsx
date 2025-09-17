@@ -341,7 +341,7 @@ export const MarketItem = React.memo(
               />
             ) : null}
           </div>
-          <div className="self-stretch inline-flex justify-center items-center gap-1">
+          <div className="flex flex-wrap justify-start items-center gap-1">
             <Image
               src="/images/Info.svg"
               alt="Copy"
@@ -353,21 +353,18 @@ export const MarketItem = React.memo(
                 handleCopyElements();
               }}
             />
-            <div className="flex justify-start items-start gap-1.5 flex-wrap content-start">
-              <div className="justify-start text-white text-xs font-normal font-sora leading-none">
-                Elements:
-              </div>
-              <div className="flex items-center gap-1">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
-                  >
-                    <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
-                  </div>
-                ))}
-              </div>
+            <div className="justify-start text-white text-xs font-normal font-sora leading-none">
+              Elements:
             </div>
+
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-wrap text-center justify-end text-white text-xs font-bold font-sora leading-none"
+              >
+                <Emoji emoji={item.emoji} size={18} /> {item.handle}
+              </div>
+            ))}
           </div>
           <div className="w-full flex justify-between items-center">
             <div className="flex items-center gap-1">
