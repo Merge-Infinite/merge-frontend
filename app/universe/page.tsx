@@ -95,6 +95,12 @@ export default function PetExplorerDashboard() {
     url: "recipes/items",
   }).post;
 
+  const submitClaimRewards = useApi({
+    key: ["submit-claim-rewards"],
+    method: "POST",
+    url: "creative/reward-claim",
+  }).post;
+
   const account = useCurrentAccount();
   const { backButton, isTelegram, isReady } = useUniversalApp();
   const suiPrice = useSelector((state: RootState) => state.appContext.suiPrice);
@@ -395,7 +401,15 @@ export default function PetExplorerDashboard() {
       }
 
       if (response && (response as any).digest) {
-        toast.success("Rewards claimed successfully!");
+        submitClaimRewards
+          ?.mutateAsync({
+            poolId: poolId,
+            transactionHash: response.digest,
+          })
+          .then(() => {
+            toast.success("Rewards claimed successfully!");
+          });
+
         await refresh();
       }
     } catch (error: any) {
