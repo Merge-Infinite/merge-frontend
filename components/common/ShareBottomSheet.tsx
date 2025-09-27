@@ -52,9 +52,9 @@ export const ShareBottomSheet = ({
         );
       } else {
         navigator.clipboard.writeText(
-          `${process.env.NEXT_PUBLIC_APP_URL}/creative?prompt=${JSON.stringify(
+          `${process.env.NEXT_PUBLIC_APP_URL}creative?prompt=${JSON.stringify(
             prompt
-          )}?referralCode=${user?.referralCode}`
+          )}&referralCode=${user?.referralCode}`
         );
       }
       toast("Copied to clipboard");

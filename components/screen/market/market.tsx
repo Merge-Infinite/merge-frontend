@@ -392,11 +392,9 @@ export const NFTMarket = () => {
   }
 
   return (
-    <div className="w-full h-full flex flex-col gap-4">
+    <div className="w-full h-full flex flex-col gap-4 mb-8">
       <div
-        className={`flex flex-col gap-4 fixed ${
-          isTelegram ? " top-4 left-4 right-4 bg-black  z-10" : ""
-        }`}
+        className={`flex flex-col gap-4 fixed w-full bg-black w-[calc(100%-32px)]`}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -478,7 +476,7 @@ export const NFTMarket = () => {
           </Button>
         </div>
       </div>
-      <div className="flex flex-1 h-full mt-10">
+      <div className="flex flex-1 h-full w-full overflow-y-hidden">
         {!initialized && isTelegram ? (
           <CreateWallet />
         ) : user && !user.kiosk ? (
@@ -488,8 +486,8 @@ export const NFTMarket = () => {
             </div>
           </div>
         ) : (
-          <div className="w-full h-full">
-            <div className="h-full overflow-y-auto " style={{ marginTop: 80 }}>
+          <div className="w-full">
+            <div className="h-[75%] overflow-y-auto" style={{ marginTop: 80 }}>
               {loading ? (
                 <MarketplaceSkeleton />
               ) : filteredListings.length > 0 ? (

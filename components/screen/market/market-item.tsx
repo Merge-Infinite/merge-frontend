@@ -118,8 +118,9 @@ export const MarketItem = React.memo(
           console.error("Error fetching items:", error);
         }
       };
-
-      fetchItems();
+      if (materials) {
+        fetchItems();
+      }
     }, []);
 
     const handleCopyId = () => {
