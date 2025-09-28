@@ -50,19 +50,19 @@ const nextConfig: NextConfig = {
         ...config.optimization,
         splitChunks: {
           ...config.optimization.splitChunks,
-          chunks: 'all',
+          chunks: "all",
           cacheGroups: {
             ...config.optimization.splitChunks.cacheGroups,
             vendor: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
+              name: "vendors",
+              chunks: "all",
               enforce: true,
             },
             common: {
-              name: 'common',
+              name: "common",
               minChunks: 2,
-              chunks: 'all',
+              chunks: "all",
               enforce: true,
             },
           },

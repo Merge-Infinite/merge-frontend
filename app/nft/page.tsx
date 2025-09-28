@@ -141,6 +141,7 @@ export default function InventoryStakingInterface() {
     subscriptionMonths: number | null | undefined
   ): number {
     // Base free slots are always available
+    console.log("subscriptionMonths", subscriptionMonths);
     let totalSlots = MAX_FREE_SLOTS;
 
     if (!subscriptionMonths || subscriptionMonths <= 0) {
@@ -202,10 +203,8 @@ export default function InventoryStakingInterface() {
 
     const subscriptionMonths =
       subscriptionEndDate &&
-      Math.floor(
-        (subscriptionEndDate.getTime() - new Date().getTime()) /
-          (1000 * 60 * 60 * 24 * 30)
-      );
+      (subscriptionEndDate.getTime() - new Date().getTime()) /
+        (1000 * 60 * 60 * 24 * 30);
     return calculateAvailableSlots(subscriptionMonths);
   }, [user]);
 
