@@ -278,7 +278,7 @@ export default function PetExplorerDashboard() {
 
             return {
               id: `1m-${i + 1}`,
-              isEnabled: subscriptionMonths >= 1,
+              isEnabled: subscriptionMonths > 0,
               isOccupied: !!stakeInfo,
               stakeInfo: stakeInfo,
               slotIndex: MAX_FREE_SLOTS + i,
