@@ -113,12 +113,9 @@ export const NFTMarket = () => {
     });
 
   const [loadingClaim, setLoadingClaim] = useState(false);
-  const { profit, refetchProfit } = useMarketPlace(
-    isOwned ? user?.kiosk?.objectId : undefined,
-    {
-      pollingInterval: undefined,
-    }
-  );
+  const { profit, refetchProfit } = useMarketPlace(user?.kiosk?.objectId, {
+    pollingInterval: undefined,
+  });
 
   const {
     listings: marketplaceListings,
@@ -394,7 +391,7 @@ export const NFTMarket = () => {
   return (
     <div className="w-full h-full flex flex-col gap-4 mb-8">
       <div
-        className={`flex flex-col gap-4 fixed w-full bg-black w-[calc(100%-32px)]`}
+        className={`flex flex-col gap-4 fixed w-full bg-black w-[calc(100%-48px)]`}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
