@@ -10,8 +10,8 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NFTImage } from "@/components/ui/nft-image";
 import creativeApi from "@/lib/api/creative";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 export const NFTGenerationJobStatus = {
@@ -157,8 +157,8 @@ const CreatureCustomizer = () => {
                     <div className="w-full px-4 inline-flex justify-start items-start gap-3">
                       <div className="size-20 bg-[#1f1f1f] rounded-2xl flex justify-center items-center gap-2 overflow-hidden">
                         {nft.blobId ? (
-                          <Image
-                            src={`https://wal.gg/${nft.blobId}`}
+                          <NFTImage
+                            src={nft.blobId}
                             alt={nft.name}
                             width={80}
                             height={80}
@@ -169,7 +169,6 @@ const CreatureCustomizer = () => {
                                 ? "blur-[10px]"
                                 : ""
                             }`}
-                            unoptimized
                           />
                         ) : (
                           <div className="flex-1 h-20 bg-zinc-800" />

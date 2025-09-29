@@ -5,6 +5,7 @@ import { SkeletonCard } from "@/components/common/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NFTImage } from "@/components/ui/nft-image";
 import useApi from "@/hooks/useApi";
 import { useLoading } from "@/hooks/useLoading";
 import { useNFTList } from "@/hooks/useNFTList";
@@ -472,13 +473,9 @@ const NFTCard = ({
     <div className="w-44 flex flex-col items-center gap-2">
       <Card className="w-44 h-44 bg-neutral-800 border-0 rounded-2xl overflow-hidden">
         <CardContent className="p-0 h-full flex justify-center items-center">
-          <Image
+          <NFTImage
             className="w-44 h-44 object-cover"
-            src={
-              item.imageUrl.includes("https")
-                ? item.imageUrl
-                : `https://wal.gg/${item.imageUrl}`
-            }
+            src={item.imageUrl}
             alt={item.name}
             width={176}
             height={176}

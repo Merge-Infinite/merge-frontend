@@ -4,6 +4,7 @@ import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { RecipeItem } from "@/components/PoolCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { NFTImage } from "@/components/ui/nft-image";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import { formatSUI } from "@/lib/wallet/core";
@@ -312,10 +313,8 @@ export const MarketItem = React.memo(
 
     return (
       <Card className="w-full sm:w-60 bg-transparent transition-all duration-300 gap-2 flex flex-col">
-        <Image
-          src={
-            imageUrl.includes("https") ? imageUrl : `https://wal.gg/${imageUrl}`
-          }
+        <NFTImage
+          src={imageUrl}
           alt={element}
           width={100}
           height={100}

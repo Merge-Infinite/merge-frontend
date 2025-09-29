@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NFTImage } from "@/components/ui/nft-image";
 import useApi from "@/hooks/useApi";
 import { useUser } from "@/hooks/useUser";
 import {
@@ -313,12 +314,8 @@ export const CreativeOnchainItem = React.memo(
           <Card className="w-44 bg-transparent border-none">
             <CardContent className="p-0 flex flex-col items-center gap-2">
               {/* Image Container */}
-              <Image
-                src={
-                  imageUrl.includes("https")
-                    ? imageUrl
-                    : `https://wal.gg/${imageUrl}`
-                }
+              <NFTImage
+                src={imageUrl}
                 alt="Project preview"
                 width={176}
                 height={176}
