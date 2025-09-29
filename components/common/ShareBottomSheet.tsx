@@ -38,7 +38,7 @@ export const ShareBottomSheet = ({
   const shareUrl = blobId
     ? blobId.includes("https")
       ? blobId
-      : `https://wal.gg/${blobId}`
+      : `https://aggregator.walrus-mainnet.walrus.space/v1/blobs/${blobId}`
     : "";
   const shareTitle = `Check out my NFT: ${name || ""}`;
   const { user } = useUser();
