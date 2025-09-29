@@ -27,9 +27,9 @@ export default function BrainrotExplorer() {
 
   // Separate pools into active and inactive
   const { activePools, inactivePools } = useMemo(() => {
-    const active = pools.filter(
-      (pool) => pool.isActive && pool.endTime > Date.now()
-    );
+    const active = pools
+      .filter((pool) => pool.isActive && pool.endTime > Date.now())
+      .sort((a, b) => b.startTime - a.startTime);
     const inactive = pools.filter(
       (pool) => !pool.isActive || pool.endTime < Date.now()
     );
