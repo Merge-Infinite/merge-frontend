@@ -15,8 +15,7 @@ export const NFTImage = ({
   className: string;
 }) => {
   const srcUrl = useMemo(() => {
-    const baseURL =
-      "https://54xhw07cv6xbe8nydu02e9it6g4nz219j26wyd0x2jkmmwpoud.walcdn.io/";
+    const baseURL = "https://aggregator.walrus-mainnet.walrus.space/v1/blobs/";
     const blobId = src.includes("https") ? src.split("/").pop() : src;
     if (blobId) {
       return `${baseURL}${blobId}`;
