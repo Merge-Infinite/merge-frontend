@@ -12,6 +12,7 @@ export interface UserProfile {
   userBalance: any;
   createdAt: string;
   updatedAt: string;
+  isWhitelisted: boolean;
 }
 
 export interface UserState {

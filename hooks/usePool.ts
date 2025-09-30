@@ -2,7 +2,6 @@ import { suiClient } from "@/lib/utils";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
 import { MER3_PACKAGE_ID, POOL_SYSTEM } from "@/utils/constants";
-import { Transaction } from "@mysten/sui/transactions";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -126,63 +125,6 @@ export const usePoolSystem = (
     [packageId, poolSystemId, suiClient]
   );
 
-  // Fetch pool overview with time calculations
-  const fetchPoolOverview = useCallback(
-    async (poolId: string): Promise<PoolOverview | null> => {
-      try {
-        if (!packageId) {
-          throw new Error("Package ID is required");
-        }
-
-        // Get current clock object ID (you might need to provide this)
-        const clockObjectId =
-          "0x0000000000000000000000000000000000000000000000000000000000000006";
-
-        const tx = new Transaction();
-        tx.moveCall({
-          target: `${packageId}::pool_rewards::get_pool_overview`,
-          arguments: [
-            tx.object(poolSystemId),
-            tx.object(poolId),
-            tx.object(clockObjectId),
-          ],
-        });
-
-        const result = await suiClient.devInspectTransactionBlock({
-          transactionBlock: tx.serialize(),
-          sender: address,
-        });
-
-        if (!result.results?.[0]?.returnValues) {
-          return null;
-        }
-
-        const [
-          totalPrize,
-          daysRemaining,
-          hoursRemaining,
-          participantCount,
-          totalStakedCount,
-          isActive,
-        ] = result.results[0].returnValues;
-
-        return {
-          poolId,
-          totalPrize: Number(totalPrize),
-          daysRemaining: Number(daysRemaining),
-          hoursRemaining: Number(hoursRemaining),
-          participantCount: Number(participantCount),
-          totalStakedCount: Number(totalStakedCount),
-          isActive: Boolean(isActive),
-        };
-      } catch (err) {
-        console.error(`Error fetching pool overview for ${poolId}:`, err);
-        return null;
-      }
-    },
-    [packageId, poolSystemId, suiClient]
-  );
-
   // Get all pool IDs from events
   const fetchAllPoolIds = useCallback(async (): Promise<string[]> => {
     try {
@@ -199,8 +141,19 @@ export const usePoolSystem = (
         order: "ascending",
       });
 
+      const customCreatedEvents = await suiClient.queryEvents({
+        query: {
+          MoveEventType: `${packageId}::pool_rewards::CustomTokenPoolCreated`,
+        },
+        limit: 1000, // Adjust as needed
+        order: "ascending",
+      });
+
       const poolIds: string[] = [];
-      for (const event of createdEvents.data) {
+      for (const event of [
+        ...createdEvents.data,
+        ...customCreatedEvents.data,
+      ]) {
         if (event.parsedJson && typeof event.parsedJson === "object") {
           const poolId = (event.parsedJson as any).pool_id;
           if (poolId && !poolIds.includes(poolId)) {

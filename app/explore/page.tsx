@@ -3,13 +3,20 @@
 import PoolCard from "@/components/PoolCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePoolSystem } from "@/hooks/usePool";
+import { useUser } from "@/hooks/useUser";
+import { MER3_UPGRADED_PACKAGE_ID } from "@/utils/constants";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useUniversalApp } from "../context/UniversalAppContext";
 
 export default function BrainrotExplorer() {
   const router = useRouter();
-  const { pools } = usePoolSystem({
+  const { pools: suiPools } = usePoolSystem({
+    refreshInterval: 30000,
+  });
+  const { user } = useUser();
+  const { pools: customPools } = usePoolSystem({
+    packageId: MER3_UPGRADED_PACKAGE_ID,
     refreshInterval: 30000,
   });
   const { backButton, isTelegram, isReady } = useUniversalApp();
@@ -27,14 +34,18 @@ export default function BrainrotExplorer() {
 
   // Separate pools into active and inactive
   const { activePools, inactivePools } = useMemo(() => {
-    const active = pools
+    const pools = [...suiPools];
+    if (user?.isWhitelisted) {
+      pools.push(...customPools);
+    }
+    const active = [...pools]
       .filter((pool) => pool.isActive && pool.endTime > Date.now())
       .sort((a, b) => b.startTime - a.startTime);
-    const inactive = pools.filter(
+    const inactive = [...pools, ...customPools].filter(
       (pool) => !pool.isActive || pool.endTime < Date.now()
     );
     return { activePools: active, inactivePools: inactive };
-  }, [pools]);
+  }, [suiPools, customPools]);
 
   return (
     <div className="w-full h-full bg-black p-4">
