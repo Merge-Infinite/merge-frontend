@@ -1,5 +1,4 @@
 import { suiClient } from "@/lib/utils";
-import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
 import {
   MER3_PACKAGE_ID,
@@ -64,7 +63,6 @@ export const usePoolSystem = (
     refreshInterval = 30000,
   } = options;
   const appContext = useSelector((state: RootState) => state.appContext);
-  const { address } = useAccount(appContext.accountId);
   const [pools, setPools] = useState<Pool[]>([]);
   const [poolOverviews, setPoolOverviews] = useState<PoolOverview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +121,7 @@ export const usePoolSystem = (
           suiRewards: Number(returnValues.sui_reward_pool),
           participantCount: Number(returnValues.participant_count),
           totalStakedCount: Number(returnValues.total_staked_count),
-          tokenType: String(returnValues.token_type),
+          tokenType: String(returnValues.token_type || ""),
         };
       } catch (err) {
         console.error(`Error fetching pool info for ${poolId}:`, err);
