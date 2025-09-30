@@ -78,6 +78,7 @@ export default function PetExplorerDashboard() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const poolId = searchParams.get("poolId");
+  const coinType = searchParams.get("coinType");
   const router = useRouter();
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
@@ -346,6 +347,96 @@ export default function PetExplorerDashboard() {
     ];
   }, [stakeInfos]);
 
+  const handleClaimCustomTokenRewards = useCallback(
+    async (customTokenType: string) => {
+      try {
+        if (isTelegram) {
+          if (!authed) {
+            toast.error("Please connect your wallet");
+            return;
+          }
+          if (!address) {
+            toast.error("Please connect your wallet");
+            return;
+          }
+        }
+
+        if (!poolId) {
+          toast.error("Pool ID not found");
+          return;
+        }
+
+        setIsClaimLoading(true);
+
+        const tx = new Transaction();
+
+        tx.moveCall({
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_custom_token_reward`,
+          typeArguments: [customTokenType],
+          arguments: [
+            tx.object(POOL_SYSTEM),
+            tx.object(poolId),
+            tx.object("0x6"),
+          ],
+        });
+
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: tx.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
+            },
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: tx.serialize(),
+          });
+        }
+
+        if (response && (response as any).digest) {
+          submitClaimRewards
+            ?.mutateAsync({
+              poolId: poolId,
+              transactionHash: response.digest,
+            })
+            .then(() => {
+              toast.success("Custom token rewards claimed successfully!");
+            });
+
+          await refresh();
+        }
+      } catch (error: any) {
+        console.error("Error claiming custom token rewards:", error);
+        if (error.message === "Authentication required") {
+          toast.error("Please authenticate to claim rewards");
+        } else if (
+          error.message.includes('Some("claim_custom_token_reward") }, 12')
+        ) {
+          toast.error(
+            "You claim too early. Please wait 24 hours from your last claim."
+          );
+          return;
+        } else {
+          toast.error(error.message || "Failed to claim custom token rewards");
+        }
+      } finally {
+        setIsClaimLoading(false);
+      }
+    },
+    [address, authed, isTelegram, account?.address, poolId, refresh]
+  );
+
   const handleClaimRewards = useCallback(async () => {
     try {
       if (isTelegram) {
@@ -517,7 +608,13 @@ export default function PetExplorerDashboard() {
                     ))}
                   </div>
                   <Button
-                    onClick={handleClaimRewards}
+                    onClick={() => {
+                      if (!coinType) {
+                        handleClaimRewards();
+                      } else {
+                        handleClaimCustomTokenRewards(coinType);
+                      }
+                    }}
                     variant="default"
                     size="sm"
                     className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white rounded-xl py-2"
@@ -663,6 +760,7 @@ const PetSlotCard = ({
   const searchParams = useSearchParams();
   const account = useCurrentAccount();
   const poolId = searchParams.get("poolId");
+  const coinType = searchParams.get("coinType");
   const { isLoading, startLoading, stopLoading } = useLoading();
   const apiClient = useApiClient();
   const appContext = useSelector((state: RootState) => state.appContext);
@@ -688,6 +786,87 @@ const PetSlotCard = ({
   const handleSlotClick = () => {
     router.push(`/nft?poolId=${poolId}`);
   };
+
+  const handleUnstakeCustomTokenClick = useCallback(
+    async (nftId: string, customTokenType: string) => {
+      try {
+        if (isTelegram) {
+          if (!authed) {
+            toast.error("Please connect your wallet");
+            return;
+          }
+          if (!address) {
+            toast.error("Please connect your wallet");
+            return;
+          }
+        }
+
+        startLoading();
+
+        let tx = new Transaction();
+
+        tx.moveCall({
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::unstake_nft_from_custom_pool`,
+          typeArguments: [customTokenType],
+          arguments: [
+            tx.object(poolId || ""),
+            tx.pure.id(nftId),
+            tx.object("0x6"),
+          ],
+        });
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: tx.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
+            },
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: tx.serialize(),
+          });
+        }
+        if (response && (response as any).digest) {
+          toast.success("NFT unstaked successfully!");
+          await onRefresh();
+        }
+      } catch (error: any) {
+        console.error("Error unstaking custom token NFT:", error);
+        if (error.message === "Authentication required") {
+          toast.error("Please authenticate to unstake");
+        } else {
+          toast.error(error.message || "Error unstaking NFT");
+        }
+      } finally {
+        stopLoading();
+      }
+    },
+    [
+      address,
+      authed,
+      isTelegram,
+      account?.address,
+      poolId,
+      onRefresh,
+      apiClient,
+      network,
+      appContext,
+      signAndExecuteTransaction,
+      startLoading,
+      stopLoading,
+    ]
+  );
 
   const handleUnstakeClick = useCallback(
     async (stakeInfoId: string) => {
@@ -858,7 +1037,14 @@ const PetSlotCard = ({
                 onClick={async () => {
                   setShowUnstakeWarning(false);
                   if (pendingUnstakeId) {
-                    await handleUnstakeClick(pendingUnstakeId);
+                    if (!coinType) {
+                      await handleUnstakeClick(pendingUnstakeId);
+                    } else {
+                      await handleUnstakeCustomTokenClick(
+                        pendingUnstakeId,
+                        coinType
+                      );
+                    }
                     setPendingUnstakeId(null);
                   }
                 }}
