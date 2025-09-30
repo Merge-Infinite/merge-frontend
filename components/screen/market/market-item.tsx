@@ -259,7 +259,6 @@ export const MarketItem = React.memo(
           ],
           typeArguments: [type],
         });
-        console.log(nftId);
         const [takenObject] = txb.moveCall({
           target: "0x2::kiosk::take",
           arguments: [
@@ -270,22 +269,29 @@ export const MarketItem = React.memo(
           typeArguments: [type],
         });
         txb.transferObjects([takenObject], recipient);
-        const response = await apiClient.callFunc<
-          SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
-          undefined
-        >(
-          "txn",
-          "signAndExecuteTransactionBlock",
-          {
-            transactionBlock: txb.serialize(),
-            context: {
-              network,
-              walletId: appContext.walletId,
-              accountId: appContext.accountId,
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: txb.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
             },
-          },
-          { withAuth: true }
-        );
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: txb.serialize(),
+          });
+        }
 
         if (response && response.digest) {
           toast.success("Your NFT has been delisted successfully");
