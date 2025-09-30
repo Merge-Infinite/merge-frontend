@@ -141,8 +141,6 @@ export default function InventoryStakingInterface() {
   function calculateAvailableSlots(
     subscriptionMonths: number | null | undefined
   ): number {
-    // Base free slots are always available
-    console.log("subscriptionMonths", subscriptionMonths);
     let totalSlots = MAX_FREE_SLOTS;
 
     if (!subscriptionMonths || subscriptionMonths <= 0) {
@@ -345,6 +343,7 @@ export default function InventoryStakingInterface() {
         .map(({ data }) => {
           const metadata = data?.content?.fields.metadata;
           const poolInfo = poolId ? getPoolById(poolId) : undefined;
+          console.log(poolInfo);
           return {
             id: data!.objectId,
             name: metadata?.fields?.name || "Creature NFT",

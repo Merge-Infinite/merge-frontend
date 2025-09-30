@@ -1,7 +1,11 @@
 import { suiClient } from "@/lib/utils";
 import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { RootState } from "@/lib/wallet/store";
-import { MER3_PACKAGE_ID, POOL_SYSTEM } from "@/utils/constants";
+import {
+  MER3_PACKAGE_ID,
+  MER3_UPGRADED_PACKAGE_ID,
+  POOL_SYSTEM,
+} from "@/utils/constants";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -135,7 +139,7 @@ export const usePoolSystem = (
       // Query PoolCreated events to get all pool IDs
       const createdEvents = await suiClient.queryEvents({
         query: {
-          MoveEventType: `${packageId}::pool_rewards::PoolCreated`,
+          MoveEventType: `${MER3_PACKAGE_ID}::pool_rewards::PoolCreated`,
         },
         limit: 1000, // Adjust as needed
         order: "ascending",
@@ -143,7 +147,7 @@ export const usePoolSystem = (
 
       const customCreatedEvents = await suiClient.queryEvents({
         query: {
-          MoveEventType: `${packageId}::pool_rewards::CustomTokenPoolCreated`,
+          MoveEventType: `${MER3_UPGRADED_PACKAGE_ID}::pool_rewards::CustomTokenPoolCreated`,
         },
         limit: 1000, // Adjust as needed
         order: "ascending",
