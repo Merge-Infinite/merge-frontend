@@ -1,5 +1,6 @@
 import { suiClient } from "@/lib/utils";
 import {
+  MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
@@ -329,24 +330,38 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
    * Get user stake info from contract for a specific pool
    */
   const getUserStakeInfoFromContract = useCallback(
-    async (userAddress: string, poolId: string) => {
+    async (userAddress: string, poolId: string, coinType?: string) => {
       try {
         const tx = new Transaction();
-        tx.moveCall({
-          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
-          arguments: [
-            tx.object(POOL_SYSTEM),
-            tx.pure.id(poolId),
-            tx.pure.address(userAddress),
-            tx.object("0x6"),
-          ],
-        });
+        console.log(coinType);
+        if (!coinType) {
+          tx.moveCall({
+            target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_dynamic`,
+            arguments: [
+              tx.object(POOL_SYSTEM),
+              tx.pure.id(poolId),
+              tx.pure.address(userAddress),
+              tx.object("0x6"),
+            ],
+          });
+        } else {
+          tx.moveCall({
+            target: `${MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_user_reward_details_custom`,
+            typeArguments: [`0x${coinType}`],
+            arguments: [
+              tx.object(poolId),
+              tx.pure.address(userAddress),
+              tx.object("0x6"),
+            ],
+          });
+        }
 
         const result = await suiClient.devInspectTransactionBlock({
           transactionBlock: tx,
           sender: userAddress,
         });
 
+        console.log("result", result);
         if (!result.results?.[0]?.returnValues) {
           return null;
         }
@@ -399,14 +414,17 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
    * Get reward stats for a specific pool
    */
   const getPoolRewardStats = useCallback(
-    async (userAddress: string, poolId: string): Promise<PoolStats> => {
+    async (
+      userAddress: string,
+      poolId: string,
+      coinType?: string
+    ): Promise<PoolStats> => {
       try {
         const userStakeInfo = await getUserStakeInfoFromContract(
           userAddress,
-          poolId
+          poolId,
+          coinType
         );
-
-        console.log("userStakeInfo", userStakeInfo);
 
         return {
           poolId,
@@ -566,7 +584,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   // Calculate stats when stakeInfos change and rewards are enabled
   useEffect(() => {
     if (calculateRewards && walletAddress) {
-      getPoolRewardStats(walletAddress, poolId!)
+      getPoolRewardStats(walletAddress, poolId!, coinType)
         .then((stats) => {
           setCalculatedStats(stats);
         })
@@ -578,7 +596,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     } else {
       setCalculatedStats(null);
     }
-  }, [calculateRewards, walletAddress]);
+  }, [calculateRewards, walletAddress, coinType]);
 
   // Utility functions
   const getStakeInfoById = useCallback(
