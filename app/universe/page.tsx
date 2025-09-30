@@ -109,7 +109,7 @@ export default function PetExplorerDashboard() {
   }>({
     key: ["custom-token-price", coinType],
     method: "GET",
-    url: `creative/custom-token/${coinType}`,
+    url: `sui/custom-token/${coinType}`,
     enabled: !!coinType,
   }).get;
 
