@@ -22,6 +22,7 @@ export const NFTGenerationJobStatus = {
   COMPLETED: "COMPLETED",
   FAILED: "FAILED",
   DUPLICATE_NFT: "DUPLICATE_NFT",
+  PROMPT_VIOLATION: "PROMPT_VIOLATION",
 };
 
 const mappingStatusToText = {
@@ -32,6 +33,7 @@ const mappingStatusToText = {
   [NFTGenerationJobStatus.COMPLETED]: "Completed",
   [NFTGenerationJobStatus.FAILED]: "Failed",
   [NFTGenerationJobStatus.DUPLICATE_NFT]: "Change name",
+  [NFTGenerationJobStatus.PROMPT_VIOLATION]: "Prompt Invalid",
 };
 
 const mappingStatusToBadgeColor = {
@@ -42,6 +44,7 @@ const mappingStatusToBadgeColor = {
   [NFTGenerationJobStatus.COMPLETED]: "#99ffc6",
   [NFTGenerationJobStatus.FAILED]: "#ff1744",
   [NFTGenerationJobStatus.DUPLICATE_NFT]: "#ff1744",
+  [NFTGenerationJobStatus.PROMPT_VIOLATION]: "#ff1744",
 };
 
 const mappingStatusToBadgeTextColor = {
@@ -52,6 +55,7 @@ const mappingStatusToBadgeTextColor = {
   [NFTGenerationJobStatus.COMPLETED]: "#009093",
   [NFTGenerationJobStatus.FAILED]: "#fff",
   [NFTGenerationJobStatus.DUPLICATE_NFT]: "#fff",
+  [NFTGenerationJobStatus.PROMPT_VIOLATION]: "#fff",
 };
 
 const CreatureCustomizer = () => {
@@ -60,7 +64,13 @@ const CreatureCustomizer = () => {
     nft: any;
   }>({ open: false, nft: null });
 
+  const [promptDialog, setPromptDialog] = useState<{
+    open: boolean;
+    nft: any;
+  }>({ open: false, nft: null });
+
   const [newName, setNewName] = useState("");
+  const [newPrompt, setNewPrompt] = useState("");
   const {
     data: nftJobs,
     isLoading: nftJobsLoading,
@@ -69,6 +79,9 @@ const CreatureCustomizer = () => {
 
   const { mutateAsync: updateNftName, isPending: isUpdatingNftName } =
     creativeApi.updateNftName.useMutation();
+
+  const { mutateAsync: updateNftPrompt, isPending: isUpdatingNftPrompt } =
+    creativeApi.updateNftPrompt.useMutation();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,6 +118,37 @@ const CreatureCustomizer = () => {
     setDuplicateDialog({ open: false, nft: null });
     setNewName("");
   };
+
+  const handlePromptViolationClick = (nft: any) => {
+    setPromptDialog({ open: true, nft });
+    setNewPrompt(nft.prompt || "");
+  };
+
+  const handleSubmitNewPrompt = async () => {
+    if (!newPrompt.trim() || !promptDialog.nft) return;
+
+    try {
+      await updateNftPrompt({
+        jobId: promptDialog.nft.id,
+        prompt: newPrompt.trim(),
+      });
+
+      setPromptDialog({ open: false, nft: null });
+      setNewPrompt("");
+      refetchNftJobs();
+    } catch (error) {
+      console.error("Failed to update prompt:", error);
+    }
+  };
+
+  const handleClosePromptDialog = () => {
+    setPromptDialog({ open: false, nft: null });
+    setNewPrompt("");
+  };
+
+  // const matchingKeywords = requiredKeywords.filter((keyword) =>
+  //   newPrompt.toLowerCase().includes(keyword.toLowerCase())
+  // ).length;
 
   // Group NFTs by date
   const groupNftsByDate = (nfts: any[]) => {
@@ -194,7 +238,10 @@ const CreatureCustomizer = () => {
                         <Badge
                           variant="secondary"
                           className={`px-2 py-1 rounded-3xl inline-flex justify-center items-center gap-1 font-['Sora'] ${
-                            nft.status === NFTGenerationJobStatus.DUPLICATE_NFT
+                            nft.status ===
+                              NFTGenerationJobStatus.DUPLICATE_NFT ||
+                            nft.status ===
+                              NFTGenerationJobStatus.PROMPT_VIOLATION
                               ? "cursor-pointer"
                               : ""
                           }`}
@@ -204,6 +251,11 @@ const CreatureCustomizer = () => {
                               NFTGenerationJobStatus.DUPLICATE_NFT
                             ) {
                               handleDuplicateClick(nft);
+                            } else if (
+                              nft.status ===
+                              NFTGenerationJobStatus.PROMPT_VIOLATION
+                            ) {
+                              handlePromptViolationClick(nft);
                             }
                           }}
                           style={{
@@ -292,6 +344,79 @@ const CreatureCustomizer = () => {
               {isUpdatingNftName ? "Renaming..." : "Rename & Mint"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={promptDialog.open} onOpenChange={handleClosePromptDialog}>
+        <DialogContent className="sm:max-w-[425px] p-4 bg-[#1f1f1f] rounded-2xl border-none shadow-2xl">
+          <div className="self-stretch inline-flex flex-col justify-start items-start gap-6">
+            <div className="self-stretch flex flex-col justify-start items-start gap-3">
+              <div className="justify-start text-white text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide">
+                Edit Prompt
+              </div>
+              <div className="self-stretch justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
+                Your prompt is invalid. Please update your prompt and mint
+                again, and make sure your new prompt includes the following
+                elements:
+              </div>
+              {/* <div className="self-stretch inline-flex justify-start items-start gap-2 flex-wrap content-start">
+                {requiredKeywords.map((keyword) => (
+                  <div
+                    key={keyword}
+                    className="px-3 py-1 rounded-3xl outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2"
+                  >
+                    <div className="justify-start text-white text-xs font-normal font-['Sora'] uppercase leading-normal">
+                      {keyword}
+                    </div>
+                  </div>
+                ))}
+              </div> */}
+              <textarea
+                value={newPrompt}
+                onChange={(e) => setNewPrompt(e.target.value)}
+                placeholder="Enter new prompt"
+                className="self-stretch max-h-52 min-h-20 px-3 py-2 bg-[#141414] rounded-xl outline outline-1 outline-offset-[-1px] outline-[#333333] text-white text-sm font-normal font-['Sora'] leading-normal placeholder:text-[#858585] resize-none focus:outline-[#858585]"
+              />
+            </div>
+            <div className="self-stretch flex flex-col justify-start items-start gap-2">
+              {/* <div
+                className={`self-stretch text-center justify-start text-xs font-normal font-['Sora'] leading-none ${
+                  matchingKeywords === requiredKeywords.length
+                    ? "text-[#68ffd1]"
+                    : "text-[#ff7062]"
+                }`}
+              >
+                {matchingKeywords}/{requiredKeywords.length} matching keywords
+              </div> */}
+              <div className="self-stretch inline-flex justify-start items-start gap-2">
+                <Button
+                  type="button"
+                  onClick={handleClosePromptDialog}
+                  disabled={isUpdatingNftPrompt}
+                  className="px-4 py-2 bg-white rounded-3xl flex justify-center items-center gap-2 text-black text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide hover:bg-gray-100 border-none"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  onClick={handleSubmitNewPrompt}
+                  disabled={
+                    // matchingKeywords !== requiredKeywords.length ||
+                    !newPrompt.trim() || isUpdatingNftPrompt
+                  }
+                  isLoading={isUpdatingNftPrompt}
+                  className={`flex-1 px-4 py-2 rounded-3xl flex justify-center items-center gap-2 text-sm font-semibold font-['Sora'] uppercase leading-normal tracking-wide border-none ${
+                    // matchingKeywords === requiredKeywords.length &&
+                    newPrompt.trim() && !isUpdatingNftPrompt
+                      ? "bg-gradient-to-r from-[#a668ff] to-[#9050e0] text-white hover:from-[#9050e0] hover:to-[#8040d0]"
+                      : "bg-[#333333] text-[#707070]"
+                  }`}
+                >
+                  {isUpdatingNftPrompt ? "Updating..." : "Mint Again"}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

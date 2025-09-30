@@ -24,7 +24,7 @@ import { OmitToken } from "@/lib/wallet/types";
 import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
 import { useCurrentAccount, useSignTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { Search, X } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -133,7 +133,6 @@ const CreatureCustomizer = () => {
       return;
     }
 
-    // Check if selected elements match keywords in the prompt
     const promptLower = prompt.toLowerCase();
     const matchingElements = selectedPromptElements.filter((element) =>
       promptLower.includes(element.handle.toLowerCase())
@@ -425,59 +424,72 @@ const CreatureCustomizer = () => {
 
       {/* Mint Bottom Sheet */}
       <Sheet open={mintBottomSheetOpen} onOpenChange={setMintBottomSheetOpen}>
-        <SheetContent side="bottom" className="p-0 border-0">
-          <div className="w-full px-4 pt-4 pb-10 bg-[#141414] rounded-tl-3xl rounded-tr-3xl inline-flex flex-col justify-start items-center gap-4">
-            <div className="w-12 h-1 bg-[#1f1f1f] rounded-sm" />
-
-            {/* Balance Section */}
-            <div className="self-stretch p-4 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#1f1f1f] flex flex-col justify-start items-start gap-2">
-              <div className="justify-start text-white text-sm font-normal leading-normal">
-                Your Balance
+        <SheetContent side="bottom" className="p-0 border-0 bg-[#141414]">
+          <div className="w-full bg-[#141414] rounded-tl-3xl rounded-tr-3xl inline-flex flex-col justify-start items-center gap-4">
+            <div className="self-stretch h-11 px-4 pt-4 inline-flex justify-between items-center">
+              <div className="justify-start text-white text-sm font-semibold uppercase leading-normal tracking-wide">
+                Select Token
               </div>
-
-              {/* Wallet and balance */}
-              <div className="inline-flex justify-start items-center gap-2">
-                <Button
-                  variant="secondary"
-                  className="px-3 py-1 bg-white rounded-3xl flex justify-center items-center gap-2"
-                >
-                  <div className="justify-start text-black text-xs font-normal uppercase leading-normal">
-                    {formatAddress(
-                      isTelegram ? address : account?.address || ""
-                    )}
+            </div>
+            <div className="self-stretch px-4 pb-2 flex flex-col justify-start items-start gap-5 overflow-hidden">
+              <div className="self-stretch inline-flex justify-center items-start gap-1">
+                <div className="flex-1 justify-start text-white text-base font-semibold leading-normal tracking-wider">
+                  Fee:
+                </div>
+                <div className="flex justify-start items-center gap-2">
+                  <div className="justify-start text-white text-base font-semibold leading-normal tracking-wider">
+                    {GENERATION_FEE} SUI
                   </div>
-                </Button>
-                <div className="flex justify-start items-center">
-                  <Image
-                    src="/images/sui.svg"
-                    alt="SUI"
-                    width={24}
-                    height={24}
-                  />
-                  <div className="justify-start text-white text-sm font-normal leading-normal">
-                    {formatSUI(isTelegram ? balance.balance : suiBalance || 0)}{" "}
-                    SUI
+                  <div className="justify-start text-[#858585] text-base font-semibold uppercase leading-normal tracking-wider">
+                    ~ $3.36
                   </div>
                 </div>
               </div>
-
-              {/* Fee info */}
-              <div className="inline-flex justify-center items-center gap-2">
-                <div className="justify-start text-white text-sm font-normal leading-normal">
-                  Fee: {GENERATION_FEE} SUI
+              <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden">
+                <div className="self-stretch px-4 py-2.5 bg-[#292929] rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#53cca7] inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer">
+                  <div className="size-8 relative rounded-xs">
+                    <Image
+                      src="/images/sui.svg"
+                      alt="SUI"
+                      width={32}
+                      height={32}
+                    />
+                  </div>
+                  <div className="flex-1 flex justify-start items-center gap-0.5">
+                    <div className="flex-1 flex justify-start items-center gap-0.5">
+                      <div className="justify-start text-white text-sm font-normal leading-normal">
+                        SUI
+                      </div>
+                      <div className="size-4 relative overflow-hidden">
+                        <svg className="size-4" viewBox="0 0 16 16" fill="none">
+                          <path
+                            d="M5 6L8 9L11 6"
+                            stroke="#68ffd1"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="justify-start text-white text-xs font-bold leading-none">
+                      {formatSUI(
+                        isTelegram ? balance.balance : suiBalance || 0
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <Image src="/images/sui.svg" alt="SUI" width={24} height={24} />
               </div>
-
-              {/* Mint button */}
+            </div>
+            <div className="w-full px-4 pt-4 pb-8 bg-[#141414] rounded-tl-2xl rounded-tr-2xl flex flex-col justify-start items-start gap-2">
               <Button
                 className="self-stretch px-4 py-2 bg-[#a668ff] rounded-3xl inline-flex justify-center items-center gap-2"
                 onClick={handleMintClick}
                 disabled={isLoading || isPending}
                 isLoading={isLoading || isPending}
               >
-                <div className="justify-start text-neutral-950 text-sm font-normal uppercase leading-normal">
-                  {isLoading || isPending ? "Minting..." : "Mint"}
+                <div className="justify-start text-white text-sm font-bold leading-normal">
+                  {isLoading || isPending ? "Minting..." : "Confirm"}
                 </div>
               </Button>
             </div>
