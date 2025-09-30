@@ -103,6 +103,16 @@ export default function PetExplorerDashboard() {
     url: "creative/reward-claim",
   }).post;
 
+  const { data: customTokenPriceData } = useApi<{
+    price: number;
+    symbol: string;
+  }>({
+    key: ["custom-token-price", coinType],
+    method: "GET",
+    url: `creative/custom-token/${coinType}`,
+    enabled: !!coinType,
+  }).get;
+
   const account = useCurrentAccount();
   const { backButton, isTelegram, isReady } = useUniversalApp();
   const suiPrice = useSelector((state: RootState) => state.appContext.suiPrice);
@@ -204,7 +214,14 @@ export default function PetExplorerDashboard() {
 
   const rewardStats: StatsItem[] = [
     {
-      icon: <Image src="/images/sui.svg" alt="User" width={24} height={24} />,
+      icon: (
+        <Image
+          src={customTokenPriceData?.imgUrl || "/images/sui.svg"}
+          alt={"SUI"}
+          width={24}
+          height={24}
+        />
+      ),
       value: suiRewardAmount.toFixed(4) || "0",
     },
     {
@@ -213,8 +230,8 @@ export default function PetExplorerDashboard() {
         suiRewardAmount > 0
           ? (
               (suiRewardAmount *
-                (suiPrice || 2.78) * // SUI value in USD
-                (100 / 20) * // Total pool (SUI is 20%)
+                (customTokenPriceData?.price || suiPrice || 2.78) * // Token value in USD
+                (100 / 20) * // Total pool (Token is 20%)
                 0.3) / // M3R8 takes 30%
               0.0088
             ) // M3R8 price
@@ -229,8 +246,8 @@ export default function PetExplorerDashboard() {
         suiRewardAmount > 0
           ? (
               (suiRewardAmount *
-                (suiPrice || 2.78) * // SUI value in USD
-                (100 / 20) * // Total pool (SUI is 20%)
+                (customTokenPriceData?.price || suiPrice || 2.78) * // Token value in USD
+                (100 / 20) * // Total pool (Token is 20%)
                 0.5) / // Energy takes 50%
               0.005
             ) // Energy price
@@ -548,7 +565,7 @@ export default function PetExplorerDashboard() {
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
                     {(
                       ((Number(pool?.totalPrize) / Number(MIST_PER_SUI)) *
-                        (suiPrice || 2.78)) /
+                        (customTokenPriceData?.price || suiPrice || 2.78)) /
                       (20 / 100)
                     ).toFixed(2)}
                     $
