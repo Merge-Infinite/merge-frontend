@@ -139,6 +139,7 @@ export default function PetExplorerDashboard() {
       poolId: poolId || undefined,
       includeNFTDetails: true,
       refreshInterval: 5000,
+      coinType: coinType || undefined,
     });
 
   useEffect(() => {
@@ -784,7 +785,7 @@ const PetSlotCard = ({
         }),
     });
   const handleSlotClick = () => {
-    router.push(`/nft?poolId=${poolId}`);
+    router.push(`/nft?poolId=${poolId}&coinType=${coinType}`);
   };
 
   const handleUnstakeCustomTokenClick = useCallback(

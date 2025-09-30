@@ -53,6 +53,7 @@ interface InventoryItem {
 export default function InventoryStakingInterface() {
   const searchParams = useSearchParams();
   const poolId = searchParams.get("poolId");
+  const coinType = searchParams.get("coinType");
   const { getPoolById, pools } = usePoolSystem({
     refreshInterval: 3000,
   });
@@ -206,6 +207,145 @@ export default function InventoryStakingInterface() {
         (1000 * 60 * 60 * 24 * 30);
     return calculateAvailableSlots(subscriptionMonths);
   }, [user]);
+
+  const handleStakeNFTInCustomPool = useCallback(
+    async (
+      nftId: string,
+      nftElements: number[],
+      poolInfo: Pool | undefined,
+      customCoinType: string
+    ) => {
+      try {
+        // Check if this NFT is already being staked
+        if (pendingStakes.has(nftId)) {
+          toast.error("This NFT is already being staked. Please wait.");
+          return;
+        }
+
+        if (!address && authed && isTelegram) {
+          toast.error("No address found");
+          return;
+        }
+        if (!isTelegram && !account?.address) {
+          toast.error("No address found");
+          return;
+        }
+
+        if (
+          poolInfo?.requiredElements &&
+          !poolInfo.requiredElements.every((element) =>
+            nftElements.includes(element)
+          )
+        ) {
+          toast.error("NFT does not contain all required elements.");
+          return;
+        }
+
+        // Use optimistic count for limit check
+        const currentCount = Math.max(
+          optimisticStakeCount,
+          stakeStats?.nftCount || 0
+        );
+        if (availableSlots <= currentCount) {
+          toast.error(
+            `You have reached the maximum number of NFTs. You can stake ${availableSlots} NFTs.`
+          );
+          return;
+        }
+
+        // Add to pending stakes and update optimistic count
+        setPendingStakes((prev) => new Set(prev).add(nftId));
+        setOptimisticStakeCount((prev) => prev + 1);
+
+        startLoading();
+
+        let tx = new Transaction();
+
+        tx.moveCall({
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::stake_nft_in_custom_pool`,
+          typeArguments: [customCoinType],
+          arguments: [
+            tx.object(poolId || ""),
+            tx.object(nftId),
+            tx.object("0x6"),
+          ],
+        });
+        let response;
+        if (isTelegram) {
+          response = await apiClient.callFunc<
+            SendAndExecuteTxParams<string, OmitToken<TxEssentials>>,
+            undefined
+          >(
+            "txn",
+            "signAndExecuteTransactionBlock",
+            {
+              transactionBlock: tx.serialize(),
+              context: {
+                network,
+                walletId: appContext.walletId,
+                accountId: appContext.accountId,
+              },
+            },
+            { withAuth: true }
+          );
+        } else {
+          response = await signAndExecuteTransaction({
+            transaction: tx.serialize(),
+          });
+        }
+
+        if (response && (response as any).digest) {
+          toast.success("NFT staked successfully in custom pool!");
+          await refreshRewards();
+        }
+      } catch (error: any) {
+        // Revert optimistic updates on error
+        setPendingStakes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(nftId);
+          return newSet;
+        });
+        setOptimisticStakeCount((prev) => Math.max(0, prev - 1));
+
+        if (error.message.includes('Some("validate_nft_requirements") }, 12')) {
+          toast.error("NFT is not containing the required elements");
+          return;
+        }
+        console.error("Error staking in custom pool:", error);
+        if (error.message === "Authentication required") {
+          setOpenAuthDialog(true);
+        } else {
+          toast.error(error.message || "Error staking NFT in custom pool");
+        }
+      } finally {
+        stopLoading();
+        // Remove from pending stakes after operation completes
+        setPendingStakes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(nftId);
+          return newSet;
+        });
+      }
+    },
+    [
+      address,
+      authed,
+      availableSlots,
+      stakeStats?.nftCount,
+      optimisticStakeCount,
+      pendingStakes,
+      isTelegram,
+      account?.address,
+      poolId,
+      apiClient,
+      network,
+      appContext,
+      signAndExecuteTransaction,
+      startLoading,
+      stopLoading,
+      refreshRewards,
+    ]
+  );
 
   const handleStakeNFT = useCallback(
     async (
@@ -421,7 +561,18 @@ export default function InventoryStakingInterface() {
                 item={card}
                 nftElements={card.elements}
                 poolInfo={card.poolInfo}
-                handleStakeNFT={handleStakeNFT}
+                handleStakeNFT={() => {
+                  if (coinType) {
+                    handleStakeNFTInCustomPool(
+                      card.id,
+                      card.elements,
+                      card.poolInfo,
+                      coinType
+                    );
+                  } else {
+                    handleStakeNFT(card.id, card.elements, card.poolInfo);
+                  }
+                }}
                 isLoading={isLoading}
                 availableSlots={Number(availableSlots)}
                 nftCount={Number(stakeStats?.nftCount)}

@@ -73,6 +73,7 @@ interface UseStakeInfoListOptions {
   includeNFTDetails?: boolean;
   enableRealTimeUpdates?: boolean;
   calculateRewards?: boolean; // New option to enable reward calculations
+  coinType?: string;
 }
 
 export function useStakeInfoList(options: UseStakeInfoListOptions) {
@@ -92,6 +93,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     includeNFTDetails = true,
     enableRealTimeUpdates = false,
     calculateRewards = true, // Enable by default
+    coinType,
   } = options;
 
   /**
@@ -212,6 +214,73 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   );
 
   /**
+   * Get staked NFT object data from a custom pool's ObjectTable
+   */
+  const getStakedNFTDataFromCustomPool = useCallback(
+    async (poolId: string, nftId: string): Promise<any | null> => {
+      try {
+        const poolObject = await suiClient.getObject({
+          id: poolId,
+          options: {
+            showContent: true,
+          },
+        });
+
+        if (
+          !poolObject.data?.content ||
+          poolObject.data.content.dataType !== "moveObject"
+        ) {
+          return null;
+        }
+
+        const poolFields = poolObject.data.content.fields as any;
+        const stakedNftsTableId = poolFields.staked_nfts?.fields?.id?.id;
+
+        if (!stakedNftsTableId) {
+          return null;
+        }
+
+        const stakedNftObject = await suiClient.getDynamicFieldObject({
+          parentId: stakedNftsTableId,
+          name: {
+            type: "0x2::object::ID",
+            value: nftId,
+          },
+        });
+
+        if (
+          !stakedNftObject.data?.content ||
+          stakedNftObject.data.content.dataType !== "moveObject"
+        ) {
+          return null;
+        }
+
+        const stakedNftFields = stakedNftObject.data.content.fields as any;
+        const nftData = stakedNftFields.nft?.fields;
+
+        if (!nftData) {
+          return null;
+        }
+
+        return {
+          name: nftData.metadata?.fields?.name || "Unknown NFT",
+          image_uri: nftData.metadata?.fields?.image_uri || "",
+          description: nftData.metadata?.fields?.description || "",
+          item_ids: nftData.item_ids || [],
+          stakedNftData: stakedNftFields,
+        };
+      } catch (error) {
+        console.error(
+          `Error fetching staked NFT data for ${nftId} in custom pool ${poolId}:`,
+          error
+        );
+        return null;
+      }
+    },
+    []
+  );
+
+  /**
    * Convert stake events to StakeInfo objects
    */
   const convertEventsToStakeInfos = useCallback(
@@ -224,7 +293,11 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       for (const nftId of nftIds) {
         try {
           let displayData;
-          displayData = await getStakedNFTData(poolId, nftId);
+          if (coinType) {
+            displayData = await getStakedNFTDataFromCustomPool(poolId, nftId);
+          } else {
+            displayData = await getStakedNFTData(poolId, nftId);
+          }
           const stakeInfo: StakeInfo = {
             id: nftId,
             nftId: nftId,
@@ -242,7 +315,14 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
 
       return stakeInfos;
     },
-    [includeNFTDetails, getStakedNFTData, walletAddress, poolId]
+    [
+      includeNFTDetails,
+      getStakedNFTData,
+      getStakedNFTDataFromCustomPool,
+      walletAddress,
+      poolId,
+      coinType,
+    ]
   );
 
   /**
@@ -387,6 +467,41 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
     []
   );
 
+  const fetchUserStakedNftIdsInCustomPool = useCallback(
+    async (poolId: string, userAddress: string): Promise<string[]> => {
+      try {
+        if (!coinType) {
+          return [];
+        }
+
+        const tx = new Transaction();
+        tx.moveCall({
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::get_custom_user_staked_nft_ids`,
+          typeArguments: [`0x${coinType}`],
+          arguments: [tx.object(poolId), tx.pure.address(userAddress)],
+        });
+
+        const result = await suiClient.devInspectTransactionBlock({
+          transactionBlock: tx,
+          sender: userAddress,
+        });
+
+        if (!result.results?.[0]?.returnValues) {
+          return [];
+        }
+
+        const returnValue = result.results[0].returnValues[0];
+        const nftIds: string[] = parseSuiVectorIds(returnValue[0]);
+
+        return nftIds;
+      } catch (error) {
+        console.error("Error fetching all staked NFT IDs:", error);
+        throw new Error(`Failed to fetch staked NFT IDs: ${error}`);
+      }
+    },
+    [coinType]
+  );
+
   const fetchStakeInfos = useCallback(
     async (isRefresh = false) => {
       if (!walletAddress) {
@@ -405,10 +520,15 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
         }
         setError(null);
 
-        const stakedNftIds = await fetchUserStakedNftIds(
-          poolId!,
-          walletAddress
-        );
+        let stakedNftIds = [];
+        if (coinType) {
+          stakedNftIds = await fetchUserStakedNftIdsInCustomPool(
+            poolId!,
+            walletAddress
+          );
+        } else {
+          stakedNftIds = await fetchUserStakedNftIds(poolId!, walletAddress);
+        }
         const stakeInfosList = await convertEventsToStakeInfos(stakedNftIds);
         setStakeInfos(stakeInfosList);
         setLastFetchTime(new Date());
@@ -434,6 +554,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
       determineCurrentlyStakedNFTs,
       convertEventsToStakeInfos,
       initialLoading,
+      coinType,
     ]
   );
 

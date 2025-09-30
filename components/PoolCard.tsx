@@ -9,6 +9,7 @@ import Emoji from "./common/Emoji";
 
 interface Pool {
   id: string;
+  tokenType: string;
   name: string;
   description: string;
   imageUrl?: string;
@@ -164,7 +165,9 @@ export default function PoolCard({ pool }: PoolCardProps) {
           className={`px-3 py-1 rounded-3xl inline-flex justify-center items-center gap-2 text-xs font-normal font-sora uppercase leading-normal ${stateClass}`}
           onClick={() => {
             if (!disabled) {
-              router.push(`/universe?poolId=${pool.id}`);
+              router.push(
+                `/universe?poolId=${pool.id}&coinType=${pool.tokenType}`
+              );
             }
           }}
         >

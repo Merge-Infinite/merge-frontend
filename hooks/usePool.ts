@@ -25,6 +25,7 @@ export interface Pool {
   participantCount: number;
   totalStakedCount: number;
   suiRewards: number;
+  tokenType: string;
 }
 
 export interface PoolOverview {
@@ -83,7 +84,6 @@ export const usePoolSystem = (
             showType: true,
           },
         });
-        console.log("result", result);
         if (
           result.data?.content?.dataType === "moveObject" &&
           !result.data?.content?.fields
@@ -97,7 +97,6 @@ export const usePoolSystem = (
             ? (result.data?.content?.fields as any)
             : null;
 
-        console.log("returnValues", returnValues);
         if (!returnValues) {
           return null;
         }
@@ -105,7 +104,10 @@ export const usePoolSystem = (
           id: poolId,
           poolId,
           name: String(returnValues.name),
-          totalPrize: Number(returnValues.total_sui_deposited),
+          totalPrize: Number(
+            returnValues.total_sui_deposited ||
+              Number(returnValues.total_rewards_added)
+          ),
           description: String(returnValues.description),
           creator: String(returnValues.creator), // You might need to fetch this separately
           imageUrl: String(returnValues.image_url), // You might need to fetch this separately
@@ -114,12 +116,14 @@ export const usePoolSystem = (
                 Number(element)
               )
             : [],
+
           startTime: Number(returnValues.start_time),
           endTime: Number(returnValues.end_time),
           isActive: Boolean(returnValues.is_active),
           suiRewards: Number(returnValues.sui_reward_pool),
           participantCount: Number(returnValues.participant_count),
           totalStakedCount: Number(returnValues.total_staked_count),
+          tokenType: String(returnValues.token_type),
         };
       } catch (err) {
         console.error(`Error fetching pool info for ${poolId}:`, err);
@@ -153,6 +157,9 @@ export const usePoolSystem = (
         order: "ascending",
       });
 
+      console.log("createdEvents", createdEvents);
+      console.log("customCreatedEvents", customCreatedEvents);
+
       const poolIds: string[] = [];
       for (const event of [
         ...createdEvents.data,
@@ -175,8 +182,25 @@ export const usePoolSystem = (
         order: "ascending",
       });
 
+      const customDeletedEvents = await suiClient.queryEvents({
+        query: {
+          MoveEventType: `${MER3_UPGRADED_PACKAGE_ID}::pool_rewards::CustomPoolDeleted`,
+        },
+        limit: 1000, // Adjust as needed
+        order: "ascending",
+      });
+
       const deletedPoolIds: Set<string> = new Set();
       for (const event of deletedEvents.data) {
+        if (event.parsedJson && typeof event.parsedJson === "object") {
+          const poolId = (event.parsedJson as any).pool_id;
+          if (poolId) {
+            deletedPoolIds.add(poolId);
+          }
+        }
+      }
+
+      for (const event of customDeletedEvents.data) {
         if (event.parsedJson && typeof event.parsedJson === "object") {
           const poolId = (event.parsedJson as any).pool_id;
           if (poolId) {
