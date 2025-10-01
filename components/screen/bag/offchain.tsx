@@ -207,7 +207,6 @@ export function OffchainBagScreen() {
         error.status !== 401
       ) {
         console.error("Error minting NFTs:", error);
-        toast.error(error.message || "Please try again later");
       }
       throw error;
     } finally {
