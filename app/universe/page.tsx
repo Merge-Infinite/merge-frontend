@@ -825,7 +825,7 @@ const PetSlotCard = ({
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::unstake_nft_from_custom_pool`,
+          target: `${MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::unstake_nft_from_custom_pool`,
           typeArguments: [customTokenType],
           arguments: [
             tx.object(poolId || ""),

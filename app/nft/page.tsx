@@ -20,6 +20,7 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
+  MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID,
   MER3_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
@@ -262,7 +263,7 @@ export default function InventoryStakingInterface() {
         let tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::stake_nft_in_custom_pool`,
+          target: `${MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::stake_nft_in_custom_pool`,
           typeArguments: [customCoinType],
           arguments: [
             tx.object(poolId || ""),
@@ -662,7 +663,10 @@ const NFTCard = ({
           ? "Staking..."
           : nftCount !== undefined &&
             availableSlots <= Math.max(nftCount, optimisticStakeCount)
-          ? "Max Slots Reached"
+          ? `${availableSlots}/${Math.max(
+              nftCount,
+              optimisticStakeCount
+            )} Slots Reached`
           : "Stake"}
       </Button>
     </div>
