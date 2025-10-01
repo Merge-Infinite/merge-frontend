@@ -22,6 +22,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
+  MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_REWARDS_MODULE_NAME,
   POOL_SYSTEM,
@@ -389,7 +390,7 @@ export default function PetExplorerDashboard() {
         const tx = new Transaction();
 
         tx.moveCall({
-          target: `${MER3_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_custom_token_reward`,
+          target: `${MER3_CUSTOM_TOKEN_UPGRADED_PACKAGE_ID}::${POOL_REWARDS_MODULE_NAME}::claim_custom_token_rewards`,
           typeArguments: [customTokenType],
           arguments: [
             tx.object(POOL_SYSTEM),
@@ -439,7 +440,7 @@ export default function PetExplorerDashboard() {
         if (error.message === "Authentication required") {
           toast.error("Please authenticate to claim rewards");
         } else if (
-          error.message.includes('Some("claim_custom_token_reward") }, 12')
+          error.message.includes('Some("claim_custom_token_rewards") }, 12')
         ) {
           toast.error(
             "You claim too early. Please wait 24 hours from your last claim."
