@@ -150,18 +150,18 @@ export default function InventoryStakingInterface() {
     }
 
     // Add slots based on subscription duration
-    if (subscriptionMonths > 0 && subscriptionMonths <= 1) {
+    if (subscriptionMonths > 0) {
       totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 1 Month tier
     }
 
-    if (subscriptionMonths > 1 && subscriptionMonths <= 3) {
+    if (subscriptionMonths > 1) {
       totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 3 Month tier
     }
 
-    if (subscriptionMonths > 3 && subscriptionMonths <= 6) {
+    if (subscriptionMonths > 3) {
       totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 6 Month tier
     }
-    if (subscriptionMonths > 6 && subscriptionMonths <= 12) {
+    if (subscriptionMonths > 6) {
       totalSlots += MAX_SUBSCRIPTION_SLOTS_PER_TIER; // 12 Month tier
     }
 
