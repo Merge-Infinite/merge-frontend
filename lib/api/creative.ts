@@ -16,6 +16,7 @@ const creativeApi = router("creative", {
       data: {
         transactionBlockBytes: string;
         signature: string;
+        coinType: string;
       };
     }) => api.post("/creative/generate-nft", variables),
   }),
@@ -29,6 +30,9 @@ const creativeApi = router("creative", {
   updateNftPrompt: router.mutation({
     mutationFn: async (variables: { jobId: number; prompt: string }) =>
       api.post("/creative/update-nft-prompt", variables),
+  }),
+  getSupportedTokens: router.query({
+    fetcher: async () => api.get("/creative/supported-tokens"),
   }),
 });
 

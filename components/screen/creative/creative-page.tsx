@@ -22,7 +22,7 @@ import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import { FEE_ADDRESS, GENERATION_FEE } from "@/utils/constants";
-import { useCurrentAccount, useSignTransaction } from "@mysten/dapp-kit";
+import { useSignTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { Search, X } from "lucide-react";
@@ -42,6 +42,7 @@ const CreatureCustomizer = () => {
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [creatureName, setCreatureName] = useState("");
+  const suiPrice = useSelector((state: RootState) => state.appContext.suiPrice);
 
   // Parse prompt from URL params if available
   const promptParam = searchParams.get("prompt");
@@ -55,12 +56,13 @@ const CreatureCustomizer = () => {
   const [mintBottomSheetOpen, setMintBottomSheetOpen] = useState(false);
   const [filteredElements, setFilteredElements] = useState<any[]>([]);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<any>(null);
   const { data: balance } = useSuiBalance(address);
-  const account = useCurrentAccount();
   const { inventory } = useUser(debouncedText);
   const { isTelegram, suiBalance } = useUniversalApp();
   const { mutateAsync: signTransaction } = useSignTransaction();
   const { mutateAsync: mint, isPending } = creativeApi.mint.useMutation();
+  const { data: supportedTokens } = creativeApi.getSupportedTokens.useQuery();
 
   useEffect(() => {
     if (!address && appContext.authed && isTelegram) {
@@ -206,6 +208,7 @@ const CreatureCustomizer = () => {
               (response as any).transactionBlockBytes ||
               (response as any).bytes,
             signature: (response as any).signature,
+            coinType: selectedToken?.coinType || "0x2::sui::SUI",
           },
         }).then(() => {
           setMintBottomSheetOpen(false);
@@ -441,11 +444,11 @@ const CreatureCustomizer = () => {
                     {GENERATION_FEE} SUI
                   </div>
                   <div className="justify-start text-[#858585] text-base font-semibold uppercase leading-normal tracking-wider">
-                    ~ $3.36
+                    ~ ${suiPrice.toFixed(2)}
                   </div>
                 </div>
               </div>
-              <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden">
+              <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden max-h-60 overflow-y-auto">
                 <div className="self-stretch px-4 py-2.5 bg-[#292929] rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#53cca7] inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer">
                   <div className="size-8 relative rounded-xs">
                     <Image
@@ -479,6 +482,41 @@ const CreatureCustomizer = () => {
                     </div>
                   </div>
                 </div>
+                {supportedTokens?.map((token: any, idx: number) => (
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedToken(token)}
+                    className={`self-stretch px-4 py-2.5 bg-[#292929] rounded-2xl outline outline-1 outline-offset-[-1px] ${
+                      selectedToken?.coinType === token.coinType
+                        ? "outline-[#53cca7]"
+                        : "outline-transparent"
+                    } inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:outline-[#53cca7] transition-all`}
+                  >
+                    <div className="size-8 relative rounded-xs">
+                      <Image
+                        src={token.imgUrl || "/images/default-token.svg"}
+                        alt={token.coinSymbol}
+                        width={32}
+                        height={32}
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-start">
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex items-center gap-1">
+                          <div className="text-white text-sm font-normal leading-normal">
+                            {token.coinSymbol}
+                          </div>
+                          <div className="text-[#858585] text-xs font-normal">
+                            {token.coinName}
+                          </div>
+                        </div>
+                        <div className="text-[#858585] text-xs font-normal">
+                          ${token.price?.toFixed(2) || "0.00"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="w-full px-4 pt-4 pb-8 bg-[#141414] rounded-tl-2xl rounded-tr-2xl flex flex-col justify-start items-start gap-2">
