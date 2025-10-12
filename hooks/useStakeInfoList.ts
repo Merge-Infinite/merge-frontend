@@ -601,14 +601,16 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
   // Utility functions
   const getStakeInfoById = useCallback(
     (id: string): StakeInfo | null => {
-      return stakeInfos.find((stake) => stake.id === id) || null;
+      return stakeInfos.find((stake: StakeInfo) => stake.id === id) || null;
     },
     [stakeInfos]
   );
 
   const getStakeInfoByNftId = useCallback(
     (nftId: string): StakeInfo | null => {
-      return stakeInfos.find((stake) => stake.nftId === nftId) || null;
+      return (
+        stakeInfos.find((stake: StakeInfo) => stake.nftId === nftId) || null
+      );
     },
     [stakeInfos]
   );

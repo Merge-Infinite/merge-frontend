@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   compress: true,
+  transpilePackages: [
+    "@telegram-apps/telegram-ui",
+    "@telegram-apps/sdk-react",
+    "@telegram-apps/sdk",
+  ],
   experimental: {
     turbo: {
       rules: {
