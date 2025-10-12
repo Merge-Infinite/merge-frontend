@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   /* config options here */
+  transpilePackages: ["@telegram-apps/telegram-ui"],
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -13,21 +14,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   compress: true,
-  transpilePackages: [
-    "@telegram-apps/telegram-ui",
-    "@telegram-apps/sdk-react",
-    "@telegram-apps/sdk",
-  ],
-  experimental: {
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
-      },
-    },
-  },
+
   webpack: (config, { dev, isServer }) => {
     const fileLoaderRule = config.module.rules.find((rule: any) =>
       rule.test?.test?.(".svg")

@@ -10,7 +10,6 @@ import {
   useThemeParams,
   useViewport,
 } from "@telegram-apps/sdk-react";
-import { AppRoot } from "@telegram-apps/telegram-ui";
 import React, {
   memo,
   type PropsWithChildren,
@@ -109,13 +108,7 @@ const TelegramApp = memo(function TelegramApp(props: PropsWithChildren) {
       <WalletProvider autoConnect={true}>
         <ApolloProvider client={apolloClient}>
           <UniversalAppProvider>
-            <AppRoot
-              appearance={appearance}
-              platform={platform}
-              className="w-full h-full"
-            >
-              {props.children}
-            </AppRoot>
+            {props.children}
             <Toaster />
             <SonnerToaster />
           </UniversalAppProvider>
@@ -293,7 +286,9 @@ const RootInner = memo(function RootInner({ children }: PropsWithChildren) {
   const [isTelegram, setIsTelegram] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsTelegram(isTelegramEnvironment());
+    isTelegramEnvironment().then((isTelegram) => {
+      setIsTelegram(isTelegram);
+    });
   }, []);
 
   if (isTelegram === null) {
