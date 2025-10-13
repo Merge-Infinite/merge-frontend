@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLoading } from "@/hooks/useLoading";
 import { useUser } from "@/hooks/useUser";
 import creativeApi from "@/lib/api/creative";
-import { formatSUI } from "@/lib/wallet/core";
 import {
   SendAndExecuteTxParams,
   TxEssentials,
@@ -63,6 +62,8 @@ const CreatureCustomizer = () => {
   const { mutateAsync: signTransaction } = useSignTransaction();
   const { mutateAsync: mint, isPending } = creativeApi.mint.useMutation();
   const { data: supportedTokens } = creativeApi.getSupportedTokens.useQuery();
+
+  console.log(supportedTokens);
 
   useEffect(() => {
     if (!address && appContext.authed && isTelegram) {
@@ -449,39 +450,6 @@ const CreatureCustomizer = () => {
                 </div>
               </div>
               <div className="w-full flex flex-col justify-start items-start gap-2 overflow-hidden max-h-60 overflow-y-auto">
-                <div className="self-stretch px-4 py-2.5 bg-[#292929] rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#53cca7] inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer">
-                  <div className="size-8 relative rounded-xs">
-                    <Image
-                      src="/images/sui.svg"
-                      alt="SUI"
-                      width={32}
-                      height={32}
-                    />
-                  </div>
-                  <div className="flex-1 flex justify-start items-center gap-0.5">
-                    <div className="flex-1 flex justify-start items-center gap-0.5">
-                      <div className="justify-start text-white text-sm font-normal leading-normal">
-                        SUI
-                      </div>
-                      <div className="size-4 relative overflow-hidden">
-                        <svg className="size-4" viewBox="0 0 16 16" fill="none">
-                          <path
-                            d="M5 6L8 9L11 6"
-                            stroke="#68ffd1"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="justify-start text-white text-xs font-bold leading-none">
-                      {formatSUI(
-                        isTelegram ? balance.balance : suiBalance || 0
-                      )}
-                    </div>
-                  </div>
-                </div>
                 {supportedTokens?.map((token: any, idx: number) => (
                   <div
                     key={idx}
@@ -494,7 +462,7 @@ const CreatureCustomizer = () => {
                   >
                     <div className="size-8 relative rounded-xs">
                       <Image
-                        src={token.imgUrl || "/images/default-token.svg"}
+                        src={token.imgUrl || "/images/sui.svg"}
                         alt={token.coinSymbol}
                         width={32}
                         height={32}
@@ -505,9 +473,6 @@ const CreatureCustomizer = () => {
                         <div className="flex items-center gap-1">
                           <div className="text-white text-sm font-normal leading-normal">
                             {token.coinSymbol}
-                          </div>
-                          <div className="text-[#858585] text-xs font-normal">
-                            {token.coinName}
                           </div>
                         </div>
                         <div className="text-[#858585] text-xs font-normal">

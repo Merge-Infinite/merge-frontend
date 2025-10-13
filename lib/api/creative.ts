@@ -32,7 +32,14 @@ const creativeApi = router("creative", {
       api.post("/creative/update-nft-prompt", variables),
   }),
   getSupportedTokens: router.query({
-    fetcher: async () => api.get("/creative/supported-tokens"),
+    fetcher: async () => {
+      const res = await api.get("/creative/supported-tokens");
+      console.log(res);
+      return [
+        ...(res as any).data.customTokens,
+        (res as any).data.defaultToken,
+      ];
+    },
   }),
 });
 
