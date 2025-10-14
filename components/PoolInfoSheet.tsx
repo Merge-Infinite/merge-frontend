@@ -137,23 +137,24 @@ export const PoolInfoSheet: React.FC<PoolInfoSheetProps> = ({
                 ))
               ) : (
                 // Fallback to static content if no API data
-                <>
-                  <div className="px-3 py-1 rounded-3xl outline outline-1 outline-offset-[-1px] outline-[#292929] flex justify-center items-center gap-2">
-                    <div className="justify-start text-white text-xs font-normal font-sora uppercase leading-normal">
-                      🇻🇳 Vietnam (1)
-                    </div>
-                  </div>
-                  <div className="px-3 py-1 rounded-3xl outline outline-1 outline-offset-[-1px] outline-[#292929] flex justify-center items-center gap-2">
-                    <div className="justify-start text-white text-xs font-normal font-sora uppercase leading-normal">
-                      👑 Sovereignty (1)
-                    </div>
-                  </div>
-                  <div className="px-3 py-1 rounded-3xl outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2">
-                    <div className="justify-start text-white text-xs font-normal font-sora uppercase leading-normal">
-                      🎊 Ceremony (1)
-                    </div>
-                  </div>
-                </>
+                <div className="self-stretch justify-start">
+                  <span className="text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
+                    Your NFT must include{" "}
+                  </span>
+                  <span className="text-white text-sm font-normal font-['Sora'] leading-normal">
+                    any
+                  </span>
+                  <span className="text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
+                    {" "}
+                  </span>
+                  <span className="text-white text-sm font-normal font-['Sora'] leading-normal">
+                    3 elements
+                  </span>
+                  <span className="text-[#858585] text-sm font-normal font-['Sora'] leading-normal">
+                    {" "}
+                    to be eligible for staking.
+                  </span>
+                </div>
               )}
             </div>
           </div>
