@@ -104,11 +104,11 @@ export default function PetExplorerDashboard() {
     url: "creative/reward-claim",
   }).post;
 
-  const { data: customTokenPriceData } = useApi<{
+  const customTokenPriceRequest = useApi<{
     price: number;
-    symbol: string;
+    imgUrl: string;
   }>({
-    key: ["custom-token-price", coinType],
+    key: ["custom-token-price", coinType || "sui"],
     method: "GET",
     url: `sui/custom-token/${coinType}`,
     enabled: !!coinType,
@@ -217,7 +217,7 @@ export default function PetExplorerDashboard() {
     {
       icon: (
         <Image
-          src={customTokenPriceData?.imgUrl || "/images/sui.svg"}
+          src={customTokenPriceRequest?.data?.imgUrl || "/images/sui.svg"}
           alt={"SUI"}
           width={24}
           height={24}
@@ -231,7 +231,7 @@ export default function PetExplorerDashboard() {
         suiRewardAmount > 0
           ? (
               (suiRewardAmount *
-                (customTokenPriceData?.price || suiPrice || 2.78) * // Token value in USD
+                (customTokenPriceRequest?.data?.price || suiPrice || 2.78) * // Token value in USD
                 (100 / (coinType ? 0.05 : 20)) * // Total pool (Token is 20%)
                 (coinType ? 0.25 : 0.3)) / // M3R8 takes 30%
               0.0088
@@ -247,7 +247,7 @@ export default function PetExplorerDashboard() {
         suiRewardAmount > 0
           ? (
               (suiRewardAmount *
-                (customTokenPriceData?.price || suiPrice || 2.78) * // Token value in USD
+                (customTokenPriceRequest?.data?.price || suiPrice || 2.78) * // Token value in USD
                 (100 / (coinType ? 0.05 : 20)) * // Total pool (Token is 20%)
                 (coinType ? 0.7 : 0.5)) / // Energy takes 50%
               0.005
@@ -566,8 +566,10 @@ export default function PetExplorerDashboard() {
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
                     {(
                       ((Number(pool?.totalPrize) / Number(MIST_PER_SUI)) *
-                        (customTokenPriceData?.price || suiPrice || 2.78)) /
-                      (20 / 100)
+                        (customTokenPriceRequest?.data?.price ||
+                          suiPrice ||
+                          2.78)) /
+                      ((coinType ? 0.05 : 20) / 100)
                     ).toFixed(2)}
                     $
                   </span>
