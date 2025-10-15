@@ -218,6 +218,8 @@ export default function PetExplorerDashboard() {
     [stakeStats?.pendingSuiRewards]
   );
 
+  console.log(suiRewardAmount);
+
   const rewardStats: StatsItem[] = [
     {
       icon: (
@@ -237,7 +239,7 @@ export default function PetExplorerDashboard() {
           ? (
               (suiRewardAmount *
                 (customTokenPriceRequest?.data?.price || suiPrice || 2.78) * // Token value in USD
-                (100 / (coinType ? 0.05 : 20)) * // Total pool (Token is 20%)
+                (100 / (coinType ? 5 : 20)) * // Total pool (Token is 20%)
                 (coinType ? 0.25 : 0.3)) / // M3R8 takes 30%
               0.0088
             ) // M3R8 price
@@ -253,7 +255,7 @@ export default function PetExplorerDashboard() {
           ? (
               (suiRewardAmount *
                 (customTokenPriceRequest?.data?.price || suiPrice || 2.78) * // Token value in USD
-                (100 / (coinType ? 0.05 : 20)) * // Total pool (Token is 20%)
+                (100 / (coinType ? 5 : 20)) * // Total pool (Token is 20%)
                 (coinType ? 0.7 : 0.5)) / // Energy takes 50%
               0.005
             ) // Energy price
