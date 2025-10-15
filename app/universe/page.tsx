@@ -218,8 +218,6 @@ export default function PetExplorerDashboard() {
     [stakeStats?.pendingSuiRewards]
   );
 
-  console.log(suiRewardAmount);
-
   const rewardStats: StatsItem[] = [
     {
       icon: (
@@ -230,7 +228,7 @@ export default function PetExplorerDashboard() {
           height={24}
         />
       ),
-      value: suiRewardAmount.toFixed(4) || "0",
+      value: suiRewardAmount.toFixed(8) || "0",
     },
     {
       icon: <Image src="/images/m3r8.svg" alt="User" width={24} height={24} />,
@@ -243,7 +241,7 @@ export default function PetExplorerDashboard() {
                 (coinType ? 0.25 : 0.3)) / // M3R8 takes 30%
               0.0088
             ) // M3R8 price
-              .toFixed(4)
+              .toFixed(0)
           : "0",
     },
     {
@@ -259,7 +257,7 @@ export default function PetExplorerDashboard() {
                 (coinType ? 0.7 : 0.5)) / // Energy takes 50%
               0.005
             ) // Energy price
-              .toFixed(4)
+              .toFixed(0)
           : "0",
     },
   ];
