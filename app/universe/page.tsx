@@ -210,7 +210,11 @@ export default function PetExplorerDashboard() {
   ];
 
   const suiRewardAmount = React.useMemo(
-    () => Number(stakeStats?.pendingSuiRewards || 0) / Number(MIST_PER_SUI),
+    () =>
+      Number(stakeStats?.pendingSuiRewards || 0) /
+      (coinType
+        ? Math.pow(10, customTokenPriceRequest?.data?.decimals || 9)
+        : Number(MIST_PER_SUI)),
     [stakeStats?.pendingSuiRewards]
   );
 
@@ -550,9 +554,6 @@ export default function PetExplorerDashboard() {
       </div>
     );
   }
-
-  console.log(customTokenPriceRequest?.data?.decimals);
-  console.log(Number(MIST_PER_SUI));
 
   return (
     <div className="min-h-screen bg-black p-4">
