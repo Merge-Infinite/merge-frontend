@@ -107,6 +107,7 @@ export default function PetExplorerDashboard() {
   const customTokenPriceRequest = useApi<{
     price: number;
     imgUrl: string;
+    decimals: number;
   }>({
     key: ["custom-token-price", coinType || "sui"],
     method: "GET",
@@ -550,6 +551,9 @@ export default function PetExplorerDashboard() {
     );
   }
 
+  console.log(customTokenPriceRequest?.data?.decimals);
+  console.log(Number(MIST_PER_SUI));
+
   return (
     <div className="min-h-screen bg-black p-4">
       <div className="max-w-md mx-auto">
@@ -565,7 +569,13 @@ export default function PetExplorerDashboard() {
                   </span>
                   <span className="text-green-400 text-xl font-normal font-sora uppercase leading-7">
                     {(
-                      ((Number(pool?.totalPrize) / Number(MIST_PER_SUI)) *
+                      ((Number(pool?.totalPrize) /
+                        (coinType
+                          ? Math.pow(
+                              10,
+                              customTokenPriceRequest?.data?.decimals || 9
+                            )
+                          : Number(MIST_PER_SUI))) *
                         (customTokenPriceRequest?.data?.price ||
                           suiPrice ||
                           2.78)) /
