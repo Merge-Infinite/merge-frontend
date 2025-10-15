@@ -30,10 +30,10 @@ export default function BrainrotExplorer() {
 
   // Separate pools into active and inactive
   const { activePools, inactivePools } = useMemo(() => {
-    let pools = [...suiPools.filter((pool) => !pool.tokenType)];
-    if (user?.isWhitelisted) {
-      pools = [...suiPools];
-    }
+    let pools = [...suiPools];
+    // if (user?.isWhitelisted) {
+    //   pools = [...suiPools];
+    // }
     const active = [...pools]
       .filter((pool) => pool.isActive && pool.endTime > Date.now())
       .sort((a, b) => b.startTime - a.startTime);
