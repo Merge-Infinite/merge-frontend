@@ -121,23 +121,27 @@ export default function PoolCard({ pool }: PoolCardProps) {
         </PoolInfoSheet>
 
         {/* Display items from API */}
-        {items.length > 0 && (
-          <div className="flex justify-start items-start gap-1.5 flex-wrap content-start">
-            <div className="justify-start text-white text-xs font-normal font-sora leading-none">
-              *Required Elements:
-            </div>
-            <div className="flex items-center gap-1">
-              {items.map((item) => (
+        <div className="flex justify-start items-start gap-1.5 flex-wrap content-start">
+          <div className="justify-start text-white text-xs font-normal font-sora leading-none">
+            *Required Elements:
+          </div>
+          <div className="flex items-center gap-1">
+            {items.length > 0 ? (
+              items.map((item) => (
                 <div
                   key={item.id}
                   className="text-center justify-start text-white text-xs font-bold font-sora leading-none"
                 >
                   <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="text-center justify-start text-white text-xs font-bold font-sora leading-none">
+                Any 3 elements
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Fallback to pool requirements if no items from API */}
         {items.length === 0 &&
