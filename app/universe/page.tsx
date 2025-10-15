@@ -569,8 +569,8 @@ export default function PetExplorerDashboard() {
                         (customTokenPriceRequest?.data?.price ||
                           suiPrice ||
                           2.78)) /
-                      ((coinType ? 0.05 : 20) / 100)
-                    ).toFixed(2)}
+                      ((coinType ? 5 : 20) / 100)
+                    ).toLocaleString()}
                     $
                   </span>
                 </div>
