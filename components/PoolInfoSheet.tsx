@@ -122,13 +122,12 @@ export const PoolInfoSheet: React.FC<PoolInfoSheetProps> = ({
 
             <div className="self-stretch inline-flex justify-start items-start gap-2.5 flex-wrap content-start">
               {poolRequiredItems.length > 0 ? (
-                poolRequiredItems.map((item) => (
-                  <>
-                    <div className="self-stretch justify-start text-[#858585] text-sm font-normal font-sora leading-normal">
-                      Your NFT must include the following elements to be
-                      eligible for staking
-                    </div>
-
+                <>
+                  <div className="self-stretch justify-start text-[#858585] text-sm font-normal font-sora leading-normal">
+                    Your NFT must include the following elements to be eligible
+                    for staking
+                  </div>
+                  {poolRequiredItems.map((item) => (
                     <div
                       key={item.id}
                       className="px-3 py-1 rounded-3xl outline outline-1 outline-offset-[-1px] outline-[#292929] flex justify-center items-center gap-2"
@@ -137,8 +136,8 @@ export const PoolInfoSheet: React.FC<PoolInfoSheetProps> = ({
                         <Emoji emoji={item.emoji} size={18} /> {item.handle} (1)
                       </div>
                     </div>
-                  </>
-                ))
+                  ))}
+                </>
               ) : (
                 // Fallback to static content if no API data
                 <div className="self-stretch justify-start">
