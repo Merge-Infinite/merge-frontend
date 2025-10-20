@@ -45,7 +45,7 @@ const CreatureCustomizer = () => {
 
   // Parse prompt from URL params if available
   const promptParam = searchParams.get("prompt");
-  const initialPrompt = promptParam ? JSON.parse(promptParam) : "";
+  const initialPrompt = promptParam || "";
   const [prompt, setPrompt] = useState(initialPrompt);
   const [selectedPromptElements, setSelectedPromptElements] = useState<any[]>(
     []

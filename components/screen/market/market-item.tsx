@@ -314,7 +314,7 @@ export const MarketItem = React.memo(
     }
 
     const handleCopyElements = () => {
-      router.push(`/creative?prompt=${JSON.stringify(prompt)}`);
+      router.push(`/creative?prompt=${encodeURIComponent(prompt || "")}`);
     };
 
     return (

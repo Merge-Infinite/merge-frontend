@@ -154,7 +154,9 @@ export const ShareBottomSheet = ({
               {prompt && (
                 <div
                   onClick={() => {
-                    router.push(`/creative?prompt=${JSON.stringify(prompt)}`);
+                    router.push(
+                      `/creative?prompt=${encodeURIComponent(prompt || "")}`
+                    );
                   }}
                   className="self-stretch px-4 py-3 bg-[#1f1f1f] rounded-2xl inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer hover:bg-[#2a2a2a] transition-colors"
                 >
