@@ -155,9 +155,6 @@ export const usePoolSystem = (
         order: "ascending",
       });
 
-      console.log("createdEvents", createdEvents);
-      console.log("customCreatedEvents", customCreatedEvents);
-
       const poolIds: string[] = [];
       for (const event of [
         ...createdEvents.data,
@@ -227,7 +224,6 @@ export const usePoolSystem = (
 
       // Get all pool IDs
       const poolIds = await fetchAllPoolIds();
-      console.log("poolIds", poolIds);
 
       if (poolIds.length === 0) {
         setPools([]);

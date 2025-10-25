@@ -203,7 +203,7 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({
     if (isReady) {
       saveAddress();
     }
-  }, [isReady]);
+  }, [isReady, account, telegramAddress]);
 
   // Get current wallet info
   const getWalletInfo = useCallback(() => {

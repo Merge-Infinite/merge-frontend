@@ -478,15 +478,12 @@ export default function InventoryStakingInterface() {
     ]
   );
 
-  console.log(creatureNfts);
-
   const filteredNfts = useMemo(
     () =>
       creatureNfts
         .map(({ data }) => {
           const metadata = data?.content?.fields.metadata;
           const poolInfo = poolId ? getPoolById(poolId) : undefined;
-          console.log(poolInfo);
           return {
             id: data!.objectId,
             name: metadata?.fields?.name || "Creature NFT",
