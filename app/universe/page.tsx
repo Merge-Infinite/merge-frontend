@@ -433,6 +433,7 @@ export default function PetExplorerDashboard() {
             ?.mutateAsync({
               poolId: poolId,
               transactionHash: response.digest,
+              coinType,
             })
             .then(() => {
               toast.success("Custom token rewards claimed successfully!");
