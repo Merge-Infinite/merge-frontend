@@ -478,6 +478,8 @@ export default function InventoryStakingInterface() {
     ]
   );
 
+  console.log(creatureNfts);
+
   const filteredNfts = useMemo(
     () =>
       creatureNfts

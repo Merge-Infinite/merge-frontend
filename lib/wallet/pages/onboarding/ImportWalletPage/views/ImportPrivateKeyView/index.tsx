@@ -5,6 +5,7 @@ import Button from "../../../../../components/Button";
 import Form from "../../../../../components/form/Form";
 import Input from "../../../../../components/Input";
 import Typo from "../../../../../components/Typo";
+import { ImportWalletParams, Wallet } from "../../../../../core";
 import { useApiClient } from "../../../../../hooks/useApiClient";
 import SettingOneLayout from "../../../../../layouts/SettingOneLayout";
 import { AppDispatch } from "../../../../../store";
@@ -15,7 +16,6 @@ import {
 import { OmitToken } from "../../../../../types";
 import { isNonEmptyArray } from "../../../../../utils/check";
 import { getInputStateByFormState } from "../../../../../utils/form";
-import { ImportWalletParams, Wallet } from "../../../core";
 
 type FormData = {
   privateKey: string;
