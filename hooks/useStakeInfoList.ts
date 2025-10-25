@@ -63,7 +63,7 @@ interface PoolStats {
   totalPoolWeight: number;
   pendingSuiRewards: number;
   stakeDurations: number;
-  lastRewardClaim: number;
+  timeSinceLastClaim: number;
 }
 
 interface UseStakeInfoListOptions {
@@ -377,10 +377,8 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           totalPoolWeight,
           pendingSuiRewards,
           stakeDurations,
-          lastRewardClaim,
+          timeSinceLastClaim,
         ] = result.results[0].returnValues;
-        console.log("pendingSuiRewards", pendingSuiRewards[0]);
-        console.log("stakeDurations", decodeU64(pendingSuiRewards[0]));
 
         return {
           nftCount: decodeU64(userNftCount[0]),
@@ -388,7 +386,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           totalPoolWeight: decodeU64(totalPoolWeight[0]),
           pendingSuiRewards: decodeU64(pendingSuiRewards[0]),
           stakeDurations: decodeU64(stakeDurations[0]),
-          lastRewardClaim: decodeU64(lastRewardClaim[0]),
+          timeSinceLastClaim: decodeU64(timeSinceLastClaim[0]),
         };
       } catch (error) {
         console.error(
@@ -433,7 +431,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           totalPoolWeight: userStakeInfo?.totalPoolWeight || 0,
           pendingSuiRewards: userStakeInfo?.pendingSuiRewards || 0,
           stakeDurations: userStakeInfo?.stakeDurations || 0,
-          lastRewardClaim: userStakeInfo?.lastRewardClaim || 0,
+          timeSinceLastClaim: userStakeInfo?.timeSinceLastClaim || 0,
         };
       } catch (error) {
         console.error(`Error getting pool reward stats for ${poolId}:`, error);
@@ -444,7 +442,7 @@ export function useStakeInfoList(options: UseStakeInfoListOptions) {
           totalPoolWeight: 0,
           pendingSuiRewards: 0,
           stakeDurations: 0,
-          lastRewardClaim: 0,
+          timeSinceLastClaim: 0,
         };
       }
     },

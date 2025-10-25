@@ -88,6 +88,9 @@ export default function PetExplorerDashboard() {
   const [pool, setPool] = useState<Pool | null>(null);
   const [isClaimLoading, setIsClaimLoading] = useState(false);
   const [poolRequiredItems, setPoolRequiredItems] = useState<RecipeItem[]>([]);
+  const [showClaimRestrictedDialog, setShowClaimRestrictedDialog] =
+    useState(false);
+  const [nextClaimDate, setNextClaimDate] = useState<Date | null>(null);
   const { getPoolById, pools } = usePoolSystem({
     refreshInterval: 30000,
   });
@@ -217,6 +220,22 @@ export default function PetExplorerDashboard() {
         : Number(MIST_PER_SUI)),
     [stakeStats?.pendingSuiRewards]
   );
+
+  // Check if user can claim (7 days since last claim)
+  const canClaim = React.useMemo(() => {
+    if (!stakeStats?.timeSinceLastClaim) return true;
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    return stakeStats.timeSinceLastClaim >= SEVEN_DAYS_MS;
+  }, [stakeStats?.timeSinceLastClaim]);
+
+  // Calculate next claim date
+  const calculateNextClaimDate = useCallback(() => {
+    if (!stakeStats?.timeSinceLastClaim) return null;
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const remainingTime = SEVEN_DAYS_MS - stakeStats.timeSinceLastClaim;
+    if (remainingTime <= 0) return null;
+    return new Date(Date.now() + remainingTime);
+  }, [stakeStats?.timeSinceLastClaim]);
 
   const rewardStats: StatsItem[] = [
     {
@@ -390,6 +409,14 @@ export default function PetExplorerDashboard() {
           return;
         }
 
+        // Check if 7 days have passed since last claim
+        if (!canClaim) {
+          const nextDate = calculateNextClaimDate();
+          setNextClaimDate(nextDate);
+          setShowClaimRestrictedDialog(true);
+          return;
+        }
+
         setIsClaimLoading(true);
 
         const tx = new Transaction();
@@ -459,7 +486,16 @@ export default function PetExplorerDashboard() {
         setIsClaimLoading(false);
       }
     },
-    [address, authed, isTelegram, account?.address, poolId, refresh]
+    [
+      address,
+      authed,
+      isTelegram,
+      account?.address,
+      poolId,
+      refresh,
+      canClaim,
+      calculateNextClaimDate,
+    ]
   );
 
   const handleClaimRewards = useCallback(async () => {
@@ -477,6 +513,14 @@ export default function PetExplorerDashboard() {
 
       if (!poolId) {
         toast.error("Pool ID not found");
+        return;
+      }
+
+      // Check if 7 days have passed since last claim
+      if (!canClaim) {
+        const nextDate = calculateNextClaimDate();
+        setNextClaimDate(nextDate);
+        setShowClaimRestrictedDialog(true);
         return;
       }
 
@@ -546,7 +590,16 @@ export default function PetExplorerDashboard() {
     } finally {
       setIsClaimLoading(false);
     }
-  }, [address, authed, isTelegram, account?.address, poolId, refresh]);
+  }, [
+    address,
+    authed,
+    isTelegram,
+    account?.address,
+    poolId,
+    refresh,
+    canClaim,
+    calculateNextClaimDate,
+  ]);
 
   if (initialLoading) {
     return (
@@ -778,6 +831,66 @@ export default function PetExplorerDashboard() {
           await refresh();
         }}
       />
+
+      {/* Claim Not Available Dialog */}
+      <Dialog
+        open={showClaimRestrictedDialog}
+        onOpenChange={setShowClaimRestrictedDialog}
+      >
+        <DialogContent className="max-w-sm bg-[#1f1f1f] border-0 p-0">
+          <div className="self-stretch p-4 bg-[#1f1f1f] rounded-2xl inline-flex flex-col justify-start items-start gap-4">
+            <div className="self-stretch inline-flex justify-start items-center gap-2.5">
+              <div className="size-8 relative overflow-hidden">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M16 2L2 28H30L16 2Z" fill="#dba301" />
+                  <path
+                    d="M16 11V19"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="16" cy="23" r="1" fill="white" />
+                </svg>
+              </div>
+              <div className="flex-1 justify-start text-white text-sm font-bold font-['Sora'] leading-6">
+                Claim Not Available Yet
+              </div>
+            </div>
+            <div className="self-stretch justify-start">
+              <span className="text-white text-sm font-normal font-['Sora'] leading-6">
+                You can claim your rewards every 7 days after staking. Your next
+                claim will be available in:{" "}
+              </span>
+              <span className="text-[#00c1ff] text-sm font-bold font-['Sora'] leading-6">
+                {nextClaimDate
+                  ? `${nextClaimDate
+                      .toLocaleDateString("en-GB")
+                      .replace(
+                        /\//g,
+                        "/"
+                      )} - ${nextClaimDate.toLocaleTimeString("en-GB")}`
+                  : "N/A"}
+              </span>
+            </div>
+            <div className="self-stretch flex flex-col justify-start items-start gap-3">
+              <button
+                onClick={() => setShowClaimRestrictedDialog(false)}
+                className="self-stretch px-4 py-2 bg-[#a668ff] rounded-3xl inline-flex justify-center items-center gap-2"
+              >
+                <div className="justify-start text-white text-sm font-semibold font-['Sora'] uppercase leading-6 tracking-wide">
+                  Got it
+                </div>
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
