@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import SplashScreen from "@/components/common/Splash";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUser } from "@/hooks/useUser";
 import userApi from "@/lib/api/user";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
 import {
@@ -88,9 +89,10 @@ const TaskScreen = dynamic(() => import("@/components/screen/task/Task"), {
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { user, backButton, isTelegram, isReady, login } = useUniversalApp();
-  const account = useCurrentAccount();
+  const { backButton, isTelegram, isReady } = useUniversalApp();
   const { data: suiPrice } = userApi.getSuiPrice.useQuery();
+  const { user, login } = useUser();
+  const account = useCurrentAccount();
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -119,19 +121,13 @@ export default function Home() {
   }, [isReady, isTelegram, backButton, dispatch]);
 
   useEffect(() => {
-    if (!isTelegram && isReady && account && !user) {
-      login();
-    }
-  }, [isReady, account, user, isTelegram]);
-
-  useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (!token && isReady) {
       dispatch(clearUser());
       login();
     }
-  }, [user, isTelegram]);
+  }, [isReady, account]);
 
   const { appMode, tabMode } = useSelector((state: RootState) => ({
     appMode: state.appContext.appMode,

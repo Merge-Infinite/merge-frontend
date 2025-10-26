@@ -108,10 +108,8 @@ const apiCall = async <T = unknown>(
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       if (status === 401) {
-        console.log("401 error");
         if (typeof window !== "undefined") {
           localStorage.clear();
-          window.location.reload();
         }
       }
 

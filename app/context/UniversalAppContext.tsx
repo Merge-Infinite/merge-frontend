@@ -191,13 +191,6 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({
     }
   }, [isTelegram, isLoading]);
 
-  // Auto-login for Telegram
-  useEffect(() => {
-    if (isReady) {
-      login();
-    }
-  }, [isReady]);
-
   // Auto-save address when available
   useEffect(() => {
     if (isReady) {

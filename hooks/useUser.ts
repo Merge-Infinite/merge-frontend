@@ -297,7 +297,6 @@ export function useUser(inventorySearch?: string) {
 
   // Universal login function
   const login = useCallback(async () => {
-    console.log("login", isTelegram);
     if (isTelegram === null) return;
     if (isTelegram) {
       await telegramLogin();
