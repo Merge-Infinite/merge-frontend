@@ -193,10 +193,10 @@ export const UniversalAppProvider = memo(function UniversalAppProvider({
 
   // Auto-save address when available
   useEffect(() => {
-    if (isReady) {
+    if (isReady && user) {
       saveAddress();
     }
-  }, [isReady, account, telegramAddress]);
+  }, [isReady, account, telegramAddress, user]);
 
   // Get current wallet info
   const getWalletInfo = useCallback(() => {

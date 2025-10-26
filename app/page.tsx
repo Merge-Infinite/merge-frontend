@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import SplashScreen from "@/components/common/Splash";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useUser } from "@/hooks/useUser";
 import userApi from "@/lib/api/user";
 import { AppDispatch, RootState } from "@/lib/wallet/store";
@@ -120,6 +121,17 @@ export default function Home() {
     }
   }, [isReady, isTelegram, backButton, dispatch]);
 
+  // Listen to token changes and auto-login when token is cleared (e.g., 401 errors)
+  useLocalStorage<string>("token", undefined, {
+    onChange: (token) => {
+      if (!token && isReady) {
+        dispatch(clearUser());
+        login();
+      }
+    },
+  });
+
+  // Check token on mount and when account changes
   useEffect(() => {
     const token = localStorage.getItem("token");
 

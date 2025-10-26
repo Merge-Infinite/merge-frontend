@@ -110,6 +110,12 @@ const apiCall = async <T = unknown>(
       if (status === 401) {
         if (typeof window !== "undefined") {
           localStorage.clear();
+          // Dispatch custom event to notify components about token removal
+          window.dispatchEvent(
+            new CustomEvent("local-storage-change", {
+              detail: { key: "token", value: null },
+            })
+          );
         }
       }
 
