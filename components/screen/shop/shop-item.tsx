@@ -375,13 +375,7 @@ export const ShopItem = ({ currency = "star" }: { currency?: string }) => {
                   <Button
                     className="bg-white rounded-3xl justify-center items-center gap-2 flex w-fit"
                     size={"sm"}
-                    disabled={
-                      createPurchase?.isPending ||
-                      isLoading ||
-                      (user?.userBalance?.subscriptionEndDate &&
-                        new Date(user?.userBalance?.subscriptionEndDate) >
-                          new Date())
-                    }
+                    disabled={createPurchase?.isPending || isLoading}
                     isLoading={createPurchase?.isPending || isLoading}
                     onClick={() => onBuy(product)}
                   >
