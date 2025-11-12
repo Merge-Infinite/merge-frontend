@@ -97,7 +97,7 @@ export default function ChallengeGrid({ category }: { category: string }) {
         {/* Row 2: NBA Game & MI Assistant */}
         <div className="flex flex-row sm:flex-row gap-2 w-full">
           {/* NBA Game Card */}
-          <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">
+          {/* <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-base font-bold font-['Sora'] text-white">
                 🏀 NBA Game
@@ -118,10 +118,10 @@ export default function ChallengeGrid({ category }: { category: string }) {
                 </span>
               </Button>
             </CardFooter>
-          </Card>
+          </Card> */}
 
           {/* MI Assistant Card */}
-          <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">
+          {/* <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-base font-bold font-['Sora'] text-white flex items-center gap-1">
                 <span className="text-base">✨</span> MI Assistant
@@ -142,7 +142,7 @@ export default function ChallengeGrid({ category }: { category: string }) {
                 </span>
               </Button>
             </CardFooter>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </>
