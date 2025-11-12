@@ -3,7 +3,6 @@
 import PoolCard from "@/components/PoolCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePoolSystem } from "@/hooks/usePool";
-import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useUniversalApp } from "../context/UniversalAppContext";
@@ -13,7 +12,6 @@ export default function BrainrotExplorer() {
   const { pools: suiPools } = usePoolSystem({
     refreshInterval: 30000,
   });
-  const { user } = useUser();
 
   const { backButton, isTelegram, isReady } = useUniversalApp();
 

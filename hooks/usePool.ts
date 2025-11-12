@@ -1,12 +1,10 @@
 import { suiClient } from "@/lib/utils";
-import { RootState } from "@/lib/wallet/store";
 import {
   MER3_PACKAGE_ID,
   MER3_UPGRADED_PACKAGE_ID,
   POOL_SYSTEM,
 } from "@/utils/constants";
 import { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 
 // Types based on your Move contract
 export interface Pool {
@@ -62,7 +60,6 @@ export const usePoolSystem = (
     poolSystemId = POOL_SYSTEM,
     refreshInterval = 30000,
   } = options;
-  const appContext = useSelector((state: RootState) => state.appContext);
   const [pools, setPools] = useState<Pool[]>([]);
   const [poolOverviews, setPoolOverviews] = useState<PoolOverview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,6 +134,7 @@ export const usePoolSystem = (
       if (!packageId) {
         throw new Error("Package ID is required");
       }
+      console.log("fetchAllPoolIds");
 
       // Query PoolCreated events to get all pool IDs
       const createdEvents = await suiClient.queryEvents({
@@ -224,7 +222,6 @@ export const usePoolSystem = (
 
       // Get all pool IDs
       const poolIds = await fetchAllPoolIds();
-
       if (poolIds.length === 0) {
         setPools([]);
         setPoolOverviews([]);

@@ -1,5 +1,5 @@
 import { KioskClient, Network } from "@mysten/kiosk";
-import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
+import { SuiClient } from "@mysten/sui/client";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { BigNumber as BN } from "bignumber.js";
 import { clsx, type ClassValue } from "clsx";
@@ -162,10 +162,24 @@ export function formatTimeRemaining(endDateString: string | number): string {
   // Format the string
   return `${days}D ${hours}H ${minutes}M`;
 }
-
 export const suiClient = new SuiClient({
-  url: getFullnodeUrl(process.env.NEXT_PUBLIC_SUI_NETWORK as any),
+  url: "https://api.zan.top/node/v1/sui/mainnet/076c677a4f7248ee82a349b79edc8fa0",
 });
+
+// export const suiClient = new SuiJsonRpcClient({
+//   transport: new JsonRpcHTTPTransport({
+//     url: "https://sui-mainnet.gateway.tatum.io",
+//     websocket: {
+//       reconnectTimeout: 1000,
+//       url: "https://sui-mainnet.gateway.tatum.io",
+//     },
+//     rpc: {
+//       headers: {
+//         "x-api-key": "t-691449e699f98eabe5b6b302-455963aacab84813adc10246",
+//       },
+//     },
+//   }),
+// });
 
 export const kioskClient = new KioskClient({
   client: suiClient as any,
