@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Close, Question, VIP, Dot, M3RToken } from "@/components/icons";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 interface LuckyRateSheetProps {
   open: boolean;
@@ -155,7 +156,7 @@ export default function LuckyRateSheet({
             <div className="bg-black border border-[#292929] rounded-2xl p-2">
               <div className="flex flex-col gap-2">
                 {/* Subscribe Card */}
-                <div className="bg-[#141414] rounded-xl p-3 flex flex-col gap-3">
+                <div className="bg-[#141414] rounded-xl pl-3 pr-4 py-4 flex flex-col gap-3">
                   <div className="flex gap-3 items-start">
                     <VIP size={32} color="#A768FF" />
                     <div className="flex-1 flex flex-col gap-1">
@@ -177,7 +178,7 @@ export default function LuckyRateSheet({
                 </div>
 
                 {/* Hold M3R Tokens Card */}
-                <div className="bg-[#141414] rounded-xl p-3 flex flex-col gap-3">
+                <div className="bg-[#141414] rounded-xl pl-3 pr-4 py-4 flex flex-col gap-3">
                   <div className="flex gap-3 items-start">
                     <M3RToken size={32} />
                     <div className="flex-1 flex flex-col gap-1">
@@ -198,10 +199,18 @@ export default function LuckyRateSheet({
                 </div>
 
                 {/* Have an account Hibt Card */}
-                <div className="bg-[#141414] rounded-xl p-3 flex flex-col gap-3">
+                <div className="bg-[#141414] rounded-xl p-4 flex flex-col gap-3">
                   <div className="flex gap-3 items-start">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">H</span>
+                    <div className="w-8 h-8 overflow-clip shrink-0 rounded-full flex items-center justify-center relative">
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px]">
+                        <Image
+                          src="/images/hibt-logo.png"
+                          alt="Hibt"
+                          width={38}
+                          height={38}
+                          className="object-cover"
+                        />
+                      </div>
                     </div>
                     <div className="flex-1 flex flex-col gap-1">
                       <p className="text-xs font-normal font-['Sora'] text-[#858585]">
@@ -213,10 +222,12 @@ export default function LuckyRateSheet({
                     </div>
                   </div>
 
-                  <Input
-                    placeholder="Enter your Hibt account"
-                    className="bg-[#141414] border border-[#333333] rounded-full px-3 py-2 text-sm font-['Sora'] text-white placeholder:text-[#5c5c5c]"
-                  />
+                  <div className="flex flex-col gap-1 rounded-[32px]">
+                    <Input
+                      placeholder="Enter your Hibt account"
+                      className="bg-[#141414] border border-[#333333] rounded-full px-3 py-2 text-sm font-['Sora'] text-white placeholder:text-[#5c5c5c] h-auto"
+                    />
+                  </div>
 
                   <Button className="bg-[#a768ff] hover:bg-[#9154e7] text-neutral-950 rounded-3xl w-full px-3 py-1 h-auto">
                     <span className="text-xs font-normal font-['Sora'] uppercase">

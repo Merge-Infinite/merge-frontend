@@ -47,3 +47,15 @@ export const POOL_SYSTEM =
 export const POOL_SYSTEM_ADMIN_CAP =
   "0x575239dd188b0da951c41048d8b8337463e44d216ee75dcecd3bda55236fafaf";
 export const POOL_REWARDS_MODULE_NAME = "pool_rewards";
+
+export const NBA_PACKAGE_ID =
+  "0x286a592459b27dbe6b35d8a5e5b9c1b2ba5448bd3b2214d129ebb23c8f073e15";
+export const NBA_REWARD_POOL_ID =
+  "0x8266d4352ed671addd20a4f3d694dda6dc8c8ab082bbaf3a67084f9deab5788d";
+export const NBA_POOL_ADMIN_CAP_ID =
+  "0x2d788f8df5c0c5a81bb2db0c19352b82a5de232d4ef7c10b71b08069eb0df4b8";
+export const NBA_MINT_CONFIG_ID =
+  "0xc0d854145b989dc8857e5cf43592766f0d6c977390815840f6489226fa870fc4";
+export const NBA_MINT_ADMIN_CAP_ID =
+  "0xd842cff35f1ea9b1799839e02eeda537a9e0e0068795191a30446e3f41f8412e";
+export const NBA_MINT_FEE = 0.1; // 10 SUI

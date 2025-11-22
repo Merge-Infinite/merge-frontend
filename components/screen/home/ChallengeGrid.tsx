@@ -8,10 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 
 export default function ChallengeGrid({ category }: { category: string }) {
   const router = useRouter();
+  const user = useUser();
   // // Get the current month's days
   // const [daysInMonth, currentMonthDays] = useMemo(() => {
   //   const today = new Date();
@@ -97,28 +99,30 @@ export default function ChallengeGrid({ category }: { category: string }) {
         {/* Row 2: NBA Game & MI Assistant */}
         <div className="flex flex-row sm:flex-row gap-2 w-full">
           {/* NBA Game Card */}
-          {/* <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-base font-bold font-['Sora'] text-white">
-                🏀 NBA Game
-              </CardTitle>
-              <CardDescription className="text-sm font-normal font-['Sora'] text-white">
-                Lorem Ipsum is simply dummy text
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="p-4 pt-2 pb-6">
-              <Button
-                onClick={() => {
-                  router.push("/nba-game");
-                }}
-                className="bg-[#a668ff] hover:bg-[#9154e7] text-neutral-950 rounded-3xl w-fit"
-              >
-                <span className="text-sm font-normal font-['Sora'] uppercase">
-                  GO
-                </span>
-              </Button>
-            </CardFooter>
-          </Card> */}
+          {user.user?.isWhitelisted && (
+            <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">
+              <CardHeader className="p-4 pb-0">
+                <CardTitle className="text-base font-bold font-['Sora'] text-white">
+                  🏀 NBA Game
+                </CardTitle>
+                <CardDescription className="text-sm font-normal font-['Sora'] text-white">
+                  Lorem Ipsum is simply dummy text
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-2 pb-6">
+                <Button
+                  onClick={() => {
+                    router.push("/nba-game");
+                  }}
+                  className="bg-[#a668ff] hover:bg-[#9154e7] text-neutral-950 rounded-3xl w-fit"
+                >
+                  <span className="text-sm font-normal font-['Sora'] uppercase">
+                    GO
+                  </span>
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
 
           {/* MI Assistant Card */}
           {/* <Card className="w-full bg-neutral-950/60 border border-[#1f1f1f] rounded-2xl">

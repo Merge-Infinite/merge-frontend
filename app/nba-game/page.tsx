@@ -9,6 +9,7 @@ import {
   SuiLogo,
 } from "@/components/icons";
 import LuckyRateSheet from "@/components/screen/nba-game/LuckyRateSheet";
+import MintConfirmationSheet from "@/components/screen/nba-game/MintConfirmationSheet";
 import SeasonMatchesSheet from "@/components/screen/nba-game/SeasonMatchesSheet";
 import { Card } from "@/components/ui/card";
 import {
@@ -18,6 +19,8 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import nbaApi from "@/lib/api/nba";
+import { NBA_MINT_FEE } from "@/utils/constants";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -34,13 +37,6 @@ const tiers = [
     image: "/images/tiers/Tier Icons/tier 1.png",
     bgEllipse1: "/images/tiers/tier-1-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-1-ellipse2.svg",
-    teams: [
-      { name: "Oklahoma City Thunder", rarity: "0.01%", minted: "2/100", logo: "Oklahoma City Thunder Logo.svg" },
-      { name: "Denver Nuggets", rarity: "0.15%", minted: "0/150", logo: "Denver Nuggets Logo.svg" },
-      { name: "Cleveland Cavaliers", rarity: "0.02%", minted: "0/200", logo: "caval lliers.svg" },
-      { name: "New York Knicks", rarity: "0.20%", minted: "0/200", logo: "knicks.svg" },
-      { name: "Minnesota Timberwolves", rarity: "0.10%", minted: "0/150", logo: "Minnesota Timberwolves Logo.svg" },
-    ],
   },
   {
     id: 2,
@@ -51,13 +47,6 @@ const tiers = [
     image: "/images/tiers/Tier Icons/tier 2.png",
     bgEllipse1: "/images/tiers/tier-2-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-2-ellipse2.svg",
-    teams: [
-      { name: "Boston Celtics", rarity: "0.50%", minted: "5/200", logo: "logo.svg" },
-      { name: "Milwaukee Bucks", rarity: "0.45%", minted: "3/180", logo: "Milwaukee Bucks Logo.svg" },
-      { name: "Phoenix Suns", rarity: "0.40%", minted: "4/190", logo: "Phoenix Suns Logo.svg" },
-      { name: "Miami Heat", rarity: "0.38%", minted: "2/175", logo: "Miami Heat Logo.svg" },
-      { name: "Golden State Warriors", rarity: "0.42%", minted: "6/200", logo: "Golden State Warriors Logo.svg" },
-    ],
   },
   {
     id: 3,
@@ -68,13 +57,6 @@ const tiers = [
     image: "/images/tiers/Tier Icons/tier 3.png",
     bgEllipse1: "/images/tiers/tier-3-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-3-ellipse2.svg",
-    teams: [
-      { name: "Los Angeles Clippers", rarity: "1.20%", minted: "0/1,200", logo: "LA Clippers Logo.svg" },
-      { name: "Philadelphia 76ers", rarity: "1.20%", minted: "0/1,200", logo: "76ers.svg" },
-      { name: "Dallas Mavericks", rarity: "1.50%", minted: "0/1,500", logo: "Dallas Mavericks Logo.svg" },
-      { name: "Milwaukee Bucks", rarity: "1.50%", minted: "0/1,500", logo: "Milwaukee Bucks Logo.svg" },
-      { name: "Indiana Pacers", rarity: "1.30%", minted: "0/1,300", logo: "indiana pacers.svg" },
-    ],
   },
   {
     id: 4,
@@ -85,13 +67,6 @@ const tiers = [
     image: "/images/tiers/Tier Icons/tier 4.png",
     bgEllipse1: "/images/tiers/tier-4-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-4-ellipse2.svg",
-    teams: [
-      { name: "Sacramento Kings", rarity: "3.00%", minted: "15/3,000", logo: "Sacramento Kings Logo.svg" },
-      { name: "Orlando Magic", rarity: "3.20%", minted: "18/3,200", logo: "Orlando Magic Logo.svg" },
-      { name: "Los Angeles Lakers", rarity: "3.50%", minted: "20/3,500", logo: "Los Angeles Lakers Logo.svg" },
-      { name: "Atlanta Hawks", rarity: "3.10%", minted: "12/3,100", logo: "Atlanta Hawks Logo.svg" },
-      { name: "Houston Rockets", rarity: "3.30%", minted: "16/3,300", logo: "Houston Rockets Logo.svg" },
-    ],
   },
   {
     id: 5,
@@ -102,13 +77,6 @@ const tiers = [
     image: "/images/tiers/Tier Icons/tier 5.png",
     bgEllipse1: "/images/tiers/tier-5-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-5-ellipse2.svg",
-    teams: [
-      { name: "Memphis Grizzlies", rarity: "8.00%", minted: "400/8,000", logo: "Memphis Grizzlies Logo.svg" },
-      { name: "New Orleans Pelicans", rarity: "8.50%", minted: "425/8,500", logo: "New Orleans Pelicans Logo.svg" },
-      { name: "Utah Jazz", rarity: "8.20%", minted: "410/8,200", logo: "utah jazz.svg" },
-      { name: "Brooklyn Nets", rarity: "8.30%", minted: "415/8,300", logo: "nets.svg" },
-      { name: "Toronto Raptors", rarity: "8.40%", minted: "420/8,400", logo: "toronto raptors.svg" },
-    ],
   },
   {
     id: 6,
@@ -119,18 +87,6 @@ const tiers = [
     image: "/images/tiers/Tier Icons/tier 6.png",
     bgEllipse1: "/images/tiers/tier-6-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-6-ellipse2.svg",
-    teams: [
-      {
-        name: "Portland Trail Blazers",
-        rarity: "15.00%",
-        minted: "1500/15,000",
-        logo: "Portland Trail Blazers Logo.svg",
-      },
-      { name: "San Antonio Spurs", rarity: "15.50%", minted: "1550/15,500", logo: "San Antonio Spurs Logo.svg" },
-      { name: "Chicago Bulls", rarity: "16.00%", minted: "1600/16,000", logo: "Chicago Bulls.svg" },
-      { name: "Washington Wizards", rarity: "15.80%", minted: "1580/15,800", logo: "Washington Wizards Logo.svg" },
-      { name: "Charlotte Hornets", rarity: "15.20%", minted: "1520/15,200", logo: "Charlotte Hornets Logo.svg" },
-    ],
   },
 ];
 
@@ -139,8 +95,16 @@ export default function NbaGame() {
   const { backButton, isTelegram, isReady } = useUniversalApp();
   const [matchesSheetOpen, setMatchesSheetOpen] = useState(false);
   const [luckyRateSheetOpen, setLuckyRateSheetOpen] = useState(false);
+  const [mintConfirmationOpen, setMintConfirmationOpen] = useState(false);
   const [tierApi, setTierApi] = useState<CarouselApi>();
   const [currentTier, setCurrentTier] = useState(0);
+
+  // Fetch user's owned NFTs
+  const { data: userNfts, isLoading: isLoadingNfts } =
+    nbaApi.getUserNfts.useQuery();
+
+  // Fetch user's tier statistics
+  const { data: tiersUser } = nbaApi.getTiersUser.useQuery();
 
   useEffect(() => {
     if (isReady) {
@@ -166,7 +130,7 @@ export default function NbaGame() {
   }, [tierApi]);
 
   return (
-    <div className="w-full h-full bg-black flex flex-col overflow-hidden">
+    <div className="w-full h-full bg-black flex flex-col overflow-y-auto">
       {/* Top Navigation */}
       <div className="flex items-center h-14 px-4 shrink-0">
         <button
@@ -222,8 +186,8 @@ export default function NbaGame() {
           </TabsList>
 
           {/* Tab Content */}
-          <TabsContent value="game" className="mt-0">
-            <div className="flex flex-col gap-4 overflow-y-auto px-4 pt-3">
+          <TabsContent value="game" className="mt-0 overflow-y-hidden">
+            <div className="flex flex-col gap-4 overflow-y-auto px-4 pt-3 pb-6">
               {/* Dashboard Cards */}
               <div className="flex flex-col gap-4 w-full">
                 {/* Stats Card */}
@@ -261,7 +225,9 @@ export default function NbaGame() {
                           Total NFT minted
                         </p>
                         <p className="text-xl font-bold font-['Sora'] text-[#53CCA7] uppercase">
-                          45,950
+                          {(
+                            tiersUser as any
+                          )?.overall?.totalMinted?.toLocaleString() || "0"}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 flex-1">
@@ -269,7 +235,7 @@ export default function NbaGame() {
                           Your own
                         </p>
                         <p className="text-xl font-bold font-['Sora'] text-[#53CCA7] uppercase">
-                          23
+                          {(tiersUser as any)?.userNFTs?.totalOwned || "0"}
                         </p>
                       </div>
                     </div>
@@ -281,9 +247,12 @@ export default function NbaGame() {
                   <div className="flex flex-col gap-4">
                     {/* NFT Preview & Description */}
                     <div className="flex gap-4 items-center">
-                      <div className="flex-1 aspect-square rounded-[10px] bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
-                        <div className="text-white text-4xl">🏀</div>
-                      </div>
+                      <Image
+                        src="/images/nba_placeholder.svg"
+                        alt="Lakers"
+                        width={161}
+                        height={161}
+                      />
                       <div className="flex-1 flex flex-col gap-2">
                         <p className="text-base font-bold font-['Sora'] text-white">
                           Mint Your NFT
@@ -314,9 +283,12 @@ export default function NbaGame() {
                           </p>
                         </button>
                         {/* Mint Button */}
-                        <button className="flex gap-2 items-center justify-center px-4 py-2 rounded-r-full bg-white flex-1 ml-[-8px]">
+                        <button
+                          onClick={() => setMintConfirmationOpen(true)}
+                          className="flex gap-2 items-center justify-center px-4 py-2 rounded-r-full bg-white flex-1 ml-[-8px]"
+                        >
                           <p className="text-sm font-normal font-['Sora'] text-black uppercase">
-                            Mint With 5 SUI
+                            Mint With {NBA_MINT_FEE} SUI
                           </p>
                           <SuiLogo size={22} color="#000000" />
                         </button>
@@ -331,17 +303,24 @@ export default function NbaGame() {
                     sponsored by
                   </p>
                   <div className="flex gap-3 items-center w-full justify-center">
-                    <div className="h-11 w-26 overflow-hidden flex items-center justify-center">
-                      <div className="text-green-500 font-bold text-sm">
-                        Meta Pool
-                      </div>
-                    </div>
-                    <div className="h-11 w-26 overflow-hidden flex items-center justify-center">
-                      <div className="text-white font-bold text-sm">HIBT</div>
-                    </div>
-                    <div className="h-11 w-26 overflow-hidden flex items-center justify-center">
-                      <div className="text-white font-bold text-sm">SWEAT</div>
-                    </div>
+                    <Image
+                      src="/images/tiers/Partner Logos/Metapool.svg"
+                      alt="Meta Pool"
+                      width={100}
+                      height={100}
+                    />
+                    <Image
+                      src="/images/tiers/Partner Logos/HIBT.svg"
+                      alt="HIBT"
+                      width={100}
+                      height={100}
+                    />
+                    <Image
+                      src="/images/tiers/Partner Logos/SWEAT.svg"
+                      alt="SWEAT"
+                      width={100}
+                      height={100}
+                    />
                   </div>
                 </div>
               </div>
@@ -459,56 +438,72 @@ export default function NbaGame() {
 
               {/* Team List */}
               <div className="flex flex-col gap-2 px-4">
-                {tiers[currentTier]?.teams.map((team, index) => (
-                  <div
-                    key={index}
-                    className="bg-[#1a1a1a] border border-[#292929] rounded-2xl p-4 flex items-center gap-3"
-                  >
-                    {/* Team Logo */}
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
-                      <Image
-                        src={`/images/tiers/NBA Team Logos/${team.logo}`}
-                        alt={team.name}
-                        width={40}
-                        height={40}
-                        className="w-10 h-10 object-contain"
-                      />
-                    </div>
-
-                    {/* Team Info */}
-                    <div className="flex-1 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <p className="text-sm font-normal font-['Sora'] text-white">
-                          {team.name}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-6">
-                        <div className="flex flex-col items-end">
-                          <p className="text-xs font-normal font-['Sora'] text-[#858585]">
-                            Rarity
-                          </p>
-                          <p className="text-sm font-normal font-['Sora'] text-white">
-                            {team.rarity}
-                          </p>
+                {(userNfts as any)?.byTier
+                  ?.find((t: any) => t.tier === currentTier + 1)
+                  ?.teams?.map((team: any, index: number) => {
+                    return (
+                      <div
+                        key={team.teamId || index}
+                        className="bg-[#1a1a1a] border border-[#292929] rounded-2xl p-4 flex items-center gap-3"
+                      >
+                        {/* Team Logo */}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
+                          {team.logoUrl || team.logo ? (
+                            <Image
+                              src={
+                                team.logoUrl ||
+                                `/images/tiers/team-logos/${team?.logo}`
+                              }
+                              alt={team.name}
+                              width={40}
+                              height={40}
+                              className="w-10 h-10 object-contain"
+                            />
+                          ) : (
+                            <span className="text-xl">🏀</span>
+                          )}
                         </div>
-                        <div className="flex flex-col items-end">
-                          <p className="text-xs font-normal font-['Sora'] text-[#858585]">
-                            Minted
-                          </p>
-                          <p className="text-sm font-normal font-['Sora'] text-white">
-                            {team.minted}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Info Icon */}
-                    <button className="w-8 h-8 rounded-full bg-[#68ffd1]/20 flex items-center justify-center shrink-0">
-                      <span className="text-[#68ffd1] text-lg">?</span>
-                    </button>
-                  </div>
-                ))}
+                        {/* Team Info */}
+                        <div className="flex-1 flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <p className="text-sm font-normal font-['Sora'] text-white">
+                              {team.name}
+                            </p>
+                            {team.count > 0 && (
+                              <p className="text-xs font-normal font-['Sora'] text-[#68ffd1]">
+                                You own: {team.count}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-6">
+                            <div className="flex flex-col items-end">
+                              <p className="text-xs font-normal font-['Sora'] text-[#858585]">
+                                Rarity
+                              </p>
+                              <p className="text-sm font-normal font-['Sora'] text-white">
+                                {team.rarity}%
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <p className="text-xs font-normal font-['Sora'] text-[#858585]">
+                                Minted
+                              </p>
+                              <p className="text-sm font-normal font-['Sora'] text-white">
+                                {team.totalMinted}/{team.supplyLimit}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Info Icon */}
+                        <button className="w-8 h-8 rounded-full bg-[#68ffd1]/20 flex items-center justify-center shrink-0">
+                          <span className="text-[#68ffd1] text-lg">?</span>
+                        </button>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           </TabsContent>
@@ -743,6 +738,12 @@ export default function NbaGame() {
       <LuckyRateSheet
         open={luckyRateSheetOpen}
         onOpenChange={setLuckyRateSheetOpen}
+      />
+
+      {/* Mint Confirmation Sheet */}
+      <MintConfirmationSheet
+        open={mintConfirmationOpen}
+        onOpenChange={setMintConfirmationOpen}
       />
     </div>
   );
