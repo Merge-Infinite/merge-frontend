@@ -321,6 +321,12 @@ export default function NbaGame() {
                       width={100}
                       height={100}
                     />
+                    <Image
+                      src="/images/tiers/Partner Logos/Flowx.svg"
+                      alt="SWEAT"
+                      width={100}
+                      height={100}
+                    />
                   </div>
                 </div>
               </div>

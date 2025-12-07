@@ -21,6 +21,7 @@ import {
   CREATURE_NFT_MODULE_NAME,
   ELEMENT_NFT_MODULE_NAME,
   MER3_PACKAGE_ID,
+  NBA_PACKAGE_ID,
 } from "@/utils/constants";
 import {
   useCurrentAccount,
@@ -85,6 +86,18 @@ export function OnchainBagScreen() {
     autoFetch: true,
     structType: `${MER3_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"CreatureNFT"}`,
   });
+
+  const {
+    nfts: nbaNfts,
+    loading: nbaNftsLoading,
+    refresh: nbaNftsRefresh,
+  } = useNFTList({
+    walletAddress: isTelegram ? address : account?.address,
+    refreshInterval: undefined,
+    autoFetch: true,
+    structType: `${NBA_PACKAGE_ID}::${"nba_nft"}::${"NBANft"}`,
+  });
+
 
   useEffect(() => {
     if (isTelegram && !authed) {
@@ -286,6 +299,31 @@ export function OnchainBagScreen() {
                     imageUrl={card.imageUrl}
                     prompt={card.prompt}
                     onListingComplete={creatureNftsRefresh}
+                  />
+                ))
+            )}
+            {nbaNftsLoading ? (
+              <SkeletonCard />
+            ) : (
+              nbaNfts
+                .map(({ data }) => {
+                  const metadata = data?.content?.fields;
+                  console.log('metadata',metadata)
+                  return {
+                    id: data!.objectId,
+                    name: metadata?.team_name || "Creature NFT",
+                    imageUrl: metadata?.url || "",
+                    prompt: metadata?.fields?.prompt || "",
+                  };
+                })
+                .map((card, index) => (
+                  <CreativeOnchainItem
+                    key={index}
+                    id={card.id}
+                    name={card.name}
+                    imageUrl={card.imageUrl}
+                    prompt={card.prompt}
+                    onListingComplete={nbaNftsRefresh}
                   />
                 ))
             )}
