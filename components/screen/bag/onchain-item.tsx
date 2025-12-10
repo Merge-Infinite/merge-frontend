@@ -232,15 +232,14 @@ export const CardItem = React.memo(
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Transaction error:", error);
-        if (error.message === "Authentication required") {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        if (errorMessage === "Authentication required") {
           setOpenAuthDialog(true);
         } else {
           setTransactionStatus("error");
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
+          toast.error(errorMessage);
         }
       } finally {
       }
@@ -306,15 +305,14 @@ export const CardItem = React.memo(
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Transaction error:", error);
-        if (error.message === "Authentication required") {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        if (errorMessage === "Authentication required") {
           setOpenAuthDialog(true);
         } else {
           setTransactionStatus("error");
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
+          toast.error(errorMessage);
         }
       } finally {
       }
@@ -340,40 +338,42 @@ export const CardItem = React.memo(
     return (
       <Fragment>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Card className="border-none gap-2 flex flex-col justify-between items-center hover:shadow-md transition-shadow duration-200">
-            <NFTImage
-              src={imageUrl}
-              alt="NFT"
-              width={100}
-              height={100}
-              className="p-4 border border-[#1f1f1f] rounded-2xl w-full"
-            />
+          <Card className="border border-[#333333] rounded-2xl overflow-hidden bg-transparent">
+            {/* Element Card - White background with emoji */}
+            <div className="bg-white rounded-t-2xl p-4 flex flex-col items-center justify-center min-h-[140px]">
+              <NFTImage
+                src={imageUrl}
+                alt="NFT"
+                width={64}
+                height={64}
+                className="mb-2"
+              />
+              <div className="text-black text-sm font-normal font-['Sora'] text-center">
+                {element}
+              </div>
+              <div className="text-[#666666] text-xs font-normal font-['Sora']">
+                Qty: {amount}
+              </div>
+            </div>
 
-            <ShareBottomSheet
-              trigger={
-                <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer">
-                  #{formatAddress(id)}
-                </div>
-              }
-              prompt={prompt}
-              blobId={imageUrl}
-              name={element}
-              nftId={id}
-            />
+            {/* Bottom section */}
+            <div className="p-2 flex flex-col items-center gap-2">
+              <ShareBottomSheet
+                trigger={
+                  <div className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer">
+                    #{formatAddress(id)}
+                  </div>
+                }
+                prompt=""
+                blobId={imageUrl}
+                name={element}
+                nftId={id}
+              />
 
-            <div className="w-full flex justify-between items-center gap-2">
-              <Button
-                size={"sm"}
-                className="text-black text-xs uppercase rounded-full hover:bg-[#f0f0f0] transition-colors"
-                onClick={onBurn}
-                disabled={isProcessing || burnNFT?.isPending}
-              >
-                {isProcessing ? "Processing..." : "Use"}
-              </Button>
               <DialogTrigger asChild>
                 <Button
-                  size={"sm"}
-                  className="text-black text-xs !bg-white uppercase rounded-full hover:bg-[#f0f0f0] transition-colors"
+                  size="sm"
+                  className="w-full h-8 bg-white hover:bg-gray-100 text-black rounded-full text-xs font-normal uppercase"
                 >
                   Sell
                 </Button>

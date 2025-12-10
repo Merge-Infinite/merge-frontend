@@ -24,7 +24,7 @@ import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
 import { TabMode, updateTabMode } from "@/lib/wallet/store/app-context";
-import { OmitToken } from "@/lib/wallet/types";
+import { ObjectChange, OmitToken, TransactionResponse } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
   ELEMENT_NFT_MODULE_NAME,
@@ -37,12 +37,15 @@ import {
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { formatAddress, MIST_PER_SUI } from "@mysten/sui/utils";
-import { SearchIcon, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { MarketItem } from "./market-item";
+import { Dropdown } from "@/components/icons";
+
+type FilterType = "all" | "element" | "creature";
 
 // Empty state component
 const EmptyState = ({ message }: { message: string }) => (
@@ -85,6 +88,9 @@ export const NFTMarket = () => {
   const { user, refetch: refetchUser } = useUser();
   const apiClient = useApiClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [filterType, setFilterType] = useState<FilterType>("all");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const appContext = useSelector((state: RootState) => state.appContext);
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
@@ -204,29 +210,22 @@ export const NFTMarket = () => {
           transaction: tx.serialize(),
         });
       }
-      if (response && (response as any).digest) {
-        const createdObjects = (response as any).objectChanges?.filter(
-          (change: any) => change.type === "created"
+      const txResponse = response as TransactionResponse;
+      if (txResponse?.digest) {
+        const createdObjects = txResponse.objectChanges?.filter(
+          (change: ObjectChange) => change.type === "created"
         );
 
         // Find the kiosk and kiosk cap objects
         const kioskObject = createdObjects?.find(
-          (obj: any) =>
-            "objectType" in obj && obj.objectType === "0x2::kiosk::Kiosk"
+          (obj: ObjectChange) => obj.objectType === "0x2::kiosk::Kiosk"
         );
 
         const kioskCapObject = createdObjects?.find(
-          (obj: any) =>
-            "objectType" in obj &&
-            obj.objectType === "0x2::kiosk::KioskOwnerCap"
+          (obj: ObjectChange) => obj.objectType === "0x2::kiosk::KioskOwnerCap"
         );
 
-        if (
-          kioskObject &&
-          kioskCapObject &&
-          "objectId" in kioskObject &&
-          "objectId" in kioskCapObject
-        ) {
+        if (kioskObject?.objectId && kioskCapObject?.objectId) {
           await createKioskApi?.mutateAsync({
             objectId: kioskObject.objectId,
             ownerCapId: kioskCapObject.objectId,
@@ -237,67 +236,70 @@ export const NFTMarket = () => {
           toast.success("Kiosk created successfully!");
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log("Error creating kiosk:", error);
-
-      if (error.message === "Authentication required") {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      if (errorMessage === "Authentication required") {
         setOpenAuthDialog(true);
       } else {
-        toast.error(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
+        toast.error(errorMessage);
       }
     }
   }, [address, authed, isTelegram]);
 
   const filteredListings = React.useMemo(() => {
     const listings = [];
-    const elementListings = marketplaceListings
-      .filter((listing) =>
-        isOwned
-          ? listing.kioskId === user?.kiosk?.objectId
-          : listing.kioskId !== user?.kiosk?.objectId
-      )
-      .filter((listing) => {
-        if (
-          searchTerm &&
-          !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !listing.objectId.toLowerCase().includes(searchTerm.toLowerCase())
-        ) {
-          return false;
-        }
 
-        return true;
-      })
-      .sort((a, b) => {
-        return b.objectId.localeCompare(a.objectId);
-      });
+    // Filter element listings
+    if (filterType === "all" || filterType === "element") {
+      const elementListings = marketplaceListings
+        .filter((listing) =>
+          isOwned
+            ? listing.kioskId === user?.kiosk?.objectId
+            : listing.kioskId !== user?.kiosk?.objectId
+        )
+        .filter((listing) => {
+          if (
+            searchTerm &&
+            !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            !listing.objectId.toLowerCase().includes(searchTerm.toLowerCase())
+          ) {
+            return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          return b.objectId.localeCompare(a.objectId);
+        });
+      listings.push(...elementListings);
+    }
 
-    const creatureListings = marketplaceCreatureListings
-      .filter((listing) =>
-        isOwned
-          ? listing.kioskId === user?.kiosk?.objectId
-          : listing.kioskId !== user?.kiosk?.objectId
-      )
-      .filter((listing) => {
-        if (
-          searchTerm &&
-          !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !listing.objectId.toLowerCase().includes(searchTerm.toLowerCase())
-        ) {
-          return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        return b.objectId.localeCompare(a.objectId);
-      });
-
-    listings.push(...elementListings, ...creatureListings);
+    // Filter creature listings
+    if (filterType === "all" || filterType === "creature") {
+      const creatureListings = marketplaceCreatureListings
+        .filter((listing) =>
+          isOwned
+            ? listing.kioskId === user?.kiosk?.objectId
+            : listing.kioskId !== user?.kiosk?.objectId
+        )
+        .filter((listing) => {
+          if (
+            searchTerm &&
+            !listing.element.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            !listing.objectId.toLowerCase().includes(searchTerm.toLowerCase())
+          ) {
+            return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          return b.objectId.localeCompare(a.objectId);
+        });
+      listings.push(...creatureListings);
+    }
 
     return listings;
-  }, [marketplaceListings, marketplaceCreatureListings, searchTerm]);
+  }, [marketplaceListings, marketplaceCreatureListings, searchTerm, filterType, isOwned, user?.kiosk?.objectId]);
 
   useEffect(() => {
     if (
@@ -374,14 +376,13 @@ export const NFTMarket = () => {
       } else {
         toast.error("Failed to claim profit. Please try again.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log(error);
-      if (error.message === "Authentication required") {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      if (errorMessage === "Authentication required") {
         setOpenAuthDialog(true);
       } else {
-        toast.error(
-          error instanceof Error ? error.message : "An unknown error occurred"
-        );
+        toast.error(errorMessage);
       }
     } finally {
       setLoadingClaim(false);
@@ -390,10 +391,9 @@ export const NFTMarket = () => {
 
   return (
     <div className="w-full h-full flex flex-col gap-4 mb-8">
-      <div
-        className={`flex flex-col gap-4 fixed w-full bg-black w-[calc(100%-48px)]`}
-      >
-        <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-4">
+        {/* Header Row - Wallet Info & Kiosk */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"
@@ -408,116 +408,163 @@ export const NFTMarket = () => {
               <Image
                 src="/images/sui.svg"
                 alt="Sui Logo"
-                className="h-4 w-4 mr-1 text-orange-500"
-                width={16}
-                height={16}
+                className="h-5 w-5"
+                width={20}
+                height={20}
               />
               <span className="text-white text-sm font-normal font-['Sora']">
                 {formatSUI(isTelegram ? balance.balance : suiBalance || 0)}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="flex-1 justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-              Kiosk:
-            </div>
-            <div className="flex justify-start items-start gap-1">
+          <div className="flex items-center gap-1.5 h-8">
+            <div className="flex items-center">
+              <span className="text-white text-sm font-normal font-['Sora']">
+                Kiosk:
+              </span>
               <Image
                 src="/images/sui.svg"
                 alt="Sui Logo"
                 width={20}
                 height={20}
               />
-              <div className="text-center justify-start text-white text-sm font-normal font-['Sora'] leading-normal">
-                {profit || 0}
-              </div>
             </div>
+            <span className="text-white text-sm font-normal font-['Sora']">
+              {profit || 0}
+            </span>
             <Button
-              className="bg-[#a668ff] flex justify-center items-center gap-2 w-fit px-1 py-1 h-fit"
+              className={cn(
+                "h-6 px-2 rounded-3xl text-xs font-normal font-['Sora'] uppercase",
+                profit ? "bg-[#a668ff] text-neutral-950" : "bg-[#1f1f1f] text-[#707070]"
+              )}
               onClick={claimProfit}
               disabled={loadingClaim || !profit}
             >
-              <div className="text-center justify-start text-neutral-950 text-xs font-normal font-['Sora'] uppercase leading-normal">
-                {loadingClaim ? "Claiming..." : "Claim"}
-              </div>
+              {loadingClaim ? "..." : "Claim"}
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2 gap-2  bg-black z-10 pb-2">
-          <div className="w-full rounded-[32px] inline-flex flex-col justify-start items-start gap-1">
-            <div className="self-stretch px-3 py-2 bg-[#141414] rounded-[32px] outline outline-1 outline-offset-[-1px] outline-[#333333] inline-flex justify-start items-start gap-4">
-              <Input className="inline-flex h-5 flex-col justify-start items-start overflow-hidden text-white ring-0 px-0 border-none" />
-              <SearchIcon className="w-5 h-5 text-white" />
-            </div>
+
+        {/* Filter Row */}
+        <div className="flex gap-2 items-center w-full">
+          {/* Dropdown Filter */}
+          <div className="relative flex-1">
+            <button
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className="w-full bg-[#1f1f1f] rounded-2xl px-3 py-2 flex items-center justify-between"
+            >
+              <span className="text-white text-sm font-bold font-['Sora']">
+                {filterType === "all" ? "All" : filterType === "element" ? "Elements" : "Creatures"}
+              </span>
+              <Dropdown size={24} color="white" />
+            </button>
+            {showFilterDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1f1f1f] rounded-2xl overflow-hidden z-10 border border-[#333333]">
+                {(["all", "element", "creature"] as FilterType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setFilterType(type);
+                      setShowFilterDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left text-sm font-['Sora'] ${
+                      filterType === type ? "bg-[#333333] text-white" : "text-[#858585] hover:bg-[#292929]"
+                    }`}
+                  >
+                    {type === "all" ? "All" : type === "element" ? "Elements" : "Creatures"}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <Button
-            size="sm"
-            className={cn(
-              "rounded-3xl w-fit  px-4 py-1  border border-[#333333]",
-              isOwned ? "bg-primary text-black" : "bg-[#141414] text-white"
-            )}
-            onClick={() => setIsOwned((prev) => !prev)}
-          >
-            Owned
-          </Button>
-          <Button
-            size="sm"
-            className={cn(
-              "rounded-3xl w-fit py-1 px-4 bg-transparent border border-[#333333]"
-            )}
-            onClick={() => {
-              dispatch(updateTabMode(TabMode.BAG));
-            }}
-          >
-            Sell
-          </Button>
+
+          {/* Filter Icon Button */}
+          <button className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0">
+            <Image
+              src="/images/filter.svg"
+              alt="filter"
+              width={24}
+              height={24}
+            />
+          </button>
+
+          {/* Search Icon Button / Search Input */}
+          {showSearch ? (
+            <div className="flex-1 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center px-3 gap-2">
+              <Image
+                src="/images/search.svg"
+                alt="search"
+                width={24}
+                height={24}
+              />
+              <Input
+                className="flex-1 h-full text-white text-sm font-normal bg-transparent border-none focus:outline-none focus:ring-0"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+                onBlur={() => {
+                  if (!searchTerm) setShowSearch(false);
+                }}
+              />
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowSearch(true)}
+              className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0"
+            >
+              <Image
+                src="/images/search.svg"
+                alt="search"
+                width={24}
+                height={24}
+              />
+            </button>
+          )}
         </div>
       </div>
-      <div className="flex flex-1 h-full w-full overflow-y-hidden">
-        {!initialized && isTelegram ? (
-          <CreateWallet />
-        ) : user && !user.kiosk ? (
-          <div className="flex flex-col gap-4 w-full h-full mt-4 ">
-            <div className="text-white text-2xl font-bold">
-              Creating your kiosk...
-            </div>
+      {/* Content Area */}
+      {!initialized && isTelegram ? (
+        <CreateWallet />
+      ) : user && !user.kiosk ? (
+        <div className="flex flex-col gap-4 w-full h-full">
+          <div className="text-white text-2xl font-bold">
+            Creating your kiosk...
           </div>
-        ) : (
-          <div className="w-full">
-            <div className="h-[75%] overflow-y-auto" style={{ marginTop: 80 }}>
-              {loading ? (
-                <MarketplaceSkeleton />
-              ) : filteredListings.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredListings.map((listing) => (
-                    <MarketItem
-                      key={listing.objectId}
-                      element={listing.element}
-                      prompt={listing.prompt}
-                      id={listing.objectId}
-                      imageUrl={listing.imageUrl}
-                      materials={listing.materials}
-                      emoji={listing.element}
-                      price={listing.price}
-                      nftId={listing.objectId}
-                      loading={purchaseLoading}
-                      seller_kiosk={listing.kioskId}
-                      onSubmitOnchainComplete={() => {
-                        refreshElement();
-                        refreshCreature();
-                      }}
-                      isOwned={isOwned}
-                      type={listing.type}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState message="No listings found matching your criteria" />
-              )}
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          {loading || loadingCreature ? (
+            <MarketplaceSkeleton />
+          ) : filteredListings.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
+              {filteredListings.map((listing) => (
+                <MarketItem
+                  key={listing.objectId}
+                  element={listing.element}
+                  prompt={listing.prompt}
+                  id={listing.objectId}
+                  imageUrl={listing.imageUrl}
+                  materials={listing.materials}
+                  emoji={listing.element}
+                  price={listing.price}
+                  nftId={listing.objectId}
+                  loading={purchaseLoading}
+                  seller_kiosk={listing.kioskId}
+                  onSubmitOnchainComplete={() => {
+                    refreshElement();
+                    refreshCreature();
+                  }}
+                  isOwned={isOwned}
+                  type={listing.type}
+                />
+              ))}
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <EmptyState message="No listings found matching your criteria" />
+          )}
+        </div>
+      )}
       <PasscodeAuthDialog
         open={openAuthDialog}
         setOpen={(open) => setOpenAuthDialog(open)}

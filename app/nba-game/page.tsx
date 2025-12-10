@@ -19,11 +19,15 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NBA_TEAMS_BY_TIER } from "@/data/nba-teams";
+import { useNbaPool } from "@/hooks/useNbaPool";
 import nbaApi from "@/lib/api/nba";
-import { NBA_MINT_FEE } from "@/utils/constants";
+import { RootState } from "@/lib/wallet/store";
+import { NBA_MINT_FEE, NBA_REWARD_POOL_ID } from "@/utils/constants";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useUniversalApp } from "../context/UniversalAppContext";
 
 // Tier data
@@ -99,12 +103,29 @@ export default function NbaGame() {
   const [tierApi, setTierApi] = useState<CarouselApi>();
   const [currentTier, setCurrentTier] = useState(0);
 
-  // Fetch user's owned NFTs
-  const { data: userNfts, isLoading: isLoadingNfts } =
-    nbaApi.getUserNfts.useQuery();
+  // Fetch user's owned NFTs to get ownership counts
+  const { data: userNfts } = nbaApi.getUserNfts.useQuery();
 
   // Fetch user's tier statistics
   const { data: tiersUser } = nbaApi.getTiersUser.useQuery();
+
+  // Get SUI price from Redux store
+  const suiPrice = useSelector((state: RootState) => state.appContext.suiPrice);
+
+  // Fetch pool data from blockchain
+  const { poolData, isLoading: isLoadingPool } = useNbaPool({
+    refreshInterval: 30000,
+    suiPrice: suiPrice || undefined,
+  });
+
+  // Open pool contract in Sui Vision Explorer
+  const openPoolInExplorer = () => {
+    window.open(
+      `https://suivision.xyz/object/${NBA_REWARD_POOL_ID}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
 
   useEffect(() => {
     if (isReady) {
@@ -194,7 +215,10 @@ export default function NbaGame() {
                 <Card className="bg-black border border-[#292929] rounded-2xl p-2">
                   <div className="flex flex-col gap-2">
                     {/* Total Reward */}
-                    <div className="bg-[#141414] flex flex-col gap-3 pl-3 pr-4 py-4 rounded-xl">
+                    <button
+                      onClick={openPoolInExplorer}
+                      className="bg-[#141414] flex flex-col gap-3 pl-3 pr-4 py-4 rounded-xl w-full text-left hover:bg-[#1a1a1a] transition-colors"
+                    >
                       <div className="flex gap-1 items-center">
                         <div className="flex items-center justify-center w-10 h-10 shrink-0">
                           <SuiLogo size={24} color="#4CA3FF" />
@@ -207,16 +231,24 @@ export default function NbaGame() {
                             <ArrowDirect size={18} color="white" />
                           </div>
                           <div className="flex gap-2 items-center uppercase">
-                            <p className="text-xl font-bold font-['Sora'] text-[#4CA3FF] flex-1">
-                              500,000 SUI
-                            </p>
-                            <p className="text-base font-semibold font-['Sora'] text-[#858585]">
-                              ~ $971,652
-                            </p>
+                            {isLoadingPool ? (
+                              <p className="text-xl font-bold font-['Sora'] text-[#858585] flex-1">
+                                Loading...
+                              </p>
+                            ) : (
+                              <>
+                                <p className="text-xl font-bold font-['Sora'] text-[#4CA3FF] flex-1">
+                                  {poolData?.totalRewardSui?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? "0"} SUI
+                                </p>
+                                <p className="text-base font-semibold font-['Sora'] text-[#858585]">
+                                  ~ ${poolData?.totalRewardUsd?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? "0"}
+                                </p>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </button>
 
                     {/* NFT Stats */}
                     <div className="bg-[#141414] flex gap-2 p-4 rounded-xl">
@@ -225,9 +257,7 @@ export default function NbaGame() {
                           Total NFT minted
                         </p>
                         <p className="text-xl font-bold font-['Sora'] text-[#53CCA7] uppercase">
-                          {(
-                            tiersUser as any
-                          )?.overall?.totalMinted?.toLocaleString() || "0"}
+                          {tiersUser?.overall?.totalMinted?.toLocaleString() ?? "0"}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 flex-1">
@@ -235,7 +265,7 @@ export default function NbaGame() {
                           Your own
                         </p>
                         <p className="text-xl font-bold font-['Sora'] text-[#53CCA7] uppercase">
-                          {(tiersUser as any)?.userNFTs?.totalOwned || "0"}
+                          {tiersUser?.userNFTs?.totalOwned?.toLocaleString() ?? "0"}
                         </p>
                       </div>
                     </div>
@@ -443,73 +473,98 @@ export default function NbaGame() {
               </div>
 
               {/* Team List */}
-              <div className="flex flex-col gap-2 px-4">
-                {(userNfts as any)?.byTier
-                  ?.find((t: any) => t.tier === currentTier + 1)
-                  ?.teams?.map((team: any, index: number) => {
+              <div className="flex flex-col gap-3 px-4">
+                {(() => {
+                  // Get static teams for current tier
+                  const staticTierData = NBA_TEAMS_BY_TIER.find((t) => t.tier === currentTier + 1);
+                  const staticTeams = staticTierData?.teams ?? [];
+
+                  // Flatten all user's teams from all tiers to search by name
+                  const allUserTeams = userNfts?.byTier?.flatMap((t) => t.teams) ?? [];
+
+                  // Merge static team data with user ownership counts (match by team name across all tiers)
+                  const teamsWithOwnership = staticTeams.map((team) => {
+                    const userTeam = allUserTeams.find(
+                      (ut) => ut.name.toLowerCase() === team.name.toLowerCase()
+                    );
+                    return {
+                      ...team,
+                      totalMinted: userTeam?.totalMinted ?? 0,
+                      count: userTeam?.count ?? 0,
+                      logoUrl: userTeam?.logoUrl ?? null,
+                    };
+                  });
+
+                  return teamsWithOwnership.map((team) => {
                     return (
                       <div
-                        key={team.teamId || index}
-                        className="bg-[#1a1a1a] border border-[#292929] rounded-2xl p-4 flex items-center gap-3"
+                        key={team.teamId}
+                        className="bg-[rgba(136,136,136,0.08)] border border-[rgba(255,255,255,0.06)] rounded-2xl p-4 flex flex-col gap-3"
+                        style={{ minHeight: "116px" }}
                       >
-                        {/* Team Logo */}
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
-                          {team.logoUrl || team.logo ? (
-                            <Image
-                              src={
-                                team.logoUrl ||
-                                `/images/tiers/team-logos/${team?.logo}`
-                              }
-                              alt={team.name}
-                              width={40}
-                              height={40}
-                              className="w-10 h-10 object-contain"
-                            />
-                          ) : (
-                            <span className="text-xl">🏀</span>
-                          )}
-                        </div>
-
-                        {/* Team Info */}
-                        <div className="flex-1 flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <p className="text-sm font-normal font-['Sora'] text-white">
-                              {team.name}
-                            </p>
-                            {team.count > 0 && (
-                              <p className="text-xs font-normal font-['Sora'] text-[#68ffd1]">
-                                You own: {team.count}
-                              </p>
+                        {/* Top Row: Logo + Team Name */}
+                        <div className="flex items-center gap-3">
+                          {/* Team Logo */}
+                          <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                            {team.logoUrl || team.logo ? (
+                              <Image
+                                src={team.logoUrl || `/images/tiers/team-logos/${team.logo}`}
+                                alt={team.name}
+                                width={44}
+                                height={44}
+                                className="w-11 h-11 object-contain"
+                              />
+                            ) : (
+                              <span className="text-2xl">🏀</span>
                             )}
                           </div>
-
-                          <div className="flex items-center gap-6">
-                            <div className="flex flex-col items-end">
-                              <p className="text-xs font-normal font-['Sora'] text-[#858585]">
-                                Rarity
-                              </p>
-                              <p className="text-sm font-normal font-['Sora'] text-white">
-                                {team.rarity}%
-                              </p>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <p className="text-xs font-normal font-['Sora'] text-[#858585]">
-                                Minted
-                              </p>
-                              <p className="text-sm font-normal font-['Sora'] text-white">
-                                {team.totalMinted}/{team.supplyLimit}
-                              </p>
-                            </div>
-                          </div>
+                          {/* Team Name */}
+                          <p className="text-base font-bold font-['Sora'] text-white flex-1">
+                            {team.name}
+                          </p>
                         </div>
 
-                        {/* Info Icon */}
-                        <button className="w-8 h-8 rounded-full bg-[#68ffd1]/20 flex items-center justify-center shrink-0">
-                          <span className="text-[#68ffd1] text-lg">?</span>
-                        </button>
+                        {/* Bottom Row: Stats */}
+                        <div className="flex items-center justify-between">
+                          {/* Rarity */}
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-xs font-normal font-['Sora'] text-[#858585]">
+                              Rarity
+                            </p>
+                            <p className="text-sm font-semibold font-['Sora'] text-white">
+                              {team.rarity}%
+                            </p>
+                          </div>
+
+                          {/* Minted */}
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-xs font-normal font-['Sora'] text-[#858585]">
+                              Minted
+                            </p>
+                            <p className="text-sm font-semibold font-['Sora'] text-white">
+                              {team.totalMinted}/{team.supplyLimit}
+                            </p>
+                          </div>
+
+                          {/* You own */}
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-xs font-normal font-['Sora'] text-[#858585]">
+                              You own
+                            </p>
+                            <p className="text-sm font-semibold font-['Sora'] text-[#00DBB6]">
+                              {team.count}
+                            </p>
+                          </div>
+
+                          {/* Question Mark Icon */}
+                          <button className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center shrink-0">
+                            <span className="text-[#858585] text-base font-semibold">?</span>
+                          </button>
+                        </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
               </div>
             </div>
           </TabsContent>
@@ -646,12 +701,35 @@ export default function NbaGame() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* 6. How the Ranking Works */}
+              <div className="flex flex-col gap-2">
+                <p className="text-base font-semibold font-['Sora'] text-white uppercase tracking-wider">
+                  6. How the Ranking Works
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-sm font-normal font-['Sora'] text-[#adadad]">
+                  <li>
+                    Team rankings are based on their{" "}
+                    <span className="text-white">real-world NBA standings</span>{" "}
+                    at the end of the season.
+                  </li>
+                  <li>
+                    The <span className="text-[#68ffd1]">#1 ranked team</span>{" "}
+                    gets the highest share (40%), decreasing down to{" "}
+                    <span className="text-[#68ffd1]">#7</span> with 2%.
+                  </li>
+                  <li>
+                    NFTs for teams that don&apos;t rank in the top 7 won&apos;t receive
+                    rewards from the main pool but retain collectible value.
+                  </li>
+                </ul>
 
                 {/* Example Calculation */}
                 <div className="text-sm font-normal font-['Sora'] text-[#adadad] mt-2 space-y-1">
                   <p>💡 Example: How rewards are calculated</p>
                   <p>
-                    Let's say the total reward pool is
+                    Let&apos;s say the total reward pool is
                     <span className="text-[#68ffd1]"> 500,000 SUI.</span>
                   </p>
                   <ul className="list-disc pl-5 space-y-1">
@@ -676,7 +754,7 @@ export default function NbaGame() {
                   </p>
                   <p>
                     <span className="text-white">
-                      75,000÷25=3,000 SUI per NFT
+                      75,000 ÷ 25 = 3,000 SUI per NFT
                     </span>
                   </p>
                   <p>
@@ -687,18 +765,22 @@ export default function NbaGame() {
                 </div>
               </div>
 
-              {/* 6. Redeem Your Reward */}
+              {/* 7. Redeem Your Reward */}
               <div className="flex flex-col gap-2">
                 <p className="text-base font-semibold font-['Sora'] text-white uppercase tracking-wider">
-                  6. Redeem Your Reward
+                  7. Redeem Your Reward
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-sm font-normal font-['Sora'] text-[#adadad]">
-                  <li>Once rewards are available, go to "Claim Reward."</li>
+                  <li>Once rewards are available, go to &quot;Claim Reward.&quot;</li>
                   <li>
-                    The system will show your SUI reward based on the NFTs you
-                    hold.
+                    The system will show your{" "}
+                    <span className="text-[#68ffd1]">SUI</span> reward based on
+                    the NFTs you hold.
                   </li>
-                  <li>Tap "Claim" to send it directly to your wallet.</li>
+                  <li>
+                    Tap <span className="text-white">&quot;Claim&quot;</span> to send it
+                    directly to your wallet.
+                  </li>
                   <li>
                     Your NFT remains yours — keep it for the next season or as a
                     collectible.
@@ -706,14 +788,14 @@ export default function NbaGame() {
                 </ul>
               </div>
 
-              {/* 7. Pro Tips */}
+              {/* 8. Pro Tips */}
               <div className="flex flex-col gap-2">
                 <p className="text-base font-semibold font-['Sora'] text-white uppercase tracking-wider">
-                  7. Pro Tips
+                  8. Pro Tips
                 </p>
-                <ul className="list-disc pl-5 space-y-1 text-sm font-normal font-['Sora'] text-[#858585]">
+                <ul className="list-disc pl-5 space-y-1 text-sm font-normal font-['Sora'] text-[#adadad]">
                   <li>
-                    <span className="font-bold text-white">Mint early: </span>
+                    <span className="font-bold text-white">Mint early:</span>{" "}
                     fewer NFTs = higher reward share.
                   </li>
                   <li>
@@ -723,7 +805,7 @@ export default function NbaGame() {
                     mint or buy multiple teams to boost your win chances.
                   </li>
                   <li>
-                    <span className="font-bold text-white">Stay secure: </span>
+                    <span className="font-bold text-white">Stay secure:</span>{" "}
                     all NFTs and rewards are linked to your wallet — keep it
                     safe.
                   </li>

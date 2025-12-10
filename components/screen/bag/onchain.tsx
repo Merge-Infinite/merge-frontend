@@ -4,6 +4,7 @@ import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
+import { Dropdown } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import useApi from "@/hooks/useApi";
 import { useNFTList } from "@/hooks/useNFTList";
@@ -16,7 +17,7 @@ import { useAccount } from "@/lib/wallet/hooks/useAccount";
 import { useApiClient } from "@/lib/wallet/hooks/useApiClient";
 import { useNetwork } from "@/lib/wallet/hooks/useNetwork";
 import { RootState } from "@/lib/wallet/store";
-import { OmitToken } from "@/lib/wallet/types";
+import { ObjectChange, OmitToken, TransactionResponse } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
   ELEMENT_NFT_MODULE_NAME,
@@ -36,6 +37,8 @@ import { toast } from "sonner";
 import { CreativeOnchainItem } from "./creative-onchain-item";
 import { CardItem } from "./onchain-item";
 
+type FilterType = "all" | "element" | "creature" | "nba";
+
 export function OnchainBagScreen() {
   const { isTelegram } = useUniversalApp();
   const apiClient = useApiClient();
@@ -45,6 +48,9 @@ export function OnchainBagScreen() {
   const { address, fetchAddressByAccountId } = useAccount(appContext.accountId);
   const authed = useSelector((state: RootState) => state.appContext.authed);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [filterType, setFilterType] = useState<FilterType>("all");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
@@ -166,30 +172,27 @@ export function OnchainBagScreen() {
         response = await signAndExecuteTransaction({
           transaction: tx.serialize(),
         });
-        console.log(response);
       }
-      if (response && (response as any).digest) {
-        const createdObjects = (response as any).objectChanges?.filter(
-          (change: any) => change.type === "created"
+      const txResponse = response as TransactionResponse;
+      if (txResponse?.digest) {
+        const createdObjects = txResponse.objectChanges?.filter(
+          (change: ObjectChange) => change.type === "created"
         );
 
         // Find the kiosk and kiosk cap objects
         const kioskObject = createdObjects?.find(
-          (obj: any) =>
-            "objectType" in obj && obj.objectType === "0x2::kiosk::Kiosk"
+          (obj: ObjectChange) =>
+            obj.objectType === "0x2::kiosk::Kiosk"
         );
 
         const kioskCapObject = createdObjects?.find(
-          (obj: any) =>
-            "objectType" in obj &&
+          (obj: ObjectChange) =>
             obj.objectType === "0x2::kiosk::KioskOwnerCap"
         );
 
         if (
-          kioskObject &&
-          kioskCapObject &&
-          "objectId" in kioskObject &&
-          "objectId" in kioskCapObject
+          kioskObject?.objectId &&
+          kioskCapObject?.objectId
         ) {
           await createKioskApi?.mutateAsync({
             objectId: kioskObject.objectId,
@@ -200,12 +203,13 @@ export function OnchainBagScreen() {
           toast.success("Kiosk created successfully!");
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating kiosk:", error);
-      if (error.message === "Authentication required") {
+      const errorMessage = error instanceof Error ? error.message : "Error creating kiosk";
+      if (errorMessage === "Authentication required") {
         setOpenAuthDialog(true);
       } else {
-        toast.error(error.message || "Error creating kiosk");
+        toast.error(errorMessage);
       }
     } finally {
       callingKiosk.current = false;
@@ -234,98 +238,191 @@ export function OnchainBagScreen() {
         </div>
       ) : (
         <div className="flex flex-col gap-4 w-full h-full">
-          <div className="self-stretch h-10 rounded-3xl flex-col justify-start items-start gap-1 flex">
-            <div className="self-stretch px-3 py-2 bg-[#141414] rounded-3xl border border-[#333333] justify-start items-start gap-4 inline-flex">
+          {/* Filter Row */}
+          <div className="flex gap-2 items-center w-full">
+            {/* Dropdown Filter */}
+            <div className="relative flex-1">
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className="w-full bg-[#1f1f1f] rounded-2xl px-3 py-2 flex items-center justify-between"
+              >
+                <span className="text-white text-sm font-bold font-['Sora']">
+                  {filterType === "all" ? "All" : filterType === "element" ? "Elements" : filterType === "creature" ? "Creatures" : "NBA"}
+                </span>
+                <Dropdown size={24} color="white" />
+              </button>
+              {showFilterDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1f1f1f] rounded-2xl overflow-hidden z-10 border border-[#333333]">
+                  {(["all", "element", "creature", "nba"] as FilterType[]).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        setFilterType(type);
+                        setShowFilterDropdown(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left text-sm font-['Sora'] ${
+                        filterType === type ? "bg-[#333333] text-white" : "text-[#858585] hover:bg-[#292929]"
+                      }`}
+                    >
+                      {type === "all" ? "All" : type === "element" ? "Elements" : type === "creature" ? "Creatures" : "NBA"}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Filter Icon Button */}
+            <button className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0">
               <Image
-                src="/images/search.svg"
-                alt="search"
+                src="/images/filter.svg"
+                alt="filter"
                 width={24}
                 height={24}
               />
-              <Input
-                className="grow shrink basis-0 h-full text-white text-sm font-normal leading-normal focus:outline-none border-transparent"
-                placeholder="Search items..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {loading ? (
-              <SkeletonCard />
+            </button>
+
+            {/* Search Icon Button / Search Input */}
+            {showSearch ? (
+              <div className="flex-1 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center px-3 gap-2">
+                <Image
+                  src="/images/search.svg"
+                  alt="search"
+                  width={24}
+                  height={24}
+                />
+                <Input
+                  className="flex-1 h-full text-white text-sm font-normal bg-transparent border-none focus:outline-none focus:ring-0"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  onBlur={() => {
+                    if (!searchQuery) setShowSearch(false);
+                  }}
+                />
+              </div>
             ) : (
-              nfts
-                .map((nft) => {
-                  const display = nft?.data?.display?.data;
-                  return {
-                    id: nft!.data.objectId,
-                    name: display?.name || "Element NFT",
-                    amount: display?.amount || 0,
-                    itemId: Number(display?.item_id),
-                    imageUrl: display?.image_url,
-                  };
-                })
-                .map((card, index) => (
-                  <CardItem
-                    key={index}
-                    element={card.name}
-                    amount={card.amount}
-                    itemId={card.itemId}
-                    imageUrl={card.imageUrl}
-                    id={card.id}
-                    onListingComplete={nftsRefresh}
-                  />
-                ))
+              <button
+                onClick={() => setShowSearch(true)}
+                className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0"
+              >
+                <Image
+                  src="/images/search.svg"
+                  alt="search"
+                  width={24}
+                  height={24}
+                />
+              </button>
+            )}
+          </div>
+
+          {/* NFT Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Element NFTs */}
+            {(filterType === "all" || filterType === "element") && (
+              <>
+                {loading ? (
+                  <SkeletonCard />
+                ) : (
+                  nfts
+                    .map((nft) => {
+                      const display = nft?.data?.display?.data;
+                      return {
+                        id: nft!.data.objectId,
+                        name: display?.name || "Element NFT",
+                        amount: display?.amount || 0,
+                        itemId: Number(display?.item_id),
+                        imageUrl: display?.image_url,
+                      };
+                    })
+                    .filter((card) =>
+                      searchQuery
+                        ? card.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        : true
+                    )
+                    .map((card) => (
+                      <CardItem
+                        key={card.id}
+                        element={card.name}
+                        amount={card.amount}
+                        itemId={card.itemId}
+                        imageUrl={card.imageUrl}
+                        id={card.id}
+                        onListingComplete={nftsRefresh}
+                      />
+                    ))
+                )}
+              </>
             )}
 
-            {creatureNftsLoading ? (
-              <SkeletonCard />
-            ) : (
-              creatureNfts
-                .map(({ data }) => {
-                  const metadata = data?.content?.fields.metadata;
-                  return {
-                    id: data!.objectId,
-                    name: metadata?.fields?.name || "Creature NFT",
-                    imageUrl: metadata?.fields?.image_uri || "",
-                    prompt: metadata?.fields?.prompt || "",
-                  };
-                })
-                .map((card, index) => (
-                  <CreativeOnchainItem
-                    key={index}
-                    id={card.id}
-                    name={card.name}
-                    imageUrl={card.imageUrl}
-                    prompt={card.prompt}
-                    onListingComplete={creatureNftsRefresh}
-                  />
-                ))
+            {/* Creature NFTs */}
+            {(filterType === "all" || filterType === "creature") && (
+              <>
+                {creatureNftsLoading ? (
+                  <SkeletonCard />
+                ) : (
+                  creatureNfts
+                    .map(({ data }) => {
+                      const metadata = data?.content?.fields.metadata;
+                      return {
+                        id: data!.objectId,
+                        name: metadata?.fields?.name || "Creature NFT",
+                        imageUrl: metadata?.fields?.image_uri || "",
+                        prompt: metadata?.fields?.prompt || "",
+                      };
+                    })
+                    .filter((card) =>
+                      searchQuery
+                        ? card.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        : true
+                    )
+                    .map((card) => (
+                      <CreativeOnchainItem
+                        key={card.id}
+                        id={card.id}
+                        name={card.name}
+                        imageUrl={card.imageUrl}
+                        prompt={card.prompt}
+                        onListingComplete={creatureNftsRefresh}
+                      />
+                    ))
+                )}
+              </>
             )}
-            {nbaNftsLoading ? (
-              <SkeletonCard />
-            ) : (
-              nbaNfts
-                .map(({ data }) => {
-                  const metadata = data?.content?.fields;
-                  console.log('metadata',metadata)
-                  return {
-                    id: data!.objectId,
-                    name: metadata?.team_name || "Creature NFT",
-                    imageUrl: metadata?.url || "",
-                    prompt: metadata?.fields?.prompt || "",
-                  };
-                })
-                .map((card, index) => (
-                  <CreativeOnchainItem
-                    key={index}
-                    id={card.id}
-                    name={card.name}
-                    imageUrl={card.imageUrl}
-                    prompt={card.prompt}
-                    onListingComplete={nbaNftsRefresh}
-                  />
-                ))
+
+            {/* NBA NFTs */}
+            {(filterType === "all" || filterType === "nba") && (
+              <>
+                {nbaNftsLoading ? (
+                  <SkeletonCard />
+                ) : (
+                  nbaNfts
+                    .map(({ data }) => {
+                      const metadata = data?.content?.fields;
+                      return {
+                        id: data!.objectId,
+                        name: metadata?.team_name || "NBA NFT",
+                        imageUrl: metadata?.url || "",
+                        prompt: "",
+                      };
+                    })
+                    .filter((card) =>
+                      searchQuery
+                        ? card.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        : true
+                    )
+                    .map((card) => (
+                      <CreativeOnchainItem
+                        key={card.id}
+                        id={card.id}
+                        name={card.name}
+                        imageUrl={card.imageUrl}
+                        prompt={card.prompt}
+                        onListingComplete={nbaNftsRefresh}
+                      />
+                    ))
+                )}
+              </>
             )}
           </div>
         </div>

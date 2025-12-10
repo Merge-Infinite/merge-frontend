@@ -213,14 +213,13 @@ export const MarketItem = React.memo(
         } else {
           toast.error("Failed to purchase NFT. Please try again.");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Purchase error:", error);
-        if (error.message === "Authentication required") {
+        const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again.";
+        if (errorMessage === "Authentication required") {
           setOpenAuthDialog(true);
         } else {
-          toast.error(
-            error.message || "Something went wrong. Please try again."
-          );
+          toast.error(errorMessage);
         }
       } finally {
         setLoading(false);
@@ -299,14 +298,13 @@ export const MarketItem = React.memo(
         } else {
           toast.error("Failed to delist NFT. Please try again.");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.log(error);
-        if (error.message === "Authentication required") {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        if (errorMessage === "Authentication required") {
           setOpenAuthDialog(true);
         } else {
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
+          toast.error(errorMessage);
         }
       } finally {
         setLoading(false);
@@ -317,110 +315,93 @@ export const MarketItem = React.memo(
       router.push(`/creative?prompt=${encodeURIComponent(prompt || "")}`);
     };
 
-    return (
-      <Card className="w-full sm:w-60 bg-transparent transition-all duration-300 gap-2 flex flex-col">
-        <NFTImage
-          src={imageUrl}
-          alt={element}
-          width={100}
-          height={100}
-          className="self-center w-full rounded-2xl border-b border-[#333333]"
-        />
+    // Determine if this is an element NFT (has emoji) or creature NFT (has image)
+    const isElementNFT = !isCreatureNFT(type);
 
-        <div className="flex flex-col items-center gap-2">
+    return (
+      <Card className="w-full bg-transparent border-none transition-all duration-300 gap-2 flex flex-col">
+        {/* Image Container */}
+        {isElementNFT ? (
+          // Element NFT - White background with emoji
+          <div className="aspect-square border border-[#1f1f1f] rounded-2xl flex flex-col items-center justify-center p-4 text-center text-white">
+            <p className="text-5xl leading-[56px] uppercase w-full">
+              <Emoji emoji={emoji} size={48} />
+            </p>
+            <div className="text-sm leading-6 w-full">
+              <p className="mb-0">{element}</p>
+              <p>Qty: {items.length || 1}</p>
+            </div>
+          </div>
+        ) : (
+          // Creature NFT - Full image with badge overlay
+          <div className="relative aspect-square rounded-2xl overflow-hidden">
+            <NFTImage
+              src={imageUrl}
+              alt={element}
+              width={177}
+              height={177}
+              className="w-full h-full object-cover"
+            />
+            {/* Badge count overlay */}
+            <div className="absolute bottom-1.5 left-1.5 bg-[rgba(10,10,10,0.72)] text-white text-xs font-bold px-1.5 py-0 rounded-3xl min-w-[16px] h-[18px] flex items-center justify-center">
+              1
+            </div>
+          </div>
+        )}
+
+        {/* NFT ID Link */}
+        <div className="flex justify-center">
           <div
-            className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline"
+            className="text-[#68ffd1] text-sm font-normal font-['Sora'] underline cursor-pointer"
             onClick={handleCopyId}
           >
-            {formatAddress(nftId)} {copied ? "✓" : ""}
-            {isCreatureNFT(type) ? (
-              <Image
-                src="/images/copy.svg"
-                alt="Copy"
-                width={20}
-                height={20}
-                className="inline ml-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCopyElements();
-                }}
-              />
-            ) : null}
+            #{formatAddress(nftId)}
           </div>
-          <div className="flex flex-wrap justify-start items-center gap-1">
-            <Image
-              src="/images/Info.svg"
-              alt="Copy"
-              width={15}
-              height={15}
-              className="inline ml-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopyElements();
-              }}
-            />
-            <div className="justify-start text-white text-xs font-normal font-sora leading-none">
-              Elements:
-            </div>
+        </div>
 
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-wrap text-center justify-end text-white text-xs font-bold font-sora leading-none"
-              >
-                <Emoji emoji={item.emoji} size={18} /> {item.handle}
-              </div>
-            ))}
-          </div>
-          <div className="w-full flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <div className="text-white text-xs font-normal font-['Sora']">
-                {price && (
-                  <>
-                    <Image
-                      src="/images/sui.svg"
-                      alt="Sui Logo"
-                      className="h-3 w-3 inline mr-1"
-                      width={16}
-                      height={16}
-                    />
-                    {formatSUI(Number(price))} SUI
-                  </>
-                )}
-              </div>
-            </div>
-            {!isOwned ? (
-              <Button
-                className=" text-black w-fit uppercase rounded-3xl"
-                onClick={purchaseNFT}
-                disabled={
-                  loading ||
-                  Number(isTelegram ? balance.balance : suiBalance || 0) <
-                    Number(price)
-                }
-                isLoading={loading}
-                size="sm"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-1">
-                    <span>Buying</span>
-                  </div>
-                ) : (
-                  "Buy"
-                )}
-              </Button>
-            ) : (
-              <Button
-                className=" text-black w-fit uppercase rounded-3xl"
-                onClick={deListNFT}
-                disabled={loading}
-                isLoading={loading}
-                size="sm"
-              >
-                Cancel
-              </Button>
+        {/* Price and Buy Button Row */}
+        <div className="w-full flex justify-between items-center">
+          <div className="flex items-center">
+            {price && (
+              <>
+                <Image
+                  src="/images/sui.svg"
+                  alt="Sui Logo"
+                  className="h-6 w-6"
+                  width={24}
+                  height={24}
+                />
+                <span className="text-white text-xs font-normal font-['Sora']">
+                  {formatSUI(Number(price))} SUI
+                </span>
+              </>
             )}
           </div>
+          {!isOwned ? (
+            <Button
+              className="bg-[#a768ff] text-neutral-950 h-6 px-4 rounded-3xl text-xs font-normal uppercase"
+              onClick={purchaseNFT}
+              disabled={
+                loading ||
+                Number(isTelegram ? balance.balance : suiBalance || 0) <
+                  Number(price)
+              }
+              isLoading={loading}
+              size="sm"
+            >
+              {loading ? "..." : "Buy"}
+            </Button>
+          ) : (
+            <Button
+              className="bg-[#a768ff] text-neutral-950 h-6 px-4 rounded-3xl text-xs font-normal uppercase"
+              onClick={deListNFT}
+              disabled={loading}
+              isLoading={loading}
+              size="sm"
+            >
+              Cancel
+            </Button>
+          )}
         </div>
         <PasscodeAuthDialog
           open={openAuthDialog}

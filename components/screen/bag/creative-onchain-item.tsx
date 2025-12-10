@@ -27,7 +27,6 @@ import { RootState } from "@/lib/wallet/store";
 import { OmitToken } from "@/lib/wallet/types";
 import {
   CREATURE_NFT_MODULE_NAME,
-  ELEMENT_NFT_MODULE_NAME,
   MER3_UPGRADED_PACKAGE_ID,
 } from "@/utils/constants";
 import {
@@ -50,12 +49,14 @@ export const CreativeOnchainItem = React.memo(
     imageUrl,
     prompt,
     onListingComplete,
+    count = 1,
   }: {
     id: string;
     name: string;
     imageUrl: string;
     prompt: string;
     onListingComplete?: () => void;
+    count?: number;
   }) => {
     const apiClient = useApiClient();
 
@@ -203,15 +204,14 @@ export const CreativeOnchainItem = React.memo(
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Transaction error:", error);
-        if (error.message === "Authentication required") {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        if (errorMessage === "Authentication required") {
           setOpenAuthDialog(true);
         } else {
           setTransactionStatus("error");
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
+          toast.error(errorMessage);
         }
       } finally {
       }
@@ -223,7 +223,7 @@ export const CreativeOnchainItem = React.memo(
 
         const txb = new Transaction();
         txb.moveCall({
-          target: `${MER3_UPGRADED_PACKAGE_ID}::${ELEMENT_NFT_MODULE_NAME}::${"burn"}`,
+          target: `${MER3_UPGRADED_PACKAGE_ID}::${CREATURE_NFT_MODULE_NAME}::${"burn"}`,
           arguments: [txb.object(id)],
         });
         let response;
@@ -277,15 +277,14 @@ export const CreativeOnchainItem = React.memo(
           setTransactionStatus("error");
           toast.error("Failed to list NFT. Please try again.");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Transaction error:", error);
-        if (error.message === "Authentication required") {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        if (errorMessage === "Authentication required") {
           setOpenAuthDialog(true);
         } else {
           setTransactionStatus("error");
-          toast.error(
-            error instanceof Error ? error.message : "An unknown error occurred"
-          );
+          toast.error(errorMessage);
         }
       } finally {
       }
@@ -311,16 +310,22 @@ export const CreativeOnchainItem = React.memo(
     return (
       <Fragment>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Card className="w-44 bg-transparent border-none">
+          <Card className="bg-transparent border-none overflow-hidden">
             <CardContent className="p-0 flex flex-col items-center gap-2">
-              {/* Image Container */}
-              <NFTImage
-                src={imageUrl}
-                alt="Project preview"
-                width={176}
-                height={176}
-                className="rounded-2xl"
-              />
+              {/* Image Container with badge overlay */}
+              <div className="relative w-full aspect-square rounded-2xl overflow-hidden">
+                <NFTImage
+                  src={imageUrl}
+                  alt="Project preview"
+                  width={176}
+                  height={176}
+                  className="w-full h-full object-cover"
+                />
+                {/* Badge count overlay */}
+                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded-md min-w-[24px] text-center">
+                  {count}
+                </div>
+              </div>
 
               <ShareBottomSheet
                 prompt={prompt}
@@ -333,14 +338,11 @@ export const CreativeOnchainItem = React.memo(
                 name={name}
                 nftId={id}
               />
-              <div className="text-white text-sm font-normal leading-normal text-center">
-                {name}
-              </div>
               <DialogTrigger asChild>
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="w-44 h-6 px-4 bg-white hover:bg-gray-100 text-black rounded-3xl text-xs font-normal uppercase leading-normal"
+                  className="w-full h-8 bg-white hover:bg-gray-100 text-black rounded-full text-xs font-normal uppercase"
                 >
                   Sell
                 </Button>

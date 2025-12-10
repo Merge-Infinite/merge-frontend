@@ -1,92 +1,117 @@
 "use client";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ArrowLeft, Calendar, Close } from "@/components/icons";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useNbaGames } from "@/hooks/useNbaGames";
+import { useNbaSeasonStatus } from "@/hooks/useNbaSeasonStatus";
+import { NBA_TEAM_COLORS, TransformedGame, GameStatus } from "@/lib/api/nba-games";
+import SeasonStatusBanner from "./SeasonStatusBanner";
 
 interface SeasonMatchesSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-// Mock game data
-const mockGames = [
-  {
-    id: 1,
-    homeTeam: "Timberwolves",
-    homeRecord: "3-3",
-    awayTeam: "Nets",
-    awayRecord: "0-6",
-    date: "Tue 4 Nov",
-    time: "7:00 AM GMT",
-  },
-  {
-    id: 2,
-    homeTeam: "Bucks",
-    homeRecord: "4-2",
-    awayTeam: "Pacers",
-    awayRecord: "1-5",
-    date: "Tue 4 Nov",
-    time: "7:00 AM GMT",
-  },
-  {
-    id: 3,
-    homeTeam: "Jazz",
-    homeRecord: "2-4",
-    awayTeam: "Celtics",
-    awayRecord: "3-4",
-    date: "Tue 4 Nov",
-    time: "7:00 AM GMT",
-  },
-  {
-    id: 4,
-    homeTeam: "Wizards",
-    homeRecord: "1-5",
-    awayTeam: "Knicks",
-    awayRecord: "3-3",
-    date: "Tue 4 Nov",
-    time: "7:00 AM GMT",
-  },
-  {
-    id: 5,
-    homeTeam: "Mavericks",
-    homeRecord: "2-4",
-    awayTeam: "Rockets",
-    awayRecord: "3-2",
-    date: "Tue 4 Nov",
-    time: "7:00 AM GMT",
-  },
-  {
-    id: 6,
-    homeTeam: "Pistons",
-    homeRecord: "4-2",
-    awayTeam: "Grizzlies",
-    awayRecord: "3-4",
-    date: "Tue 4 Nov",
-    time: "7:00 AM GMT",
-  },
-];
+// Check if two dates are the same day
+function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
+}
 
-const daysOfWeek = [
-  { day: "Sun", date: 2 },
-  { day: "Mon", date: 3 },
-  { day: "Tue", date: 4 },
-  { day: "Web", date: 5 },
-  { day: "Thu", date: 6 },
-  { day: "Fri", date: 7 },
-  { day: "Sat", date: 8 },
-];
+// Generate days of the week centered around today
+function generateWeekDays(centerDate: Date = new Date()) {
+  const days = [];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = new Date();
+
+  // Start from 3 days ago
+  for (let i = -3; i <= 3; i++) {
+    const date = new Date(centerDate);
+    date.setDate(centerDate.getDate() + i);
+    days.push({
+      day: dayNames[date.getDay()],
+      date: date.getDate(),
+      fullDate: new Date(date),
+      isToday: isSameDay(date, today),
+    });
+  }
+
+  return days;
+}
+
+// Get current month/year string
+function getMonthYearString(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+// Get team color or fallback
+function getTeamColor(tricode: string): string {
+  return NBA_TEAM_COLORS[tricode]?.primary || "#1D428A";
+}
+
+// Game status display helper
+function getGameStatusDisplay(game: TransformedGame): {
+  primary: string;
+  secondary: string;
+} {
+  if (game.gameStatus === GameStatus.SCHEDULED) {
+    return { primary: game.date, secondary: game.time };
+  } else if (game.gameStatus === GameStatus.IN_PROGRESS) {
+    return {
+      primary: `Q${game.period}`,
+      secondary: game.gameClock || "LIVE",
+    };
+  } else {
+    return {
+      primary: `${game.homeScore} - ${game.awayScore}`,
+      secondary: "FINAL",
+    };
+  }
+}
 
 export default function SeasonMatchesSheet({
   open,
   onOpenChange,
 }: SeasonMatchesSheetProps) {
-  const [selectedDay, setSelectedDay] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(3); // Default to today (center of week)
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  // Season status with live countdown
+  const seasonInfo = useNbaSeasonStatus({ enabled: open });
+
+  // Generate week days based on current offset
+  const daysOfWeek = useMemo(() => {
+    const centerDate = new Date();
+    centerDate.setDate(centerDate.getDate() + weekOffset * 7);
+    return generateWeekDays(centerDate);
+  }, [weekOffset]);
+
+  // Get the selected date based on selectedDay and weekOffset
+  const selectedDate = useMemo(() => {
+    return daysOfWeek[selectedDay]?.fullDate;
+  }, [daysOfWeek, selectedDay]);
+
+  // Fetch NBA games for selected date - only enabled when sheet is open
+  const { data: games, isLoading, isError, refetch } = useNbaGames({
+    date: selectedDate,
+    enabled: open,
+    refetchInterval: 30000, // Refresh every 30 seconds for live scores
+  });
+
+  // Current month/year display
+  const monthYearDisplay = useMemo(() => {
+    const centerDate = new Date();
+    centerDate.setDate(centerDate.getDate() + weekOffset * 7);
+    return getMonthYearString(centerDate);
+  }, [weekOffset]);
+
+  // Navigate weeks
+  const goToPreviousWeek = () => setWeekOffset((prev) => prev - 1);
+  const goToNextWeek = () => setWeekOffset((prev) => prev + 1);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -111,7 +136,7 @@ export default function SeasonMatchesSheet({
             {/* Month */}
             <div className="flex items-center justify-center px-1 py-0 relative mb-2">
               <p className="text-xs font-bold font-['Sora'] text-[#858585] uppercase">
-                November 2025
+                {monthYearDisplay}
               </p>
               <div className="absolute right-1 flex gap-2 items-center">
                 <Calendar size={24} color="white" />
@@ -137,7 +162,10 @@ export default function SeasonMatchesSheet({
 
             {/* Days */}
             <div className="flex items-center justify-center w-full">
-              <button className="flex items-center justify-center w-6 h-full">
+              <button
+                onClick={goToPreviousWeek}
+                className="flex items-center justify-center w-6 h-full"
+              >
                 <div className="rotate-180">
                   <ArrowLeft size={20} color="white" />
                 </div>
@@ -152,7 +180,7 @@ export default function SeasonMatchesSheet({
                       selectedDay === index
                         ? "border-b-2 border-[#9447ff]"
                         : ""
-                    }`}
+                    } ${item.isToday ? "bg-[#9447ff]/10 rounded-t-lg" : ""}`}
                   >
                     <p className="text-sm font-normal font-['Sora'] text-white">
                       {item.day}
@@ -164,64 +192,126 @@ export default function SeasonMatchesSheet({
                 ))}
               </div>
 
-              <button className="flex items-center justify-center w-6 h-full">
+              <button
+                onClick={goToNextWeek}
+                className="flex items-center justify-center w-6 h-full"
+              >
                 <ArrowLeft size={20} color="white" />
               </button>
             </div>
           </div>
 
+          {/* Season Status Banner */}
+          <SeasonStatusBanner seasonInfo={seasonInfo} />
+
           {/* Games List */}
           <div className="flex-1 flex flex-col gap-2 overflow-y-auto pb-4">
-            {mockGames.map((game) => (
-              <div
-                key={game.id}
-                className="bg-[#1f1f1f] rounded-2xl px-4 py-3 flex gap-2.5 items-center"
-              >
-                {/* Home Team */}
-                <div className="flex-1 flex flex-col gap-1 items-center">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {game.homeTeam.substring(0, 2)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <p className="text-sm font-normal font-['Sora'] text-white text-center">
-                      {game.homeTeam}
-                    </p>
-                    <p className="text-sm font-normal font-['Sora'] text-[#858585]">
-                      {game.homeRecord}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Time */}
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <p className="text-xs font-normal font-['Sora'] text-white">
-                    {game.date}
-                  </p>
-                  <p className="text-sm font-bold font-['Sora'] text-white uppercase">
-                    {game.time}
-                  </p>
-                </div>
-
-                {/* Away Team */}
-                <div className="flex-1 flex flex-col gap-1 items-center">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {game.awayTeam.substring(0, 2)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <p className="text-sm font-normal font-['Sora'] text-white text-center">
-                      {game.awayTeam}
-                    </p>
-                    <p className="text-sm font-normal font-['Sora'] text-[#858585]">
-                      {game.awayRecord}
-                    </p>
-                  </div>
-                </div>
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9447ff]"></div>
               </div>
-            ))}
+            )}
+
+            {/* Error State */}
+            {isError && (
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <p className="text-sm text-[#858585]">Failed to load games</p>
+                <button
+                  onClick={() => refetch()}
+                  className="px-4 py-2 bg-[#9447ff] rounded-lg text-white text-sm"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && !isError && (!games || games.length === 0) && (
+              <div className="flex items-center justify-center py-8">
+                <p className="text-sm text-[#858585]">No games scheduled</p>
+              </div>
+            )}
+
+            {/* Games */}
+            {games?.map((game) => {
+              const statusDisplay = getGameStatusDisplay(game);
+              const homeColor = getTeamColor(game.homeTricode);
+              const awayColor = getTeamColor(game.awayTricode);
+
+              return (
+                <div
+                  key={game.id}
+                  className="bg-[#1f1f1f] rounded-2xl px-4 py-3 flex gap-2.5 items-center"
+                >
+                  {/* Home Team */}
+                  <div className="flex-1 flex flex-col gap-1 items-center">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: homeColor }}
+                    >
+                      <span className="text-white text-xs font-bold">
+                        {game.homeTricode}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm font-normal font-['Sora'] text-white text-center">
+                        {game.homeTeam}
+                      </p>
+                      <p className="text-sm font-normal font-['Sora'] text-[#858585]">
+                        {game.homeRecord}
+                      </p>
+                      {game.gameStatus !== GameStatus.SCHEDULED && (
+                        <p className="text-lg font-bold font-['Sora'] text-white">
+                          {game.homeScore}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status / Time */}
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <p className="text-xs font-normal font-['Sora'] text-white">
+                      {statusDisplay.primary}
+                    </p>
+                    <p
+                      className={`text-sm font-bold font-['Sora'] uppercase ${
+                        game.gameStatus === GameStatus.IN_PROGRESS
+                          ? "text-[#9447ff]"
+                          : "text-white"
+                      }`}
+                    >
+                      {statusDisplay.secondary}
+                    </p>
+                  </div>
+
+                  {/* Away Team */}
+                  <div className="flex-1 flex flex-col gap-1 items-center">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: awayColor }}
+                    >
+                      <span className="text-white text-xs font-bold">
+                        {game.awayTricode}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm font-normal font-['Sora'] text-white text-center">
+                        {game.awayTeam}
+                      </p>
+                      <p className="text-sm font-normal font-['Sora'] text-[#858585]">
+                        {game.awayRecord}
+                      </p>
+                      {game.gameStatus !== GameStatus.SCHEDULED && (
+                        <p className="text-lg font-bold font-['Sora'] text-white">
+                          {game.awayScore}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </SheetContent>
