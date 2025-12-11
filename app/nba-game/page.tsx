@@ -38,7 +38,7 @@ const tiers = [
     color: "from-red-900 via-red-600 to-red-900",
     gemColor: "bg-red-600",
     border: "border-red-500",
-    image: "/images/tiers/Tier Icons/tier 1.png",
+    image: "/images/tiers/tier-icons/tier-1.png",
     bgEllipse1: "/images/tiers/tier-1-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-1-ellipse2.svg",
   },
@@ -48,7 +48,7 @@ const tiers = [
     color: "from-orange-900 via-orange-600 to-orange-900",
     gemColor: "bg-orange-600",
     border: "border-orange-500",
-    image: "/images/tiers/Tier Icons/tier 2.png",
+    image: "/images/tiers/tier-icons/tier-2.png",
     bgEllipse1: "/images/tiers/tier-2-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-2-ellipse2.svg",
   },
@@ -58,7 +58,7 @@ const tiers = [
     color: "from-yellow-900 via-yellow-500 to-yellow-900",
     gemColor: "bg-yellow-600",
     border: "border-yellow-500",
-    image: "/images/tiers/Tier Icons/tier 3.png",
+    image: "/images/tiers/tier-icons/tier-3.png",
     bgEllipse1: "/images/tiers/tier-3-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-3-ellipse2.svg",
   },
@@ -68,7 +68,7 @@ const tiers = [
     color: "from-blue-900 via-blue-600 to-blue-900",
     gemColor: "bg-blue-600",
     border: "border-blue-500",
-    image: "/images/tiers/Tier Icons/tier 4.png",
+    image: "/images/tiers/tier-icons/tier-4.png",
     bgEllipse1: "/images/tiers/tier-4-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-4-ellipse2.svg",
   },
@@ -78,7 +78,7 @@ const tiers = [
     color: "from-green-900 via-green-600 to-green-900",
     gemColor: "bg-green-600",
     border: "border-green-500",
-    image: "/images/tiers/Tier Icons/tier 5.png",
+    image: "/images/tiers/tier-icons/tier-5.png",
     bgEllipse1: "/images/tiers/tier-5-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-5-ellipse2.svg",
   },
@@ -88,7 +88,7 @@ const tiers = [
     color: "from-gray-800 via-gray-600 to-gray-800",
     gemColor: "bg-gray-600",
     border: "border-gray-500",
-    image: "/images/tiers/Tier Icons/tier 6.png",
+    image: "/images/tiers/tier-icons/tier-6.png",
     bgEllipse1: "/images/tiers/tier-6-ellipse1.svg",
     bgEllipse2: "/images/tiers/tier-6-ellipse2.svg",
   },
@@ -334,25 +334,25 @@ export default function NbaGame() {
                   </p>
                   <div className="flex gap-3 items-center w-full justify-center">
                     <Image
-                      src="/images/tiers/Partner Logos/Metapool.svg"
+                      src="/images/tiers/partner-logos/Metapool.svg"
                       alt="Meta Pool"
                       width={100}
                       height={100}
                     />
                     <Image
-                      src="/images/tiers/Partner Logos/HIBT.svg"
+                      src="/images/tiers/partner-logos/HIBT.svg"
                       alt="HIBT"
                       width={100}
                       height={100}
                     />
                     <Image
-                      src="/images/tiers/Partner Logos/SWEAT.svg"
+                      src="/images/tiers/partner-logos/SWEAT.svg"
                       alt="SWEAT"
                       width={100}
                       height={100}
                     />
                     <Image
-                      src="/images/tiers/Partner Logos/Flowx.svg"
+                      src="/images/tiers/partner-logos/Flowx.svg"
                       alt="SWEAT"
                       width={100}
                       height={100}
