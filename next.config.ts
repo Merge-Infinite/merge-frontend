@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
+interface WebpackRule {
+  test?: { test?: (value: string) => boolean };
+  issuer?: unknown;
+  resourceQuery?: { not?: unknown[] };
+  exclude?: RegExp;
+}
+
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Note: Remove "standalone" for Cloudflare Pages - it requires edge-compatible output
   /* config options here */
   transpilePackages: ["@telegram-apps/telegram-ui"],
   typescript: {
@@ -16,9 +23,10 @@ const nextConfig: NextConfig = {
   compress: true,
 
   webpack: (config, { dev, isServer }) => {
-    const fileLoaderRule = config.module.rules.find((rule: any) =>
-      rule.test?.test?.(".svg")
-    );
+    const fileLoaderRule = config.module.rules.find(
+      (rule: WebpackRule | string) =>
+        typeof rule === "object" && rule !== null && rule.test?.test?.(".svg")
+    ) as WebpackRule | undefined;
 
     config.module.rules.push(
       {

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Required for Cloudflare Pages edge runtime
+export const runtime = "edge";
+
 // NBA CDN URL for today's scoreboard
 const NBA_TODAY_URL =
   "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json";
