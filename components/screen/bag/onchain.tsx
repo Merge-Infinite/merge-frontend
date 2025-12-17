@@ -4,8 +4,9 @@ import { useUniversalApp } from "@/app/context/UniversalAppContext";
 import CreateWallet from "@/components/common/CreateWallet";
 import { PasscodeAuthDialog } from "@/components/common/PasscodeAuthenticate";
 import { SkeletonCard } from "@/components/common/SkeletonCard";
-import { Dropdown } from "@/components/icons";
+import { Dropdown, Filter, Search } from "@/components/icons";
 import { Input } from "@/components/ui/input";
+import NbaFilterSheet from "./NbaFilterSheet";
 import useApi from "@/hooks/useApi";
 import { useNFTList } from "@/hooks/useNFTList";
 import { useUser } from "@/hooks/useUser";
@@ -30,8 +31,7 @@ import {
   useSuiClient,
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { CreativeOnchainItem } from "./creative-onchain-item";
@@ -52,6 +52,9 @@ export function OnchainBagScreen() {
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const [showNbaFilterSheet, setShowNbaFilterSheet] = useState(false);
+  const [selectedNbaTeams, setSelectedNbaTeams] = useState<string[]>([]);
+  const [nbaSortBy, setNbaSortBy] = useState<"newest" | "oldest">("newest");
   const initialized = useSelector(
     (state: RootState) => state.appContext.initialized
   );
@@ -104,6 +107,17 @@ export function OnchainBagScreen() {
     structType: `${NBA_PACKAGE_ID}::${"nba_nft"}::${"NBANft"}`,
   });
 
+  // Calculate team counts for filter sheet
+  const teamCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    nbaNfts.forEach(({ data }) => {
+      const teamId = data?.content?.fields?.team_id;
+      if (teamId) {
+        counts[teamId] = (counts[teamId] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [nbaNfts]);
 
   useEffect(() => {
     if (isTelegram && !authed) {
@@ -272,24 +286,17 @@ export function OnchainBagScreen() {
             </div>
 
             {/* Filter Icon Button */}
-            <button className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0">
-              <Image
-                src="/images/filter.svg"
-                alt="filter"
-                width={24}
-                height={24}
-              />
+            <button
+              onClick={() => setShowNbaFilterSheet(true)}
+              className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0"
+            >
+              <Filter size={24} color="white" />
             </button>
 
             {/* Search Icon Button / Search Input */}
             {showSearch ? (
               <div className="flex-1 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center px-3 gap-2">
-                <Image
-                  src="/images/search.svg"
-                  alt="search"
-                  width={24}
-                  height={24}
-                />
+                <Search size={24} color="white" />
                 <Input
                   className="flex-1 h-full text-white text-sm font-normal bg-transparent border-none focus:outline-none focus:ring-0"
                   placeholder="Search..."
@@ -306,12 +313,7 @@ export function OnchainBagScreen() {
                 onClick={() => setShowSearch(true)}
                 className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0"
               >
-                <Image
-                  src="/images/search.svg"
-                  alt="search"
-                  width={24}
-                  height={24}
-                />
+                <Search size={24} color="white" />
               </button>
             )}
           </div>
@@ -402,6 +404,7 @@ export function OnchainBagScreen() {
                       return {
                         id: data!.objectId,
                         name: metadata?.team_name || "NBA NFT",
+                        teamId: metadata?.team_id || "",
                         imageUrl: metadata?.url || "",
                         prompt: "",
                       };
@@ -411,6 +414,18 @@ export function OnchainBagScreen() {
                         ? card.name.toLowerCase().includes(searchQuery.toLowerCase())
                         : true
                     )
+                    .filter((card) =>
+                      selectedNbaTeams.length > 0
+                        ? selectedNbaTeams.includes(card.teamId)
+                        : true
+                    )
+                    .sort((a, b) => {
+                      // Sort by objectId as proxy for mint order (newer IDs are lexicographically greater)
+                      if (nbaSortBy === "newest") {
+                        return b.id.localeCompare(a.id);
+                      }
+                      return a.id.localeCompare(b.id);
+                    })
                     .map((card) => (
                       <CreativeOnchainItem
                         key={card.id}
@@ -437,6 +452,22 @@ export function OnchainBagScreen() {
           }}
         />
       )}
+      <NbaFilterSheet
+        open={showNbaFilterSheet}
+        onOpenChange={setShowNbaFilterSheet}
+        selectedTeams={selectedNbaTeams}
+        onSelectedTeamsChange={setSelectedNbaTeams}
+        sortBy={nbaSortBy}
+        onSortByChange={setNbaSortBy}
+        teamCounts={teamCounts}
+        onApply={() => {
+          // Filter will be applied through the state
+        }}
+        onClearAll={() => {
+          setSelectedNbaTeams([]);
+          setNbaSortBy("newest");
+        }}
+      />
     </div>
   );
 }

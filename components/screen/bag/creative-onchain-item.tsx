@@ -401,7 +401,7 @@ export const CreativeOnchainItem = React.memo(
               <div className="flex flex-col gap-4">
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <div className="text-sm font-medium">Element Name:</div>
+                    <div className="text-sm font-medium">NFT Name:</div>
                     <Badge
                       variant="outline"
                       className="rounded-3xl border-white p-2 text-white text-xs uppercase"

@@ -10,6 +10,7 @@ import {
 } from "@/components/icons";
 import LuckyRateSheet from "@/components/screen/nba-game/LuckyRateSheet";
 import MintConfirmationSheet from "@/components/screen/nba-game/MintConfirmationSheet";
+import NFTValueEstimatorSheet from "@/components/screen/nba-game/NFTValueEstimatorSheet";
 import SeasonMatchesSheet from "@/components/screen/nba-game/SeasonMatchesSheet";
 import { Card } from "@/components/ui/card";
 import {
@@ -100,6 +101,14 @@ export default function NbaGame() {
   const [matchesSheetOpen, setMatchesSheetOpen] = useState(false);
   const [luckyRateSheetOpen, setLuckyRateSheetOpen] = useState(false);
   const [mintConfirmationOpen, setMintConfirmationOpen] = useState(false);
+  const [valueEstimatorOpen, setValueEstimatorOpen] = useState(false);
+  const [selectedTeamForEstimator, setSelectedTeamForEstimator] = useState<{
+    name: string;
+    logoUrl?: string | null;
+    logo?: string;
+    totalMinted: number;
+    supplyLimit: number;
+  } | null>(null);
   const [tierApi, setTierApi] = useState<CarouselApi>();
   const [currentTier, setCurrentTier] = useState(0);
 
@@ -451,23 +460,21 @@ export default function NbaGame() {
                   <button
                     key={tier.id}
                     onClick={() => tierApi?.scrollTo(index)}
-                    className="flex items-center justify-center"
+                    className={`flex items-center justify-center p-2 rounded-xl transition-all duration-200 ${
+                      currentTier === index
+                        ? "bg-[#141414]"
+                        : "bg-transparent"
+                    }`}
                   >
-                    <div
-                      className={`w-9 h-9 rounded-xl ${
-                        currentTier === index
-                          ? `${tier.border} border-2 scale-110`
-                          : "opacity-40"
-                      } transition-all duration-200`}
-                    >
-                      <Image
-                        src={tier.image}
-                        alt={tier.name}
-                        width={36}
-                        height={36}
-                        className="w-9 h-9"
-                      />
-                    </div>
+                    <Image
+                      src={tier.image}
+                      alt={tier.name}
+                      width={36}
+                      height={36}
+                      className={`w-9 h-9 rounded-lg transition-opacity duration-200 ${
+                        currentTier === index ? "opacity-100" : "opacity-[0.56]"
+                      }`}
+                    />
                   </button>
                 ))}
               </div>
@@ -557,7 +564,19 @@ export default function NbaGame() {
                           </div>
 
                           {/* Question Mark Icon */}
-                          <button className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center shrink-0">
+                          <button
+                            onClick={() => {
+                              setSelectedTeamForEstimator({
+                                name: team.name,
+                                logoUrl: team.logoUrl,
+                                logo: team.logo,
+                                totalMinted: team.totalMinted,
+                                supplyLimit: team.supplyLimit,
+                              });
+                              setValueEstimatorOpen(true);
+                            }}
+                            className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center shrink-0"
+                          >
                             <span className="text-[#858585] text-base font-semibold">?</span>
                           </button>
                         </div>
@@ -832,6 +851,14 @@ export default function NbaGame() {
       <MintConfirmationSheet
         open={mintConfirmationOpen}
         onOpenChange={setMintConfirmationOpen}
+      />
+
+      {/* NFT Value Estimator Sheet */}
+      <NFTValueEstimatorSheet
+        open={valueEstimatorOpen}
+        onOpenChange={setValueEstimatorOpen}
+        team={selectedTeamForEstimator}
+        totalRewardPool={poolData?.totalRewardSui ?? 500000}
       />
     </div>
   );

@@ -1,7 +1,11 @@
 export { default as ArrowLeft } from "./ArrowLeft";
+export { default as Bag } from "./Bag";
+export { default as Checkbox } from "./Checkbox";
 export { default as Dropdown } from "./Dropdown";
 export { default as Clock } from "./Clock";
 export { default as ArrowDirect } from "./ArrowDirect";
+export { default as Filter } from "./Filter";
+export { default as Search } from "./Search";
 export { default as SuiLogo } from "./SuiLogo";
 export { default as Lucky } from "./Lucky";
 export { default as Close } from "./Close";

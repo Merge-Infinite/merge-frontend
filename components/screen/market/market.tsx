@@ -43,7 +43,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { MarketItem } from "./market-item";
-import { Dropdown } from "@/components/icons";
+import { Dropdown, Filter, Search } from "@/components/icons";
+import MarketFilterSheet from "./MarketFilterSheet";
 
 type FilterType = "all" | "element" | "creature";
 
@@ -102,6 +103,9 @@ export const NFTMarket = () => {
   );
   const [isOwned, setIsOwned] = useState(false);
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const [showMarketFilterSheet, setShowMarketFilterSheet] = useState(false);
+  const [marketSortBy, setMarketSortBy] = useState<"price_high" | "price_low">("price_low");
+  const [showListingOnly, setShowListingOnly] = useState(true);
   const account = useCurrentAccount();
   const dispatch = useDispatch();
   const client = useSuiClient();
@@ -248,6 +252,11 @@ export const NFTMarket = () => {
   }, [address, authed, isTelegram]);
 
   const filteredListings = React.useMemo(() => {
+    // If showListingOnly is false, don't show any listings
+    if (!showListingOnly) {
+      return [];
+    }
+
     const listings = [];
 
     // Filter element listings
@@ -267,9 +276,6 @@ export const NFTMarket = () => {
             return false;
           }
           return true;
-        })
-        .sort((a, b) => {
-          return b.objectId.localeCompare(a.objectId);
         });
       listings.push(...elementListings);
     }
@@ -291,15 +297,22 @@ export const NFTMarket = () => {
             return false;
           }
           return true;
-        })
-        .sort((a, b) => {
-          return b.objectId.localeCompare(a.objectId);
         });
       listings.push(...creatureListings);
     }
 
+    // Sort by price
+    listings.sort((a, b) => {
+      const priceA = Number(a.price) || 0;
+      const priceB = Number(b.price) || 0;
+      if (marketSortBy === "price_high") {
+        return priceB - priceA;
+      }
+      return priceA - priceB;
+    });
+
     return listings;
-  }, [marketplaceListings, marketplaceCreatureListings, searchTerm, filterType, isOwned, user?.kiosk?.objectId]);
+  }, [marketplaceListings, marketplaceCreatureListings, searchTerm, filterType, isOwned, user?.kiosk?.objectId, marketSortBy, showListingOnly]);
 
   useEffect(() => {
     if (
@@ -479,24 +492,17 @@ export const NFTMarket = () => {
           </div>
 
           {/* Filter Icon Button */}
-          <button className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0">
-            <Image
-              src="/images/filter.svg"
-              alt="filter"
-              width={24}
-              height={24}
-            />
+          <button
+            onClick={() => setShowMarketFilterSheet(true)}
+            className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0"
+          >
+            <Filter size={24} color="white" />
           </button>
 
           {/* Search Icon Button / Search Input */}
           {showSearch ? (
             <div className="flex-1 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center px-3 gap-2">
-              <Image
-                src="/images/search.svg"
-                alt="search"
-                width={24}
-                height={24}
-              />
+              <Search size={24} color="white" />
               <Input
                 className="flex-1 h-full text-white text-sm font-normal bg-transparent border-none focus:outline-none focus:ring-0"
                 placeholder="Search..."
@@ -513,12 +519,7 @@ export const NFTMarket = () => {
               onClick={() => setShowSearch(true)}
               className="w-10 h-10 bg-[#141414] border border-[#333333] rounded-full flex items-center justify-center shrink-0"
             >
-              <Image
-                src="/images/search.svg"
-                alt="search"
-                width={24}
-                height={24}
-              />
+              <Search size={24} color="white" />
             </button>
           )}
         </div>
@@ -571,6 +572,21 @@ export const NFTMarket = () => {
         onSuccess={() => {
           refreshElement();
           refreshCreature();
+        }}
+      />
+      <MarketFilterSheet
+        open={showMarketFilterSheet}
+        onOpenChange={setShowMarketFilterSheet}
+        sortBy={marketSortBy}
+        onSortByChange={setMarketSortBy}
+        showListingOnly={showListingOnly}
+        onShowListingOnlyChange={setShowListingOnly}
+        onApply={() => {
+          // Filter will be applied through the state
+        }}
+        onClearAll={() => {
+          setMarketSortBy("price_low");
+          setShowListingOnly(true);
         }}
       />
     </div>

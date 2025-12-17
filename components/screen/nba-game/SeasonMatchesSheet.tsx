@@ -1,12 +1,22 @@
 "use client";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { ArrowLeft, Calendar, Close } from "@/components/icons";
+import { ArrowLeft, Calendar, Close, Dropdown } from "@/components/icons";
 import { useState, useMemo } from "react";
 import { useNbaGames } from "@/hooks/useNbaGames";
 import { useNbaSeasonStatus } from "@/hooks/useNbaSeasonStatus";
-import { NBA_TEAM_COLORS, TransformedGame, GameStatus } from "@/lib/api/nba-games";
+import { TransformedGame, GameStatus } from "@/lib/api/nba-games";
+import { NBA_TEAMS_BY_TIER } from "@/data/nba-teams";
 import SeasonStatusBanner from "./SeasonStatusBanner";
+import Image from "next/image";
+
+// Create a map of tricode to logo path
+const TEAM_LOGO_MAP: Record<string, string> = {};
+NBA_TEAMS_BY_TIER.forEach((tier) => {
+  tier.teams.forEach((team) => {
+    TEAM_LOGO_MAP[team.teamId] = `/images/tiers/team-logos/${team.logo}`;
+  });
+});
 
 interface SeasonMatchesSheetProps {
   open: boolean;
@@ -48,9 +58,24 @@ function getMonthYearString(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
-// Get team color or fallback
-function getTeamColor(tricode: string): string {
-  return NBA_TEAM_COLORS[tricode]?.primary || "#1D428A";
+// Get team logo path or null
+function getTeamLogo(tricode: string): string | null {
+  return TEAM_LOGO_MAP[tricode] || null;
+}
+
+// Generate month options for picker (6 months back, 6 months forward)
+function generateMonthOptions(): { value: string; label: string; date: Date }[] {
+  const options = [];
+  const today = new Date();
+
+  for (let i = -6; i <= 6; i++) {
+    const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const label = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    options.push({ value, label, date });
+  }
+
+  return options;
 }
 
 // Game status display helper
@@ -79,9 +104,13 @@ export default function SeasonMatchesSheet({
 }: SeasonMatchesSheetProps) {
   const [selectedDay, setSelectedDay] = useState(3); // Default to today (center of week)
   const [weekOffset, setWeekOffset] = useState(0);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   // Season status with live countdown
   const seasonInfo = useNbaSeasonStatus({ enabled: open });
+
+  // Month options for picker
+  const monthOptions = useMemo(() => generateMonthOptions(), []);
 
   // Generate week days based on current offset
   const daysOfWeek = useMemo(() => {
@@ -113,6 +142,18 @@ export default function SeasonMatchesSheet({
   const goToPreviousWeek = () => setWeekOffset((prev) => prev - 1);
   const goToNextWeek = () => setWeekOffset((prev) => prev + 1);
 
+  // Handle month selection
+  const handleMonthSelect = (monthDate: Date) => {
+    const today = new Date();
+    const diffInDays = Math.floor(
+      (monthDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const weekDiff = Math.floor(diffInDays / 7);
+    setWeekOffset(weekDiff);
+    setSelectedDay(3); // Reset to center of week
+    setShowMonthPicker(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" showClose={false} className="h-[80vh] p-0">
@@ -132,7 +173,7 @@ export default function SeasonMatchesSheet({
         {/* Content */}
         <div className="flex flex-col gap-3 px-4 pt-3 h-[calc(100%-44px)] overflow-hidden">
           {/* Calendar Selector */}
-          <div className="bg-[#141414] border border-[#292929] rounded-2xl p-3 sticky top-0 z-10">
+          <div className="bg-[#141414] border border-[#292929] rounded-2xl p-3 sticky top-0 z-10 relative">
             {/* Month */}
             <div className="flex items-center justify-center px-1 py-0 relative mb-2">
               <p className="text-xs font-bold font-['Sora'] text-[#858585] uppercase">
@@ -140,25 +181,37 @@ export default function SeasonMatchesSheet({
               </p>
               <div className="absolute right-1 flex gap-2 items-center">
                 <Calendar size={24} color="white" />
-                <button className="flex items-center justify-center">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 6L8 10L12 6"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                <button
+                  onClick={() => setShowMonthPicker(!showMonthPicker)}
+                  className="flex items-center justify-center"
+                >
+                  <Dropdown
+                    size={16}
+                    color="white"
+                    className={`transition-transform duration-200 ${showMonthPicker ? "rotate-180" : ""}`}
+                  />
                 </button>
               </div>
             </div>
+
+            {/* Month Picker Dropdown */}
+            {showMonthPicker && (
+              <div className="absolute left-4 right-4 top-14 bg-[#1f1f1f] border border-[#292929] rounded-xl max-h-48 overflow-y-auto z-20 shadow-lg">
+                {monthOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleMonthSelect(option.date)}
+                    className={`w-full px-4 py-2 text-left text-sm font-['Sora'] hover:bg-[#292929] transition-colors ${
+                      option.label === monthYearDisplay
+                        ? "text-[#9447ff] bg-[#9447ff]/10"
+                        : "text-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Days */}
             <div className="flex items-center justify-center w-full">
@@ -166,9 +219,7 @@ export default function SeasonMatchesSheet({
                 onClick={goToPreviousWeek}
                 className="flex items-center justify-center w-6 h-full"
               >
-                <div className="rotate-180">
-                  <ArrowLeft size={20} color="white" />
-                </div>
+                <ArrowLeft size={20} color="white" />
               </button>
 
               <div className="flex-1 flex gap-1 items-center">
@@ -196,7 +247,9 @@ export default function SeasonMatchesSheet({
                 onClick={goToNextWeek}
                 className="flex items-center justify-center w-6 h-full"
               >
-                <ArrowLeft size={20} color="white" />
+                <div className="rotate-180">
+                  <ArrowLeft size={20} color="white" />
+                </div>
               </button>
             </div>
           </div>
@@ -236,8 +289,8 @@ export default function SeasonMatchesSheet({
             {/* Games */}
             {games?.map((game) => {
               const statusDisplay = getGameStatusDisplay(game);
-              const homeColor = getTeamColor(game.homeTricode);
-              const awayColor = getTeamColor(game.awayTricode);
+              const homeLogo = getTeamLogo(game.homeTricode);
+              const awayLogo = getTeamLogo(game.awayTricode);
 
               return (
                 <div
@@ -246,13 +299,20 @@ export default function SeasonMatchesSheet({
                 >
                   {/* Home Team */}
                   <div className="flex-1 flex flex-col gap-1 items-center">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: homeColor }}
-                    >
-                      <span className="text-white text-xs font-bold">
-                        {game.homeTricode}
-                      </span>
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      {homeLogo ? (
+                        <Image
+                          src={homeLogo}
+                          alt={game.homeTeam}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 object-contain"
+                        />
+                      ) : (
+                        <span className="text-white text-xs font-bold">
+                          {game.homeTricode}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-col items-center">
                       <p className="text-sm font-normal font-['Sora'] text-white text-center">
@@ -287,13 +347,20 @@ export default function SeasonMatchesSheet({
 
                   {/* Away Team */}
                   <div className="flex-1 flex flex-col gap-1 items-center">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: awayColor }}
-                    >
-                      <span className="text-white text-xs font-bold">
-                        {game.awayTricode}
-                      </span>
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      {awayLogo ? (
+                        <Image
+                          src={awayLogo}
+                          alt={game.awayTeam}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 object-contain"
+                        />
+                      ) : (
+                        <span className="text-white text-xs font-bold">
+                          {game.awayTricode}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-col items-center">
                       <p className="text-sm font-normal font-['Sora'] text-white text-center">
